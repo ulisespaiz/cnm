@@ -1,0 +1,40 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../../layouts/Base.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import ProductCard from '../../../components/ProductCard.astro';
+import CtaBand from '../../../components/CtaBand.astro';
+import { getCategories, getProducts, categoryUrl } from '../../../lib/content';
+import { breadcrumbs } from '../../../lib/schema';
+
+export const getStaticPaths = (async () => {
+  const categories = await getCategories();
+  const withProducts = await Promise.all(
+    categories.map(async (category) => ({ category, products: await getProducts(category.id) })),
+  );
+  return withProducts
+    .filter((c) => c.products.length)
+    .map(({ category, products }) => ({ params: { category: category.id }, props: { category, products } }));
+}) satisfies GetStaticPaths;
+
+const { category, products } = Astro.props;
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Products', path: '/products/' },
+  { name: category.data.title, path: categoryUrl(category.id) },
+];
+---
+
+<Base title={category.data.title} description={category.data.summary} jsonLd={[breadcrumbs(crumbs)]}>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <h1>{category.data.title}</h1>
+      <p class="muted">{category.data.summary}</p>
+      <div class="grid">
+        {products.map((p) => <ProductCard product={p} />)}
+      </div>
+    </div>
+  </section>
+  <CtaBand />
+</Base>

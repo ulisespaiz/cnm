@@ -1,0 +1,42 @@
+---
+import Base from '../layouts/Base.astro';
+import QuoteForm from '../components/QuoteForm.astro';
+import { site } from '../config/site';
+---
+
+<Base title="Contact" description={`Call, email or message ${site.name} in ${site.address.city}, CA.`}>
+  <section class="section">
+    <div class="container contact">
+      <div>
+        <h1>Contact Us</h1>
+        <p>Looking for pricing on specific products? <a href="/products/">Build a quote list</a> and send it in one step.</p>
+        <address>
+          <strong>{site.name}</strong><br />
+          {site.address.street}<br />
+          {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}<br />
+          <a href={`tel:${site.phoneE164}`}>{site.phone}</a><br />
+          <a href={`mailto:${site.email}`}>{site.email}</a>
+        </address>
+      </div>
+      <QuoteForm kind="contact" />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .contact {
+    display: grid;
+    gap: 32px;
+  }
+
+  address {
+    font-style: normal;
+    line-height: 1.8;
+  }
+
+  @media (min-width: 900px) {
+    .contact {
+      grid-template-columns: 1fr 1.4fr;
+    }
+  }
+</style>

@@ -1,0 +1,171 @@
+---
+// Sends to Web3Forms. With JavaScript the selected products are added to the
+// email and the visitor stays on-site; without it the form still posts and
+// Web3Forms redirects to the thank-you page.
+import { site, serviceAreas } from '../config/site';
+import { forms } from '../config/forms';
+
+interface Props {
+  kind: 'quote' | 'contact';
+}
+
+const { kind } = Astro.props;
+const thanks = new URL('/quote/thanks/', Astro.site).href;
+const missingKey = !forms.accessKey;
+---
+
+<form class="quote-form" action={forms.endpoint} method="POST" data-quote-form data-kind={kind} data-fallback-email={site.email}>
+  {missingKey && (
+    <p class="form-alert form-alert--error" role="alert">
+      Form not configured: set PUBLIC_WEB3FORMS_KEY (see README).
+    </p>
+  )}
+
+  <input type="hidden" name="access_key" value={forms.accessKey} />
+  <input type="hidden" name="subject" value={`New ${kind} request from ${site.name} website`} />
+  <input type="hidden" name="from_name" value={`${site.name} Website`} />
+  <input type="hidden" name="redirect" value={thanks} />
+  <input type="hidden" name="products" value="" data-products-field />
+  <!-- Honeypot: humans never see or tick this -->
+  <input type="checkbox" name="botcheck" class="visually-hidden" tabindex="-1" autocomplete="off" />
+
+  <div class="field-row">
+    <div class="field">
+      <label for={`${kind}-name`}>Name *</label>
+      <input id={`${kind}-name`} name="name" autocomplete="name" required />
+    </div>
+    <div class="field">
+      <label for={`${kind}-phone`}>Phone</label>
+      <input id={`${kind}-phone`} name="phone" type="tel" autocomplete="tel" inputmode="tel" />
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for={`${kind}-email`}>Email *</label>
+      <input id={`${kind}-email`} name="email" type="email" autocomplete="email" required />
+    </div>
+    <div class="field">
+      <label for={`${kind}-city`}>City</label>
+      <select id={`${kind}-city`} name="city">
+        <option value="">Select your city</option>
+        {serviceAreas.map((c) => <option>{c}</option>)}
+        <option>Other</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for={`${kind}-message`}>{kind === 'quote' ? 'Project details' : 'How can we help?'}</label>
+    <textarea
+      id={`${kind}-message`}
+      name="message"
+      placeholder={kind === 'quote' ? 'Timeline, measurements, delivery or install needs…' : ''}
+      required={kind === 'contact'}></textarea>
+  </div>
+
+  <div class="field">
+    <label for={`${kind}-contact-pref`}>Best way to reach you</label>
+    <select id={`${kind}-contact-pref`} name="preferred_contact">
+      <option>Phone call</option>
+      <option>Text message</option>
+      <option>Email</option>
+    </select>
+  </div>
+
+  <button class="btn btn--block" type="submit" data-submit>
+    {kind === 'quote' ? 'Send Quote Request' : 'Send Message'}
+  </button>
+  <p class="form-alert" role="status" aria-live="polite" data-form-status hidden></p>
+  <p class="muted form-note">
+    We reply within one business day. Prefer to talk? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.
+  </p>
+</form>
+
+<script>
+  import { getItems, summarize, clearItems } from '../scripts/quote-store';
+
+  document.querySelectorAll<HTMLFormElement>('[data-quote-form]').forEach((form) => {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const status = form.querySelector<HTMLElement>('[data-form-status]')!;
+      const button = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+      const isQuote = form.dataset.kind === 'quote';
+      const items = isQuote ? getItems() : [];
+
+      if (isQuote && !items.length) {
+        show(status, 'Add at least one product to your quote first.', true);
+        return;
+      }
+
+      const data = new FormData(form);
+      if (isQuote) {
+        data.set('products', summarize(items));
+        const name = String(data.get('name') || '').trim();
+        const city = String(data.get('city') || '').trim();
+        const count = items.reduce((n, i) => n + i.qty, 0);
+        data.set(
+          'subject',
+          `Quote request: ${count} item${count === 1 ? '' : 's'} from ${name}${city ? ` (${city})` : ''}`,
+        );
+      }
+      data.delete('redirect');
+
+      button.disabled = true;
+      show(status, 'Sending…', false);
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: data,
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || !json.success) throw new Error(json.message || `HTTP ${res.status}`);
+        if (isQuote) clearItems();
+        location.href = '/quote/thanks/';
+      } catch (err) {
+        console.error('Form submit failed', err);
+        const body = encodeURIComponent(
+          `${isQuote ? `Products:\n${summarize(items)}\n\n` : ''}${data.get('message') || ''}`,
+        );
+        show(
+          status,
+          `Sorry, that didn't send. Please call us or <a href="mailto:${form.dataset.fallbackEmail}?subject=${encodeURIComponent(String(data.get('subject')))}&body=${body}">email your request</a>.`,
+          true,
+          true,
+        );
+        button.disabled = false;
+      }
+    });
+  });
+
+  function show(el: HTMLElement, msg: string, isError: boolean, html = false) {
+    el.hidden = false;
+    el.classList.toggle('form-alert--error', isError);
+    if (html) el.innerHTML = msg;
+    else el.textContent = msg;
+  }
+</script>
+
+<style>
+  .quote-form {
+    max-width: 720px;
+  }
+
+  .form-alert {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  .form-alert--error {
+    background: #fdecea;
+    color: var(--color-danger);
+  }
+
+  .form-note {
+    margin-top: 12px;
+    font-size: 0.95rem;
+  }
+</style>

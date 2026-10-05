@@ -1,0 +1,118 @@
+---
+import Base from '../layouts/Base.astro';
+import ProductCard from '../components/ProductCard.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { site, serviceAreas } from '../config/site';
+import { getCategories, getProducts, categoryUrl } from '../lib/content';
+
+const categories = await getCategories();
+const featured = (await getProducts()).filter((p) => p.data.featured).slice(0, 6);
+---
+
+<Base title={site.name} description={site.description}>
+  <section class="hero">
+    <div class="container">
+      <p class="hero__eyebrow">Serving {site.address.city} and the Monterey Bay area</p>
+      <h1>{site.tagline}</h1>
+      <p class="hero__lead">{site.description}</p>
+      <div class="hero__actions">
+        <a class="btn" href="/products/">Browse Products</a>
+        <a class="btn btn--outline" href="/quote/">Request a Quote</a>
+      </div>
+    </div>
+  </section>
+
+  {categories.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <h2>Products</h2>
+        <div class="grid">
+          {categories.map((c) => (
+            <a class="card" href={categoryUrl(c.id)}>
+              <div class="card__body">
+                <h3>{c.data.title}</h3>
+                <p class="muted">{c.data.summary}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {featured.length > 0 && (
+    <section class="section section--alt">
+      <div class="container">
+        <h2>Popular Products</h2>
+        <div class="grid">
+          {featured.map((p) => <ProductCard product={p} />)}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section">
+    <div class="container steps">
+      <h2>How quotes work</h2>
+      <ol>
+        <li><strong>Pick products.</strong> Choose options and add them to your quote list.</li>
+        <li><strong>Send the list.</strong> Tell us about the project and where it is.</li>
+        <li><strong>Get your price.</strong> We reply within one business day.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section section--alt">
+    <div class="container">
+      <h2>Areas we serve</h2>
+      <p>{serviceAreas.join(' · ')}</p>
+      <a href="/service-areas/">See all service areas</a>
+    </div>
+  </section>
+
+  <CtaBand />
+</Base>
+
+<style>
+  .hero {
+    padding-block: clamp(48px, 10vw, 112px);
+    background: linear-gradient(160deg, var(--color-surface), var(--color-bg));
+  }
+
+  .hero__eyebrow {
+    font-weight: 700;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.85rem;
+  }
+
+  .hero__lead {
+    font-size: 1.15rem;
+    max-width: 60ch;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 479px) {
+    .hero__actions .btn {
+      flex: 1 1 100%;
+    }
+  }
+
+  .steps ol {
+    display: grid;
+    gap: 16px;
+    padding-left: 1.25em;
+  }
+
+  @media (min-width: 768px) {
+    .steps ol {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>

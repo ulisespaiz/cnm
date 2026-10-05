@@ -1,0 +1,130 @@
+---
+import Base from '../../layouts/Base.astro';
+import QuoteForm from '../../components/QuoteForm.astro';
+---
+
+<Base
+  title="Request a Quote"
+  description="Send us your product list and project details for a free quote."
+  noindex
+>
+  <section class="section">
+    <div class="container quote-page">
+      <h1>Your Quote</h1>
+
+      <div class="quote-list" data-quote-list>
+        <p class="muted" data-quote-empty>
+          Your quote list is empty. <a href="/products/">Browse products</a> and tap “Add to Quote”.
+        </p>
+        <ul data-quote-items></ul>
+      </div>
+
+      <h2>Your details</h2>
+      <QuoteForm kind="quote" />
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { getItems, setQty, removeItem } from '../../scripts/quote-store';
+
+  const list = document.querySelector<HTMLUListElement>('[data-quote-items]')!;
+  const empty = document.querySelector<HTMLElement>('[data-quote-empty]')!;
+
+  function render() {
+    const items = getItems();
+    empty.hidden = items.length > 0;
+    list.replaceChildren(
+      ...items.map((item) => {
+        const li = document.createElement('li');
+        li.className = 'quote-item';
+
+        const info = document.createElement('div');
+        const link = document.createElement('a');
+        link.href = item.url;
+        link.textContent = item.title;
+        info.append(link);
+        const opts = Object.entries(item.options);
+        if (opts.length) {
+          const p = document.createElement('p');
+          p.className = 'muted';
+          p.textContent = opts.map(([k, v]) => `${k}: ${v}`).join(' · ');
+          info.append(p);
+        }
+
+        const controls = document.createElement('div');
+        controls.className = 'quote-item__controls';
+        const qtyLabel = document.createElement('label');
+        qtyLabel.className = 'visually-hidden';
+        qtyLabel.htmlFor = `qty-${item.key}`;
+        qtyLabel.textContent = `Quantity for ${item.title}`;
+        const qty = document.createElement('input');
+        qty.type = 'number';
+        qty.min = '1';
+        qty.max = '999';
+        qty.inputMode = 'numeric';
+        qty.id = `qty-${item.key}`;
+        qty.value = String(item.qty);
+        qty.addEventListener('change', () => setQty(item.key, Number(qty.value)));
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'btn btn--outline';
+        remove.textContent = 'Remove';
+        remove.setAttribute('aria-label', `Remove ${item.title}`);
+        remove.addEventListener('click', () => removeItem(item.key));
+        controls.append(qtyLabel, qty, remove);
+
+        li.append(info, controls);
+        return li;
+      }),
+    );
+  }
+
+  render();
+  document.addEventListener('quote:change', render);
+</script>
+
+<style is:global>
+  .quote-list ul {
+    list-style: none;
+    margin: 0 0 32px;
+    padding: 0;
+  }
+
+  .quote-item {
+    display: grid;
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .quote-item a {
+    font-weight: 700;
+  }
+
+  .quote-item p {
+    margin: 4px 0 0;
+  }
+
+  .quote-item__controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .quote-item__controls input {
+    width: 90px;
+    min-height: var(--tap);
+    padding: 8px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .quote-item {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+  }
+</style>

@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../config/site';
+---
+
+<Base title="Privacy Policy" description={`How ${site.name} handles information submitted through this website.`}>
+  <section class="section">
+    <div class="container prose">
+      <h1>Privacy Policy</h1>
+      <p><em>Template: have the business review this before launch.</em></p>
+      <h2>What we collect</h2>
+      <p>When you send a quote request or message, we receive the details you enter (name, email, phone, city, project details and the products you selected). Your quote list is stored in your own browser until you send it.</p>
+      <h2>How it is delivered</h2>
+      <p>Form submissions are relayed to our inbox by Web3Forms, a form-processing service. We use the information only to respond to your request.</p>
+      <h2>Sharing</h2>
+      <p>We do not sell or share your personal information.</p>
+      <h2>Your choices</h2>
+      <p>California residents may ask what we hold about them or ask us to delete it. Contact <a href={`mailto:${site.email}`}>{site.email}</a> or call {site.phone}.</p>
+    </div>
+  </section>
+</Base>

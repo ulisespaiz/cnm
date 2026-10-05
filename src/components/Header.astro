@@ -1,0 +1,156 @@
+---
+import { site, nav } from '../config/site';
+const path = Astro.url.pathname;
+const isActive = (href: string) => path === href || path.startsWith(href);
+---
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="brand" href="/">{site.name}</a>
+
+    <nav class="nav-desktop" aria-label="Main">
+      {nav.map((item) => (
+        <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+      ))}
+    </nav>
+
+    <div class="header-actions">
+      <a class="header-phone" href={`tel:${site.phoneE164}`}>{site.phone}</a>
+      <a class="btn quote-link" href="/quote/">
+        Quote <span class="badge" data-quote-count hidden>0</span>
+      </a>
+    </div>
+
+    <details class="nav-mobile">
+      <summary aria-label="Menu">
+        <span class="burger" aria-hidden="true"></span>
+      </summary>
+      <nav aria-label="Main mobile">
+        {nav.map((item) => (
+          <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+        ))}
+        <a href="/quote/">My Quote</a>
+      </nav>
+    </details>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 64px;
+  }
+
+  .brand {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--color-text);
+    text-decoration: none;
+    margin-right: auto;
+  }
+
+  .nav-desktop,
+  .header-actions {
+    display: none;
+  }
+
+  .nav-desktop a,
+  .nav-mobile a {
+    color: var(--color-text);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  [aria-current='page'] {
+    color: var(--color-primary) !important;
+  }
+
+  .nav-mobile summary {
+    list-style: none;
+    display: grid;
+    place-items: center;
+    width: var(--tap);
+    height: var(--tap);
+    cursor: pointer;
+  }
+
+  .nav-mobile summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .burger,
+  .burger::before,
+  .burger::after {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--color-text);
+    position: relative;
+  }
+
+  .burger::before,
+  .burger::after {
+    content: '';
+    position: absolute;
+  }
+
+  .burger::before {
+    top: -7px;
+  }
+
+  .burger::after {
+    top: 7px;
+  }
+
+  .nav-mobile[open] nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    display: grid;
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow);
+  }
+
+  .nav-mobile nav a {
+    display: flex;
+    align-items: center;
+    min-height: 56px;
+    padding: 0 var(--gutter);
+    border-top: 1px solid var(--color-border);
+  }
+
+  @media (min-width: 900px) {
+    .nav-mobile {
+      display: none;
+    }
+
+    .nav-desktop {
+      display: flex;
+      gap: 24px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-phone {
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+  }
+</style>

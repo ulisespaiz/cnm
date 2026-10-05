@@ -1,0 +1,31 @@
+{
+  "name": "cnm",
+  "version": "1.0.0",
+  "description": "Static marketing and quote-request site",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "prelaunch": "node scripts/prelaunch.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ulisespaiz/cnm.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ulisespaiz/cnm/issues"
+  },
+  "homepage": "https://github.com/ulisespaiz/cnm#readme",
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.3.5"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,4 @@
+# Cloudflare Pages redirects: 301s from the old WordPress URLs to the new ones.
+# Generated from the Simply Static export during extraction. Format:
+#   /old-path/   /new-path/   301
+# Keep every old URL that had traffic or backlinks; otherwise rankings drop.

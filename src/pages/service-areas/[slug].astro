@@ -1,0 +1,96 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getEntries, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import QuoteForm from '../../components/QuoteForm.astro';
+import { site } from '../../config/site';
+import { getAreas, areaUrl } from '../../lib/content';
+import { breadcrumbs, faqPage } from '../../lib/schema';
+
+export const getStaticPaths = (async () => {
+  const areas = await getAreas();
+  return areas.map((area) => ({ params: { slug: area.id }, props: { area } }));
+}) satisfies GetStaticPaths;
+
+const { area } = Astro.props;
+const { data } = area;
+const { Content } = await render(area);
+const products = (await getEntries(data.featuredProducts)).filter((p) => p && !p.data.draft);
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Service Areas', path: '/service-areas/' },
+  { name: data.city, path: areaUrl(area) },
+];
+---
+
+<Base
+  title={data.seoTitle ?? `${data.city}, CA`}
+  description={data.seoDescription ?? data.summary}
+  jsonLd={[breadcrumbs(crumbs), ...(data.faqs.length ? [faqPage(data.faqs)] : [])]}
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <h1>{data.seoTitle ?? `Serving ${data.city}, CA`}</h1>
+      <p class="area-summary">{data.summary}</p>
+      <div class="prose">
+        <Content />
+      </div>
+      {data.nearby.length > 0 && (
+        <p class="muted">Also serving nearby {data.nearby.join(', ')} and the rest of {data.county}.</p>
+      )}
+    </div>
+  </section>
+
+  {products.length > 0 && (
+    <section class="section section--alt">
+      <div class="container">
+        <h2>Popular in {data.city}</h2>
+        <div class="grid">
+          {products.map((p) => <ProductCard product={p} />)}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {data.faqs.length > 0 && (
+    <section class="section">
+      <div class="container prose">
+        <h2>{data.city} FAQ</h2>
+        {data.faqs.map((f) => (
+          <details class="faq">
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="section section--alt">
+    <div class="container">
+      <h2>Get a quote in {data.city}</h2>
+      <p>Tell us what you need, or call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.</p>
+      <QuoteForm kind="contact" />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .area-summary {
+    font-size: 1.15rem;
+  }
+
+  .faq {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .faq summary {
+    min-height: var(--tap);
+    padding: 12px 0;
+    font-weight: 700;
+    cursor: pointer;
+  }
+</style>
