@@ -5,30 +5,29 @@
 // `npm run prelaunch` lists every one still left.
 
 export const site = {
-  name: 'TODO Business Name',
-  legalName: 'TODO Business Legal Name',
+  name: 'C&M Machine Shop',
+  legalName: 'C&M Machine Shop Inc.',
   tagline: 'TODO one-line value proposition',
   description:
     'TODO 150-160 character description used on the home page and as the default meta description.',
-  url: 'https://example.com', // TODO production domain, no trailing slash
+  url: 'https://cmmachshop.com',
 
-  phone: 'TODO', // display format, e.g. (831) 555-0100
-  phoneE164: 'TODO', // e.g. +18315550100, used for tel: links and schema
+  phone: '(831) 753-7092',
+  phoneE164: '+18317537092',
   email: 'TODO', // public contact address
   quoteInbox: 'TODO', // where Web3Forms delivers; set when creating the key
 
   address: {
-    street: 'TODO',
+    street: '772 Vertin Ave',
     city: 'Salinas',
     region: 'CA',
-    postalCode: 'TODO',
+    postalCode: '93901',
     country: 'US',
   },
   geo: { lat: 0, lng: 0 }, // TODO from the Google Business Profile pin
 
   hours: [
-    // TODO confirm, schema.org format
-    { days: ['Mo', 'Tu', 'We', 'Th', 'Fr'], opens: '08:00', closes: '17:00' },
+    { days: ['Mo', 'Tu', 'We', 'Th', 'Fr'], opens: '07:00', closes: '16:00' },
   ],
 
   // schema.org LocalBusiness subtype that best fits. TODO pick once the
