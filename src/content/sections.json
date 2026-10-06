@@ -1,0 +1,44 @@
+[
+ {
+  "id": "stagger",
+  "machine": "hayssen-vffs",
+  "title": "Stagger Parts",
+  "blurb": "Replacement stagger parts for Hayssen VFFS machines: the special air cylinder, rail guide, left and right mounting plates, carrier arm, back-up, clamp and guide blocks, cable assembly and phenolic pulley.",
+  "order": 1
+ },
+ {
+  "id": "pull-belt",
+  "machine": "hayssen-vffs",
+  "title": "Pull Belt Parts",
+  "blurb": "Pull belt replacement parts for Hayssen VFFS machines, including roller brackets and mounting plates, rollers, shoulder bolts, take-up blocks, idler hubs and pulleys, drive shafts, XL timing pulleys and linear bearings.",
+  "order": 2
+ },
+ {
+  "id": "platen",
+  "machine": "hayssen-vffs",
+  "title": "Platen Parts",
+  "blurb": "Platen replacement parts for Hayssen VFFS machines: platen bodies, poly platen bars, latch and catch plates, guided pivot brackets, insulator plates, air tube supports and assemblies, springs and shoulder screws.",
+  "order": 3
+ },
+ {
+  "id": "actuator",
+  "machine": "hayssen-vffs",
+  "title": "Actuator Parts",
+  "blurb": "Actuator replacement parts for Hayssen VFFS machines, from stainless pivot links, adjustment sleeves and spacers to floating and fixed shafts, Teflon inserts, black-anodized aluminum arm links and jaw-carrier shafts.",
+  "order": 4
+ },
+ {
+  "id": "servo",
+  "machine": "hayssen-vffs",
+  "title": "Servo Parts",
+  "blurb": "Servo drive replacement parts for Hayssen VFFS machines: AT10 timing pulleys, gearbox mount guide, support brackets, tensioner support and plate, output shaft, drive link assembly, link bar and outrigger parts.",
+  "order": 5
+ },
+ {
+  "id": "seal-faces",
+  "machine": "hayssen-vffs",
+  "title": "Seal Faces & Parts",
+  "blurb": "Seal face and jaw replacement parts for Hayssen VFFS machines in 14\" and 16\" sizes: front and rear seal faces, knife holders and links, back-up plates, phenolic insulators, rear grippers, drive links and bushings.",
+  "order": 6
+ }
+]

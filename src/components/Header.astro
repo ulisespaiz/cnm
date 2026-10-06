@@ -2,8 +2,10 @@
 import { Image } from 'astro:assets';
 import logo from '../assets/site/cnm-logo.png';
 import { site, nav } from '../config/site';
+
 const path = Astro.url.pathname;
-const isActive = (href: string) => path === href || path.startsWith(href);
+const links = [{ label: 'Home', href: '/' }, ...nav];
+const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
 ---
 
 <header class="site-header">
@@ -13,33 +15,81 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     </a>
 
     <nav class="nav-desktop" aria-label="Main">
-      {nav.map((item) => (
+      {links.map((item) => (
         <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
       ))}
     </nav>
 
     <div class="header-actions">
       <a class="header-phone" href={`tel:${site.phoneE164}`}>{site.phone}</a>
-      <a class="btn btn--red quote-link" href="/quote/">
-        Quote <span class="badge" data-quote-count hidden>0</span>
+
+      <!-- 768px and up: labelled buttons. Under 768px: icon-only cart button. -->
+      <a class="btn btn--red cart-btn" href="/quote/">
+        <svg class="cart-btn__icon" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 11-1 9"></path><path d="m19 11-4-7"></path><path d="M2 11h20"></path>
+          <path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"></path>
+          <path d="m5 11 4-7"></path><path d="m9 11 1 9"></path>
+        </svg>
+        <span class="cart-btn__label">Cart</span>
+        <span class="visually-hidden"> (quote list)</span>
+        <span class="badge" data-quote-count hidden>0</span>
       </a>
-      <a class="btn" href="/shop/">Shop</a>
+      <a class="btn shop-btn" href="/shop/" aria-label="Shop">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+          <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+          <path d="M2 7h20"></path>
+          <path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"></path>
+        </svg>
+        <span class="shop-btn__label">Shop</span>
+      </a>
     </div>
 
-    <details class="nav-mobile">
-      <summary aria-label="Menu">
-        <span class="burger" aria-hidden="true"></span>
-      </summary>
-      <nav aria-label="Main mobile">
-        {nav.map((item) => (
-          <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
-        ))}
-        <a href="/quote/">My Quote <span class="badge" data-quote-count hidden>0</span></a>
-        <a href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
-      </nav>
-    </details>
+    <button class="burger-btn" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu" data-menu-toggle>
+      <span class="burger" aria-hidden="true"></span>
+    </button>
   </div>
+
+  <nav class="nav-mobile" id="mobile-menu" aria-label="Main mobile" hidden data-menu>
+    {links.map((item) => (
+      <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+    ))}
+    <a href="/quote/">My quote list <span class="badge" data-quote-count hidden>0</span></a>
+    <a href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
+  </nav>
 </header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const menu = document.querySelector<HTMLElement>('[data-menu]');
+
+  if (toggle && menu) {
+    const setOpen = (open: boolean) => {
+      menu.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+    };
+    const isOpen = () => !menu.hidden;
+
+    toggle.addEventListener('click', () => setOpen(!isOpen()));
+    menu.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) setOpen(false);
+    });
+    document.addEventListener('click', (e) => {
+      if (isOpen() && !menu.contains(e.target as Node) && !toggle.contains(e.target as Node)) setOpen(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen()) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+    // Nav links show inline from 1100px, so drop the panel if the window grows past it.
+    window.matchMedia('(min-width: 1100px)').addEventListener('change', (e) => {
+      if (e.matches) setOpen(false);
+    });
+  }
+</script>
 
 <style>
   .site-header {
@@ -54,12 +104,13 @@ const isActive = (href: string) => path === href || path.startsWith(href);
   .site-header__inner {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 8px;
     min-height: 72px;
   }
 
   .brand {
     display: flex;
+    flex: none;
     margin-right: auto;
   }
 
@@ -68,8 +119,7 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     height: 48px;
   }
 
-  .nav-desktop,
-  .header-actions {
+  .nav-desktop {
     display: none;
   }
 
@@ -80,21 +130,67 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     font-weight: 600;
   }
 
+  .nav-desktop a:hover,
+  .nav-mobile a:hover {
+    color: var(--color-primary);
+  }
+
   [aria-current='page'] {
     color: var(--color-primary) !important;
   }
 
-  .nav-mobile summary {
-    list-style: none;
-    display: grid;
-    place-items: center;
-    width: var(--tap);
-    height: var(--tap);
-    cursor: pointer;
+  /* Cart + Shop. Phones: icon-only buttons (48px), labelled from 768px. */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  .nav-mobile summary::-webkit-details-marker {
+  .header-phone {
     display: none;
+  }
+
+  .shop-btn {
+    width: var(--tap);
+    min-width: var(--tap);
+    padding: 0;
+    border-radius: var(--radius);
+  }
+
+  .shop-btn__label {
+    display: none;
+  }
+
+  .cart-btn {
+    position: relative;
+    width: var(--tap);
+    min-width: var(--tap);
+    padding: 0;
+    border-radius: var(--radius);
+  }
+
+  .cart-btn__label {
+    display: none;
+  }
+
+  .badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    box-shadow: 0 0 0 2px #fff;
+  }
+
+  .burger-btn {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--tap);
+    height: var(--tap);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    cursor: pointer;
   }
 
   .burger,
@@ -103,6 +199,7 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     display: block;
     width: 24px;
     height: 2px;
+    border-radius: 1px;
     background: var(--color-text);
     position: relative;
   }
@@ -111,6 +208,7 @@ const isActive = (href: string) => path === href || path.startsWith(href);
   .burger::after {
     content: '';
     position: absolute;
+    left: 0;
   }
 
   .burger::before {
@@ -121,18 +219,37 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     top: 7px;
   }
 
-  .nav-mobile[open] nav {
+  .burger-btn[aria-expanded='true'] .burger {
+    background: transparent;
+  }
+
+  .burger-btn[aria-expanded='true'] .burger::before {
+    top: 0;
+    transform: rotate(45deg);
+  }
+
+  .burger-btn[aria-expanded='true'] .burger::after {
+    top: 0;
+    transform: rotate(-45deg);
+  }
+
+  .nav-mobile {
     position: absolute;
     left: 0;
     right: 0;
     top: 100%;
-    display: grid;
+    max-height: calc(100dvh - 72px);
+    overflow-y: auto;
     background: #fff;
     border-bottom: 1px solid var(--color-border);
     box-shadow: var(--shadow);
   }
 
-  .nav-mobile nav a {
+  .nav-mobile[hidden] {
+    display: none;
+  }
+
+  .nav-mobile a {
     display: flex;
     gap: 8px;
     align-items: center;
@@ -141,43 +258,72 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     border-top: 1px solid var(--color-border);
   }
 
-  @media (min-width: 900px) {
+  .nav-mobile .badge {
+    position: static;
+    box-shadow: none;
+  }
+
+  /* Tablet: labelled Cart and Shop buttons sit next to the burger. */
+  @media (min-width: 768px) {
+    .site-header__inner {
+      gap: 10px;
+    }
+
+    .shop-btn {
+      width: auto;
+    }
+
+    .shop-btn__label {
+      display: inline;
+    }
+
+    .header-actions .btn {
+      min-height: 44px;
+      padding: 0 16px;
+    }
+
+    .cart-btn {
+      width: auto;
+    }
+
+    .cart-btn__label {
+      display: inline;
+    }
+  }
+
+  /* Desktop: the nav links come out of the burger. */
+  @media (min-width: 1100px) {
+    .burger-btn,
     .nav-mobile {
       display: none;
     }
 
     .nav-desktop {
       display: flex;
-      gap: 28px;
-      margin-right: 8px;
+      gap: 26px;
+      margin-right: 12px;
     }
 
     .nav-desktop a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
       font-weight: 500;
     }
+  }
 
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .header-actions .btn {
-      min-height: 42px;
-      padding: 0 18px;
-    }
-
+  @media (min-width: 1280px) {
     .header-phone {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
       margin-right: 6px;
+      color: var(--color-text);
       font-weight: 700;
       text-decoration: none;
       white-space: nowrap;
-    }
-
-    @media (max-width: 1100px) {
-      .header-phone {
-        display: none;
-      }
     }
   }
 </style>

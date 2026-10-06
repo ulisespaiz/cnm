@@ -3,7 +3,7 @@ city: Hollister
 county: San Benito County
 summary: TODO one sentence on what you do for customers in Hollister, specific to Hollister.
 nearby: [San Juan Bautista, Tres Pinos, Gilroy]
-featuredProducts: []
+featuredParts: []
 faqs: []
 draft: true
 ---

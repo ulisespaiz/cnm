@@ -1,32 +1,39 @@
 ---
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
-import ProductCard from '../components/ProductCard.astro';
-import CtaBand from '../components/CtaBand.astro';
+import FeaturedParts from '../components/FeaturedParts.astro';
 import { site } from '../config/site';
-import { getEquipment, getProducts, getServices, serviceUrl } from '../lib/content';
+import { getEquipment, getServices, serviceUrl } from '../lib/content';
+import { getParts, getSections, sectionUrl } from '../lib/parts';
 import { faqPage } from '../lib/schema';
-import banner from '../assets/site/metal-piece-4.png';
-import shopPhoto from '../assets/work/our-work-3.jpg';
-import work1 from '../assets/work/our-work-1.jpg';
-import work2 from '../assets/work/our-work-2.jpg';
-import work3 from '../assets/work/our-work-3.jpg';
-import work4 from '../assets/work/our-work-4.jpg';
-import work5 from '../assets/work/our-work-5.jpg';
-import work6 from '../assets/work/our-work-6.jpg';
+import banner from '../assets/work/our-work-2.jpg';
+import shopPhoto from '../assets/site/front-office-cnm.jpeg';
+import finishing from '../assets/work/our-work-1.jpg';
+import machiningCenter from '../assets/work/our-work-2.jpg';
+import lathe from '../assets/work/our-work-6.jpg';
+import waterjet from '../assets/equipment/Flow-Mach-500-Waterjet-Cutting-Machine.jpg';
+import laser from '../assets/equipment/Laser-Cutting-Services.jpg';
+import verticalMill from '../assets/equipment/CNC-Vertical-Milling-Machine.jpg';
 
 const services = await getServices();
 const machines = await getEquipment();
-const featured = (await getProducts()).filter((p) => p.data.featured).slice(0, 4);
-const yearsInBusiness = new Date().getFullYear() - 2002;
+const parts = await getParts();
+const sections = (await getSections('hayssen-vffs')).map((s) => ({
+  title: s.data.title,
+  href: sectionUrl(s),
+  count: parts.filter((p) => p.data.section.id === s.id).length,
+}));
+// Owner's headline: "25 years of precision" (fixed, not computed).
+const yearsInBusiness = 25;
 
+// Real C&M shop photos only, each captioned for the machine it shows.
 const work = [
-  { src: work1, title: 'Engine Lathe', text: 'Sharp precision engine lathe with digital readout for turning and machining cylindrical metal components.' },
-  { src: work2, title: 'Precision Drilling', text: 'Sub-millimeter CNC drill bit making precise contact with a metal surface for micro-machining operations.' },
-  { src: work3, title: 'Vertical Milling', text: 'Manual vertical mill machining a clamped metal workpiece on a T-slot table in our shop.' },
-  { src: work4, title: 'CNC Routing', text: 'Technician overseeing a CNC router cutting precise patterns into sheet metal.' },
-  { src: work5, title: 'CNC Machining Center', text: 'Vertical machining center in operation with Kurt vises securing workpieces and coolant mist during the cut.' },
-  { src: work6, title: 'Surface Finishing', text: 'Timesavers 32 RB Series wide belt machine for precision deburring and surface finishing of sheet metal parts.' },
+  { src: finishing, title: 'Wide-Belt Finishing', text: 'Timesavers 32 RB Series wide-belt machine for deburring and finishing metal parts.' },
+  { src: machiningCenter, title: 'CNC Machining Center', text: 'Vertical machining center with Kurt vises holding the workpieces.' },
+  { src: lathe, title: 'Engine Lathe', text: 'Sharp 22120B engine lathe with digital readout for turning cylindrical components.' },
+  { src: waterjet, title: 'Waterjet Cutting', text: 'Flow waterjet cutting table in our Salinas shop.' },
+  { src: laser, title: 'Fiber Laser Cutting', text: 'Fiber laser cutting system for stainless steel, aluminum, brass and mild steel.' },
+  { src: verticalMill, title: 'CNC Vertical Mill', text: 'CNC vertical milling machine for precision milling in our shop.' },
 ];
 
 const faqs = [
@@ -35,12 +42,16 @@ const faqs = [
     a: 'We offer a range of machining services including CNC milling, turning, fabrication, and custom part manufacturing. Our team is skilled in precision engineering for various industries.',
   },
   {
+    q: 'Do you sell replacement parts for Hayssen machines?',
+    a: `Yes. Our parts catalog lists ${parts.length} replacement parts for Hayssen VFFS machines, searchable by Hayssen part number. If your part is not listed, send us the number and we will quote it.`,
+  },
+  {
     q: 'What materials do you use?',
     a: 'We work with a variety of materials including metals (aluminum, steel, titanium) and plastics. If you have specific material requirements, feel free to reach out.',
   },
   {
     q: 'How do I request a quote?',
-    a: `Add parts or services to your quote list and send it from our quote page, email us the details of your project, or call us directly at ${site.phone}.`,
+    a: `Add parts or services to your quote list and send it from our quote page, email us the details of your project, or call us directly at ${site.phone}. ${site.replyTime}.`,
   },
   {
     q: 'What is your typical turnaround time?',
@@ -56,27 +67,52 @@ const faqs = [
 >
   <section class="hero">
     <div class="container">
-      <p class="eyebrow">Trusted since 2002</p>
+      <p class="eyebrow">Founded in {site.founded}</p>
       <h1>{yearsInBusiness} years of <span class="mark">precision.</span><br /> Still your machine shop.</h1>
       <p class="lead">
-        Custom machining &amp; fabrication services — and now a full parts store. From one-off industrial components
-        to ready-to-ship stock.
+        Custom machining &amp; fabrication services, and a parts store with {parts.length} replacement parts for Hayssen
+        VFFS machines.
       </p>
+
+      <form class="part-search" action="/shop/" method="get" role="search">
+        <label for="hero-q">Search by Hayssen part #</label>
+        <div class="part-search__row">
+          <input
+            id="hero-q"
+            name="q"
+            type="search"
+            placeholder="e.g. 03187A0897"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            enterkeyhint="search"
+          />
+          <button class="btn btn--red" type="submit">Search</button>
+        </div>
+      </form>
+
       <div class="hero__actions">
         <a class="btn btn--dark" href="/quote/">Get a Quote</a>
-        <a class="btn btn--red" href="/shop/">Browse the Store</a>
+        <a class="btn btn--outline" href="/shop/">Browse the Store</a>
       </div>
       <dl class="stats">
         <div><dt>Years in business</dt><dd>{yearsInBusiness}+</dd></div>
         <div><dt>Precision machines</dt><dd>{machines.length}</dd></div>
         <div><dt>Core services</dt><dd>{services.length}</dd></div>
-        <div class="stats__live"><dt>Parts store</dt><dd>Now live</dd></div>
+        <div class="stats__live"><dt>Parts in the store</dt><dd>{parts.length}</dd></div>
       </dl>
     </div>
   </section>
 
   <section class="banner">
-    <Image src={banner} alt="Precision-machined metal part" widths={[640, 1024, 1600]} sizes="100vw" loading="eager" fetchpriority="high" />
+    <Image
+      src={banner}
+      alt="CNC vertical machining center with Kurt vises and the C&M logo on the door, inside the C&M shop"
+      widths={[640, 1024, 1280]}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+    />
     <div class="banner__overlay">
       <div class="container">
         <p class="banner__title">Manufacturing solutions you can count on</p>
@@ -92,45 +128,69 @@ const faqs = [
           <h2>The smarter way to get your <span class="text-blue">parts.</span></h2>
         </div>
         <p class="lead">
-          When your machines need parts, your shop needs a source you can trust. Browse our catalog of
-          precision-machined components, stock materials, and specialty hardware — shipped fast or ready for local
-          pickup.
+          Replacement parts for Hayssen VFFS machines, made to match your part number, sample or print. Search by
+          Hayssen part number, add what you need to your quote list, and send it. Nothing to pay online.
         </p>
+      </div>
+
+      <div class="store">
+        <div class="store__count">
+          <p class="store__eyebrow">Parts catalog</p>
+          <p class="store__num">{parts.length}</p>
+          <p class="store__label">replacement parts for Hayssen VFFS machines, in {sections.length} sections</p>
+          <div class="store__actions">
+            <a class="btn btn--red" href="/shop/">Browse all parts</a>
+            <a class="btn btn--light" href="/quote/#bulk">Paste a part list</a>
+          </div>
+        </div>
+        <ul class="store__sections" aria-label="Parts sections">
+          {sections.map((sec) => (
+            <li>
+              <a href={sec.href}>
+                <span class="store__sec-title">{sec.title}</span>
+                <span class="store__sec-count">{sec.count} parts <span aria-hidden="true">→</span></span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <h3 class="featured__title">Featured parts</h3>
+      <div class="featured">
+        <FeaturedParts />
+      </div>
+      <div class="featured__actions">
+        <a class="btn btn--dark" href="/quote/#bulk">Paste a part list</a>
+        <a class="btn btn--outline" href="/shop/">Browse all parts</a>
       </div>
 
       <div class="bento">
         <article class="bento__card">
           <h3>Save time without sacrificing quality</h3>
-          <p class="muted">Skip the middleman. Order directly from a machine shop that has been in business since 2002. Every part is made or sourced to spec.</p>
+          <p class="muted">Skip the middleman. Order directly from a machine shop founded in {site.founded}. {site.store.madeTo}.</p>
         </article>
         <article class="bento__card">
           <h3>3 steps to your part</h3>
           <ol class="steps">
-            <li>Browse the catalog</li>
+            <li>Search by Hayssen part #</li>
             <li>Send your quote request</li>
-            <li>Pick up or receive it</li>
+            <li>Pick up in {site.address.city}, or ask about shipping</li>
           </ol>
         </article>
         <article class="bento__card">
-          <h3>24-hour order support</h3>
-          <p class="muted">Our team responds within 24 hours to quotes, orders, and custom part requests.</p>
+          <h3>Quote support</h3>
+          <p class="muted">{site.replyTime} for quotes, orders, and custom part requests.</p>
         </article>
         <article class="bento__card bento__card--blue">
           <h3>Focus on running your operation, not hunting for parts</h3>
           <ul class="ticks ticks--light">
             <li>No complicated ordering system</li>
             <li>Fully customizable orders</li>
-            <li>Local pickup or fast shipping</li>
+            <li>Local pickup, or ask about shipping</li>
           </ul>
           <a class="btn btn--light" href="/shop/">Shop All Parts</a>
         </article>
       </div>
-
-      {featured.length > 0 && (
-        <div class="grid featured">
-          {featured.map((p) => <ProductCard product={p} />)}
-        </div>
-      )}
     </div>
   </section>
 
@@ -151,10 +211,10 @@ const faqs = [
         </div>
       </div>
       <div class="about-split__media">
-        <Image src={shopPhoto} alt="Vertical milling machine in the C&M shop" widths={[480, 800]} sizes="(min-width: 900px) 520px, 100vw" />
+        <Image src={shopPhoto} alt={`The ${site.name} shop at ${site.address.street}, ${site.address.city}`} widths={[480, 800]} sizes="(min-width: 900px) 520px, 100vw" />
         <div class="since">
-          <span>Since</span>
-          <strong>2002</strong>
+          <span>Founded in</span>
+          <strong>{site.founded}</strong>
           <span>Family-owned in {site.address.city}</span>
         </div>
       </div>
@@ -191,10 +251,10 @@ const faqs = [
         <h2>Every cut, every part, every deadline — machined to your <span class="text-blue">exact specifications</span></h2>
         <p class="lead">At {site.legalName} we are committed to being your trusted partner, offering craftsmanship, innovation and reliability in every project.</p>
       </div>
-      <ul class="gallery">
+      <ul class="gallery" tabindex="0" aria-label="Recent work samples">
         {work.map((w) => (
           <li>
-            <Image src={w.src} alt={w.title} widths={[360, 560]} sizes="(min-width: 900px) 360px, 80vw" />
+            <Image src={w.src} alt={`${w.title}: ${w.text}`} widths={[360, 560]} sizes="(min-width: 900px) 360px, 80vw" />
             <h3>{w.title}</h3>
             <p class="muted">{w.text}</p>
           </li>
@@ -218,7 +278,6 @@ const faqs = [
     </div>
   </section>
 
-  <CtaBand />
 </Base>
 
 <style>
@@ -241,6 +300,40 @@ const faqs = [
     .hero__actions .btn {
       flex: 1 1 100%;
     }
+  }
+
+  /* Part number search: a plain GET form, the store page runs the search */
+  .part-search {
+    max-width: 560px;
+    margin: 0 0 20px;
+  }
+
+  .part-search label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+
+  .part-search__row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .part-search input {
+    flex: 1;
+    min-width: 0;
+    min-height: var(--tap);
+    padding: 0 14px;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius);
+    background: #fff;
+    color: inherit;
+    font: 400 1rem/1.4 var(--font-body);
+  }
+
+  .part-search input:focus-visible {
+    border-color: var(--color-primary);
+    outline-offset: 0;
   }
 
   .stats {
@@ -268,7 +361,7 @@ const faqs = [
   }
 
   .stats dt {
-    font-size: 0.8rem;
+    font-size: 0.875rem;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -296,6 +389,7 @@ const faqs = [
     width: 100%;
     height: clamp(260px, 45vw, 560px);
     object-fit: cover;
+    object-position: 20% 25%;
   }
 
   .banner__overlay {
@@ -330,9 +424,121 @@ const faqs = [
     }
   }
 
+  /* Parts store block: catalog size + the six sections */
+  .store {
+    display: grid;
+    gap: 16px;
+  }
+
+  @media (min-width: 900px) {
+    .store {
+      grid-template-columns: 1fr 1.4fr;
+    }
+  }
+
+  .store__count {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 28px;
+    border-radius: var(--radius);
+    background: var(--color-primary);
+    color: #fff;
+  }
+
+  .store__eyebrow {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #dbe3ff;
+  }
+
+  .store__num {
+    margin: 0;
+    font-size: clamp(3.5rem, 12vw, 5.5rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .store__label {
+    max-width: 30ch;
+    margin: 4px 0 20px;
+    font-size: 1.1rem;
+  }
+
+  .store__actions,
+  .featured__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 479px) {
+    .store__actions .btn,
+    .featured__actions .btn {
+      flex: 1 1 100%;
+    }
+  }
+
+  .store__sections {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 560px) {
+    .store__sections {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .store__sections a {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-height: 72px;
+    height: 100%;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: inherit;
+    text-decoration: none;
+    transition: box-shadow 0.15s;
+  }
+
+  .store__sections a:hover {
+    box-shadow: var(--shadow);
+  }
+
+  .store__sec-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .store__sec-count {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .featured__title {
+    margin: 36px 0 12px;
+  }
+
+  .featured__actions {
+    margin-top: 20px;
+  }
+
   .bento {
     display: grid;
     gap: 16px;
+    margin-top: 40px;
   }
 
   @media (min-width: 768px) {
@@ -375,6 +581,7 @@ const faqs = [
   .btn--light:hover {
     background: var(--color-tint);
     border-color: var(--color-tint);
+    color: var(--color-primary);
   }
 
   .steps {
@@ -385,7 +592,7 @@ const faqs = [
   }
 
   .featured {
-    margin-top: 24px;
+    margin-top: 0;
   }
 
   .about-split {
@@ -422,7 +629,7 @@ const faqs = [
     background: var(--color-primary);
     color: #fff;
     text-align: center;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
   }
 
   .since strong {

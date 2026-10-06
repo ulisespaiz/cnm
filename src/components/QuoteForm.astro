@@ -1,8 +1,9 @@
 ---
-// Sends to Web3Forms. With JavaScript the selected products are added to the
-// email and the visitor stays on-site; without it the form still posts and
-// Web3Forms redirects to the thank-you page.
-import { site, serviceAreas } from '../config/site';
+// Sends to Web3Forms. With JavaScript the quote list is added to the email
+// and the visitor goes to /quote/thanks/; without it the form still posts and
+// Web3Forms redirects to the thank-you page. Submit logic is shared with the
+// other forms in src/scripts/web3forms-submit.ts.
+import { site } from '../config/site';
 import { forms } from '../config/forms';
 
 interface Props {
@@ -10,11 +11,23 @@ interface Props {
 }
 
 const { kind } = Astro.props;
-const thanks = new URL('/quote/thanks/', Astro.site).href;
-const missingKey = !forms.accessKey;
+const isQuote = kind === 'quote';
+const thanks = new URL('/quote/thanks/', Astro.site ?? site.url).href;
+// Only developers see this notice. Customers must never see a config error, so
+// production builds stay silent here (set PUBLIC_WEB3FORMS_KEY at build time).
+const missingKey = import.meta.env.DEV && !forms.accessKey;
+if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] PUBLIC_WEB3FORMS_KEY is not set: form posts will be rejected.');
 ---
 
-<form class="quote-form" action={forms.endpoint} method="POST" data-quote-form data-kind={kind} data-fallback-email={site.email}>
+<form
+  class:list={['quote-form', `quote-form--${kind}`]}
+  action={forms.endpoint}
+  method="POST"
+  data-quote-form
+  data-kind={kind}
+  data-fallback-email={site.email}
+  data-reply-time={site.replyTime}
+>
   {missingKey && (
     <p class="form-alert form-alert--error" role="alert">
       Form not configured: set PUBLIC_WEB3FORMS_KEY (see README).
@@ -22,157 +35,284 @@ const missingKey = !forms.accessKey;
   )}
 
   <input type="hidden" name="access_key" value={forms.accessKey} />
-  <input type="hidden" name="subject" value={`New ${kind} request from ${site.name} website`} />
+  <input type="hidden" name="subject" value={isQuote ? `Quote request from ${site.name} website` : `Message from ${site.name} website`} />
   <input type="hidden" name="from_name" value={`${site.name} Website`} />
   <input type="hidden" name="redirect" value={thanks} />
-  <input type="hidden" name="products" value="" data-products-field />
+  <input type="hidden" name="products" value="" />
+  <input type="hidden" name="quote_ref" value="" />
   <!-- Honeypot: humans never see or tick this -->
-  <input type="checkbox" name="botcheck" class="visually-hidden" tabindex="-1" autocomplete="off" />
+  <input type="checkbox" name="botcheck" class="visually-hidden" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
   <div class="field-row">
     <div class="field">
-      <label for={`${kind}-name`}>Name *</label>
+      <label for={`${kind}-name`}>{isQuote ? 'Full Name' : 'Name'} <span class="req" aria-hidden="true">*</span></label>
       <input id={`${kind}-name`} name="name" autocomplete="name" required />
     </div>
     <div class="field">
-      <label for={`${kind}-phone`}>Phone{kind === 'quote' ? ' *' : ''}</label>
-      <input id={`${kind}-phone`} name="phone" type="tel" autocomplete="tel" inputmode="tel" required={kind === 'quote'} />
+      <label for={`${kind}-email`}>{isQuote ? 'Email Address' : 'Email'} <span class="req" aria-hidden="true">*</span></label>
+      <input id={`${kind}-email`} name="email" type="email" autocomplete="email" required />
     </div>
   </div>
 
   <div class="field-row">
     <div class="field">
-      <label for={`${kind}-email`}>Email *</label>
-      <input id={`${kind}-email`} name="email" type="email" autocomplete="email" required />
+      <label for={`${kind}-phone`}>{isQuote ? 'Phone Number' : 'Phone'} {isQuote && <span class="req" aria-hidden="true">*</span>}</label>
+      <input
+        id={`${kind}-phone`}
+        name="phone"
+        type="tel"
+        autocomplete="tel"
+        inputmode="tel"
+        placeholder="(555) 000-0000"
+        required={isQuote}
+      />
     </div>
     <div class="field">
-      <label for={`${kind}-city`}>City</label>
-      <select id={`${kind}-city`} name="city">
-        <option value="">Select your city</option>
-        {serviceAreas.map((c) => <option>{c}</option>)}
-        <option>Other</option>
-      </select>
+      <label for={`${kind}-company`}>Company / Organization <span class="opt">(optional)</span></label>
+      <input id={`${kind}-company`} name="company" autocomplete="organization" />
     </div>
   </div>
 
-  <div class="field">
-    <label for={`${kind}-company`}>Company / Organization</label>
-    <input id={`${kind}-company`} name="company" autocomplete="organization" />
-  </div>
+  {isQuote && (
+    <>
+      <div class="field-row">
+        <div class="field">
+          <label for="quote-po">PO / reference # <span class="opt">(optional)</span></label>
+          <input id="quote-po" name="po" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="quote-needed">Needed by</label>
+          <select id="quote-needed" name="needed_by">
+            <option value="">Select (optional)</option>
+            <option>ASAP / rush</option>
+            <option>This week</option>
+            <option>2–4 weeks</option>
+            <option>Flexible</option>
+          </select>
+        </div>
+      </div>
+
+      <fieldset class="field delivery">
+        <legend>Delivery</legend>
+        <div class="delivery__options">
+          <label class="choice" for="quote-pickup">
+            <input id="quote-pickup" type="radio" name="delivery" value="Pickup in Salinas" checked />
+            <span>Pickup in Salinas</span>
+          </label>
+          <label class="choice" for="quote-ship">
+            <input id="quote-ship" type="radio" name="delivery" value="Ship to me" />
+            <span>Ship to me</span>
+          </label>
+        </div>
+        <div class="field zip-field">
+          <label for="quote-zip">Ship-to ZIP code</label>
+          <input id="quote-zip" name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="10" />
+        </div>
+      </fieldset>
+    </>
+  )}
 
   <div class="field">
-    <label for={`${kind}-message`}>{kind === 'quote' ? 'Project details' : 'How can we help?'}</label>
+    <label for={`${kind}-message`}>{isQuote ? 'Additional Notes' : 'Message'} {!isQuote && <span class="req" aria-hidden="true">*</span>}</label>
     <textarea
       id={`${kind}-message`}
       name="message"
-      placeholder={kind === 'quote' ? 'Material, quantity, dimensions or tolerances, timeline, pickup or shipping…' : ''}
-      required={kind === 'contact'}></textarea>
+      placeholder={isQuote
+        ? 'Describe specifications, tolerances, materials, quantities, deadlines, machine model/serial, or any other details that will help us prepare your quote…'
+        : 'How can we help?'}
+      required={!isQuote}></textarea>
   </div>
 
-  <div class="field">
-    <label for={`${kind}-contact-pref`}>Best way to reach you</label>
-    <select id={`${kind}-contact-pref`} name="preferred_contact">
-      <option>Phone call</option>
-      <option>Text message</option>
-      <option>Email</option>
-    </select>
-  </div>
-
-  <button class="btn btn--block" type="submit" data-submit>
-    {kind === 'quote' ? 'Send Quote Request' : 'Send Message'}
+  <button class="btn btn--block quote-form__submit" type="submit" data-submit>
+    {isQuote ? 'Send Quote Request →' : 'Send Message →'}
   </button>
-  <p class="form-alert" role="status" aria-live="polite" data-form-status hidden></p>
-  <p class="muted form-note">
-    Have drawings or photos? Email them to <a href={`mailto:${site.email}`}>{site.email}</a> with your name.
-    We reply within one business day. Prefer to talk? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.
+  <p class="form-alert" role="status" aria-live="polite" data-form-status></p>
+  <p class="form-note">
+    {site.replyTime}. Prefer to talk? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.
   </p>
 </form>
 
 <script>
-  import { getItems, summarize, clearItems } from '../scripts/quote-store';
+  import { getItems, summarize, countLabel, quoteRef, clearItems } from '../scripts/quote-store';
+  import { bindWeb3Form, setStatus } from '../scripts/web3forms-submit';
 
   document.querySelectorAll<HTMLFormElement>('[data-quote-form]').forEach((form) => {
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const status = form.querySelector<HTMLElement>('[data-form-status]')!;
-      const button = form.querySelector<HTMLButtonElement>('[data-submit]')!;
-      const isQuote = form.dataset.kind === 'quote';
-      const items = isQuote ? getItems() : [];
+    const isQuote = form.dataset.kind === 'quote';
+    const status = form.querySelector<HTMLElement>('[data-form-status]');
+    let ref = '';
 
-      // Custom-part requests often have nothing in the list, just a description.
-      if (isQuote && !items.length && !String(new FormData(form).get('message') || '').trim()) {
-        show(status, 'Add a product or service to your quote, or describe the part you need.', true);
-        return;
-      }
-
-      const data = new FormData(form);
-      if (isQuote) {
-        data.set('products', summarize(items));
+    bindWeb3Form({
+      form,
+      prepare(data) {
         const name = String(data.get('name') || '').trim();
-        const city = String(data.get('city') || '').trim();
-        const count = items.reduce((n, i) => n + i.qty, 0);
-        data.set(
-          'subject',
-          `Quote request: ${count} item${count === 1 ? '' : 's'} from ${name}${city ? ` (${city})` : ''}`,
-        );
-      }
-      data.delete('redirect');
-
-      button.disabled = true;
-      show(status, 'Sending…', false);
-      try {
-        const res = await fetch(form.action, {
-          method: 'POST',
-          headers: { Accept: 'application/json' },
-          body: data,
-        });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok || !json.success) throw new Error(json.message || `HTTP ${res.status}`);
-        if (isQuote) clearItems();
-        location.href = '/quote/thanks/';
-      } catch (err) {
-        console.error('Form submit failed', err);
-        const body = encodeURIComponent(
-          `${isQuote ? `Products:\n${summarize(items)}\n\n` : ''}${data.get('message') || ''}`,
-        );
-        show(
-          status,
-          `Sorry, that didn't send. Please call us or <a href="mailto:${form.dataset.fallbackEmail}?subject=${encodeURIComponent(String(data.get('subject')))}&body=${body}">email your request</a>.`,
-          true,
-          true,
-        );
-        button.disabled = false;
-      }
+        if (!isQuote) {
+          data.set('subject', `Website message from ${name}`);
+          return;
+        }
+        const items = getItems();
+        const notes = String(data.get('message') || '').trim();
+        if (!items.length && !notes) {
+          return 'Add a part or service to your quote, or describe what you need in the notes.';
+        }
+        ref = quoteRef();
+        const company = String(data.get('company') || '').trim();
+        data.set('quote_ref', ref);
+        data.set('products', summarize(items));
+        data.set('subject', `Quote request ${ref}: ${countLabel(items)} from ${name}${company ? ` (${company})` : ''}`);
+        if (data.get('delivery') !== 'Ship to me') data.delete('zip');
+      },
+      fallbackBody(data) {
+        const lines = [
+          isQuote ? `Quote reference: ${data.get('quote_ref') ?? ''}` : '',
+          `Name: ${data.get('name') ?? ''}`,
+          `Email: ${data.get('email') ?? ''}`,
+          `Phone: ${data.get('phone') ?? ''}`,
+          data.get('company') ? `Company: ${data.get('company')}` : '',
+          data.get('po') ? `PO: ${data.get('po')}` : '',
+          data.get('needed_by') ? `Needed by: ${data.get('needed_by')}` : '',
+          data.get('delivery') ? `Delivery: ${data.get('delivery')}${data.get('zip') ? ` (${data.get('zip')})` : ''}` : '',
+          data.get('products') ? `\nItems:\n${data.get('products')}` : '',
+          `\n${data.get('message') ?? ''}`,
+        ];
+        return lines.filter(Boolean).join('\n');
+      },
+      onSuccess() {
+        if (isQuote) {
+          try {
+            sessionStorage.setItem('last-quote-ref', ref);
+          } catch {
+            // the thank-you page just omits the reference
+          }
+          clearItems();
+          location.href = '/quote/thanks/';
+          return;
+        }
+        form.reset();
+        setStatus(status, 'success', `Thanks, we got your message. ${form.dataset.replyTime ?? ''}.`);
+      },
     });
   });
-
-  function show(el: HTMLElement, msg: string, isError: boolean, html = false) {
-    el.hidden = false;
-    el.classList.toggle('form-alert--error', isError);
-    if (html) el.innerHTML = msg;
-    else el.textContent = msg;
-  }
 </script>
 
 <style>
-  .quote-form {
+  .quote-form--contact {
     max-width: 720px;
   }
 
+  .req {
+    color: var(--color-accent);
+  }
+
+  .opt {
+    color: var(--color-muted);
+    font-weight: 400;
+    font-size: 0.9em;
+  }
+
+  .delivery {
+    margin: 0 0 16px;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .delivery legend {
+    margin-bottom: 6px;
+    padding: 0;
+    font-weight: 600;
+  }
+
+  .delivery__options {
+    display: grid;
+    gap: 10px;
+  }
+
+  @media (min-width: 480px) {
+    .delivery__options {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .choice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--tap);
+    padding: 0 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: #fff;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .delivery .choice input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    accent-color: var(--color-primary);
+  }
+
+  .choice:has(input:checked) {
+    border-color: var(--color-primary);
+    background: var(--color-tint);
+  }
+
+  .choice:has(input:focus-visible) {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Ship-to ZIP shows only when "Ship to me" is chosen (no JavaScript needed) */
+  .zip-field {
+    display: none;
+    margin: 12px 0 0;
+  }
+
+  .delivery:has(#quote-ship:checked) .zip-field {
+    display: grid;
+  }
+
+  .quote-form__submit {
+    min-height: 54px;
+    font-size: 1.05rem;
+  }
+
   .form-alert {
-    margin-top: 12px;
+    margin: 12px 0 0;
     padding: 12px 14px;
     border-radius: var(--radius);
     background: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+
+  .form-alert:empty {
+    display: none;
   }
 
   .form-alert--error {
     background: #fdecea;
+    border-color: #f3c4bf;
     color: var(--color-danger);
   }
 
+  .form-alert--success {
+    background: #e9f6ee;
+    border-color: #b9e0c8;
+    color: var(--color-success);
+  }
+
   .form-note {
-    margin-top: 12px;
-    font-size: 0.95rem;
+    margin: 12px 0 0;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  .quote-form--contact .form-note {
+    text-align: left;
   }
 </style>

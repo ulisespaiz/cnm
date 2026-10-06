@@ -12,8 +12,10 @@ import { site } from '../config/site';
     >
     Call
   </a>
-  <a class="mobile-bar__quote" href="/quote/">
-    Get a Quote <span class="badge" data-quote-count hidden>0</span>
+  <!-- quote-store's renderCount() flips data-quote-has-items and fills the count. -->
+  <a class="mobile-bar__quote" href="/quote/" data-quote-has-items="false">
+    <span class="mb-empty">Get a Quote</span>
+    <span class="mb-full">Review quote (<span data-quote-count hidden>0</span>)</span>
   </a>
 </nav>
 
@@ -44,12 +46,18 @@ import { site } from '../config/site';
 
   .mobile-bar__call {
     border: 2px solid var(--color-primary);
+    background: #fff;
     color: var(--color-primary);
   }
 
   .mobile-bar__quote {
-    background: var(--color-primary);
-    color: var(--color-primary-contrast);
+    background: var(--color-accent);
+    color: #fff;
+  }
+
+  .mobile-bar__quote[data-quote-has-items='true'] .mb-empty,
+  .mobile-bar__quote[data-quote-has-items='false'] .mb-full {
+    display: none;
   }
 
   @media (min-width: 768px) {

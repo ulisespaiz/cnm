@@ -14,9 +14,11 @@ interface Props {
   image?: string;
   noindex?: boolean;
   jsonLd?: Record<string, unknown>[];
+  // Hide the fixed call/quote bar on phones (quote page, pages with their own bar).
+  hideMobileBar?: boolean;
 }
 
-const { jsonLd = [], ...seo } = Astro.props;
+const { jsonLd = [], hideMobileBar = false, ...seo } = Astro.props;
 const services = (await getServices()).map((s) => ({ name: s.data.title, url: serviceUrl(s) }));
 ---
 
@@ -32,14 +34,14 @@ const services = (await getServices()).map((s) => ({ name: s.data.title, url: se
     <link rel="sitemap" href="/sitemap-index.xml" />
     <Seo {...seo} jsonLd={[localBusiness(services), website(), ...jsonLd]} />
   </head>
-  <body>
+  <body class:list={{ 'no-mobile-bar': hideMobileBar }}>
     <a class="skip-link" href="#main">Skip to content</a>
     <Header />
     <main id="main">
       <slot />
     </main>
     <Footer />
-    <MobileBar />
+    {!hideMobileBar && <MobileBar />}
     <script>
       import { renderCount } from '../scripts/quote-store';
       renderCount();

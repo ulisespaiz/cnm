@@ -3,7 +3,7 @@ city: Monterey
 county: Monterey County
 summary: TODO one sentence on what you do for customers in Monterey, specific to Monterey.
 nearby: [Pacific Grove, Carmel-by-the-Sea, Seaside, Del Rey Oaks]
-featuredProducts: []
+featuredParts: []
 faqs: []
 draft: true
 ---

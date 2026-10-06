@@ -3,7 +3,7 @@ city: San Jose
 county: Santa Clara County
 summary: TODO one sentence on what you do for customers in San Jose, specific to San Jose.
 nearby: [Morgan Hill, Campbell, Santa Clara]
-featuredProducts: []
+featuredParts: []
 faqs: []
 draft: true
 ---
