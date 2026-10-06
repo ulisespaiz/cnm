@@ -1,0 +1,52 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { getCategories, getProducts, categoryUrl } from '../../lib/content';
+import { breadcrumbs } from '../../lib/schema';
+
+const categories = await getCategories();
+const sections = await Promise.all(
+  categories.map(async (c) => ({ category: c, products: await getProducts(c.id) })),
+);
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Products', path: '/products/' },
+];
+---
+
+<Base
+  title="Products"
+  description="Browse our products, choose your options, and request a free quote."
+  jsonLd={[breadcrumbs(crumbs)]}
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <h1>Products</h1>
+      <p class="muted">Add what you need to your quote list and send it over. Pricing comes back within one business day.</p>
+
+      {sections.filter((s) => s.products.length).map(({ category, products }) => (
+        <section class="category-block">
+          <h2><a href={categoryUrl(category.id)}>{category.data.title}</a></h2>
+          <div class="grid">
+            {products.map((p) => <ProductCard product={p} />)}
+          </div>
+        </section>
+      ))}
+    </div>
+  </section>
+  <CtaBand />
+</Base>
+
+<style>
+  .category-block {
+    margin-top: 40px;
+  }
+
+  .category-block h2 a {
+    color: inherit;
+    text-decoration: none;
+  }
+</style>

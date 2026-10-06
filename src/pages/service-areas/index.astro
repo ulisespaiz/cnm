@@ -1,0 +1,52 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { site, serviceAreas } from '../../config/site';
+import { getAreas, areaUrl } from '../../lib/content';
+import { breadcrumbs } from '../../lib/schema';
+
+const pages = await getAreas();
+const pageByCity = new Map(pages.map((a) => [a.data.city, areaUrl(a)]));
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Service Areas', path: '/service-areas/' },
+];
+---
+
+<Base
+  title="Service Areas"
+  description={`${site.name} serves ${serviceAreas.slice(0, 6).join(', ')} and the greater Monterey Bay area.`}
+  jsonLd={[breadcrumbs(crumbs)]}
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <h1>Service Areas</h1>
+      <p>Based in {site.address.city}, we serve customers across Monterey, San Benito, Santa Cruz and Santa Clara counties.</p>
+      <ul class="area-list">
+        {serviceAreas.map((city) => (
+          <li>{pageByCity.has(city) ? <a href={pageByCity.get(city)}>{city}</a> : city}</li>
+        ))}
+      </ul>
+      <p class="muted">Don't see your city? <a href="/contact/">Ask us</a>, we may still be able to help.</p>
+    </div>
+  </section>
+  <CtaBand />
+</Base>
+
+<style>
+  .area-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+    gap: 8px 20px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .area-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+  }
+</style>

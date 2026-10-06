@@ -1,0 +1,113 @@
+---
+import { site, nav } from '../config/site';
+import { getAreas, areaUrl } from '../lib/content';
+
+const areas = await getAreas();
+const year = new Date().getFullYear();
+const social = Object.entries(site.social).filter(([, url]) => url);
+---
+
+<footer class="site-footer">
+  <div class="container site-footer__grid">
+    <div>
+      <p class="site-footer__name">{site.name}</p>
+      <address>
+        {site.address.street}<br />
+        {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}<br />
+        <a href={`tel:${site.phoneE164}`}>{site.phone}</a><br />
+        <a href={`mailto:${site.email}`}>{site.email}</a>
+      </address>
+    </div>
+
+    <nav aria-label="Footer">
+      <p class="site-footer__heading">Explore</p>
+      <ul>
+        {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+        <li><a href="/quote/">Request a Quote</a></li>
+      </ul>
+    </nav>
+
+    {areas.length > 0 && (
+      <nav aria-label="Service areas">
+        <p class="site-footer__heading">Service Areas</p>
+        <ul>
+          {areas.map((a) => <li><a href={areaUrl(a)}>{a.data.city}</a></li>)}
+        </ul>
+      </nav>
+    )}
+
+    {social.length > 0 && (
+      <div>
+        <p class="site-footer__heading">Follow</p>
+        <ul>
+          {social.map(([name, url]) => (
+            <li><a href={url} rel="noopener">{name}</a></li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+
+  <div class="container site-footer__legal">
+    <p>© {year} {site.legalName}. <a href="/privacy/">Privacy Policy</a></p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 40px;
+    padding-top: 40px;
+    background: #14181c;
+    color: #c9d0d8;
+  }
+
+  .site-footer a {
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .site-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .site-footer__grid {
+    display: grid;
+    gap: 28px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .site-footer__name {
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: #fff;
+  }
+
+  .site-footer__heading {
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .site-footer ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .site-footer li a {
+    display: inline-block;
+    padding: 6px 0;
+  }
+
+  address {
+    font-style: normal;
+    line-height: 1.8;
+  }
+
+  .site-footer__legal {
+    margin-top: 28px;
+    padding-block: 20px;
+    border-top: 1px solid #2a3038;
+    font-size: 0.9rem;
+  }
+</style>

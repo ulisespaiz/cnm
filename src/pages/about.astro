@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { site } from '../config/site';
+---
+
+<Base title="About Us" description={`About ${site.name}, based in ${site.address.city}, CA.`}>
+  <section class="section">
+    <div class="container prose">
+      <h1>About {site.name}</h1>
+      <!-- TODO replaced with the About copy extracted from the existing site -->
+      <p>TODO About content.</p>
+    </div>
+  </section>
+  <CtaBand />
+</Base>

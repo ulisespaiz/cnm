@@ -427,3 +427,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Astro / site build
+dist/
+.astro/
+.env
+.env.*
+!.env.example

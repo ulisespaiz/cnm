@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import { site } from '../../config/site';
+---
+
+<Base title="Request Received" noindex>
+  <section class="section">
+    <div class="container prose">
+      <h1>Thanks, we got your request.</h1>
+      <p>We will reply within one business day. If it is urgent, call us at <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.</p>
+      <p><a class="btn" href="/products/">Keep browsing</a></p>
+    </div>
+  </section>
+</Base>
