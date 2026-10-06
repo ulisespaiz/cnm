@@ -1,16 +1,196 @@
 ---
+import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import CtaBand from '../components/CtaBand.astro';
 import { site } from '../config/site';
+import { breadcrumbs } from '../lib/schema';
+import office from '../assets/site/front-office.jpeg';
+
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'About', path: '/about/' },
+];
+
+const highlights = [
+  { label: 'Experience', value: '30+ Years', text: 'Of precision machining expertise trusted by businesses across multiple industries.' },
+  { label: 'Quality', value: 'Exact Specs', text: 'Precision machining to exact specifications — no compromises, every time.' },
+  { label: 'Innovation', value: 'Advanced Tech', text: 'Advanced machinery and techniques that keep us ahead of industry standards.' },
+];
+
+const values = [
+  { title: 'Precision', text: 'Delivering exceptional quality with stringent standards and advanced technology — every cut, every part, every time.' },
+  { title: 'Integrity', text: 'Prioritizing honesty, transparency, and trust in all interactions — with clients, employees, and the community we serve.' },
+  { title: 'Family-Oriented', text: 'Nurturing a positive, growth-driven work environment that fosters innovation, respect, and long-term partnerships.' },
+];
 ---
 
-<Base title="About Us" description={`About ${site.name}, based in ${site.address.city}, CA.`}>
+<Base
+  title="About Us: Family-Owned Machine Shop Since 2002"
+  description={`${site.legalName} is a family-owned machine shop in ${site.address.city}, CA, founded in 2002, serving food processing, agriculture and industry across Monterey County.`}
+  jsonLd={[breadcrumbs(crumbs)]}
+>
   <section class="section">
-    <div class="container prose">
-      <h1>About {site.name}</h1>
-      <!-- TODO replaced with the About copy extracted from the existing site -->
-      <p>TODO About content.</p>
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <p class="eyebrow">About Us</p>
+      <h1>Precision built on 30+ years of <span class="mark">craftsmanship</span></h1>
+      <div class="intro">
+        <div>
+          <p class="lead">
+            {site.legalName} was founded in 2002 with a simple vision: to provide quality craftsmanship with integrity
+            and hard work. With over 30 years of industry experience, we remain a family-oriented business dedicated to
+            delivering precise, reliable, and honest service for every project.
+          </p>
+          <p>
+            Our team of professionals works closely with clients to ensure personalized solutions that exceed
+            expectations. We value transparency, innovation, and customer satisfaction, making us a trusted partner in
+            your journey to success.
+          </p>
+        </div>
+        <Image src={office} alt={`${site.name} front office in ${site.address.city}`} widths={[480, 800]} sizes="(min-width: 900px) 480px, 100vw" loading="eager" />
+      </div>
+
+      <div class="highlights">
+        {highlights.map((h) => (
+          <div class="highlight">
+            <span class="muted">{h.label}</span>
+            <strong>{h.value}</strong>
+            <p class="muted">{h.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt">
+    <div class="container two-col">
+      <div>
+        <p class="eyebrow">Our Mission</p>
+        <h2>Why we do what we do</h2>
+        <p>
+          At {site.legalName}, with more than 30 years of industry experience, we specialize in providing
+          precision-engineered solutions for the food processing and agriculture industries. Our capabilities extend far
+          beyond standard machining and metalworking services to include custom fabrication and blueprint-based
+          fabrication. Whether it's water-jet cutting, laser cutting, or shearing, as well as machining such as milling
+          and turning, metal working such as rolling, forming, and welding, we are equipped to handle projects of any
+          scale and complexity. With the expertise of our skilled team, we turn your concepts into reality—delivering
+          tailored, high-quality solutions that exceed expectations.
+        </p>
+        <p><a href="/industries/food-processing-agriculture/">How we serve food processing &amp; agriculture →</a></p>
+      </div>
+      <div>
+        <p class="eyebrow">Our Vision</p>
+        <h2>Where we're headed</h2>
+        <p>
+          Our vision is to be a leader in precision machining and metalworking, delivering excellence through innovation
+          and craftsmanship. As a family-oriented company, we prioritize building strong relationships with our clients,
+          employees, and community. We believe in continuously investing in our shop, upgrading our equipment and
+          processes to enhance efficiency and simplify our work—allowing us to maintain the highest quality standards.
+          Our commitment is to foster a culture of integrity, reliability, and growth, ensuring that every project we
+          undertake is a testament to our dedication to excellence and the success of those we serve.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <p class="eyebrow">Our Values</p>
+      <h2>What we stand for</h2>
+      <ol class="values">
+        {values.map((v, i) => (
+          <li>
+            <span class="num">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{v.title}</h3>
+            <p class="muted">{v.text}</p>
+          </li>
+        ))}
+      </ol>
     </div>
   </section>
   <CtaBand />
 </Base>
+
+<style>
+  .intro {
+    display: grid;
+    gap: 28px;
+    align-items: center;
+  }
+
+  @media (min-width: 900px) {
+    .intro {
+      grid-template-columns: 1.3fr 1fr;
+    }
+  }
+
+  .intro img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius);
+  }
+
+  .highlights,
+  .values {
+    display: grid;
+    gap: 16px;
+    margin: 36px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 768px) {
+    .highlights,
+    .values {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .highlight,
+  .values li {
+    padding: 24px;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  .highlight strong {
+    display: block;
+    margin: 4px 0 8px;
+    font-size: 1.8rem;
+    letter-spacing: -0.03em;
+    color: var(--color-primary);
+  }
+
+  .highlight p,
+  .values p {
+    margin: 0;
+  }
+
+  .values li {
+    background: var(--color-bg);
+  }
+
+  .section:not(.section--alt) .values li {
+    background: var(--color-surface);
+  }
+
+  .two-col {
+    display: grid;
+    gap: 40px;
+  }
+
+  @media (min-width: 900px) {
+    .two-col {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .num {
+    display: inline-block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+</style>

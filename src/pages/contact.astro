@@ -1,24 +1,66 @@
 ---
+import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import QuoteForm from '../components/QuoteForm.astro';
 import { site } from '../config/site';
+import { breadcrumbs } from '../lib/schema';
+import office from '../assets/site/front-office-cnm.jpeg';
+
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Contact', path: '/contact/' },
+];
+const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+  `${site.legalName}, ${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}`,
+)}`;
 ---
 
-<Base title="Contact" description={`Call, email or message ${site.name} in ${site.address.city}, CA.`}>
+<Base
+  title="Contact Us"
+  description={`Call ${site.phone}, email or visit ${site.legalName} at ${site.address.street}, ${site.address.city}, CA. Open Monday to Friday, 7am to 4pm.`}
+  jsonLd={[breadcrumbs(crumbs)]}
+>
   <section class="section">
-    <div class="container contact">
-      <div>
-        <h1>Contact Us</h1>
-        <p>Looking for pricing on specific products? <a href="/products/">Build a quote list</a> and send it in one step.</p>
-        <address>
-          <strong>{site.name}</strong><br />
-          {site.address.street}<br />
-          {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}<br />
-          <a href={`tel:${site.phoneE164}`}>{site.phone}</a><br />
-          <a href={`mailto:${site.email}`}>{site.email}</a>
-        </address>
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <p class="eyebrow">Contact Us</p>
+      <h1>Let's talk about your <span class="mark">project</span></h1>
+      <p class="lead">
+        Reach out for quotes, questions, or to discuss your custom machining needs. Our team is ready to provide you
+        with exceptional service and solutions tailored to your exact requirements.
+      </p>
+
+      <div class="contact">
+        <div class="contact__details">
+          <Image src={office} alt={`${site.name} front office`} widths={[480, 800]} sizes="(min-width: 900px) 440px, 100vw" loading="eager" />
+          <dl>
+            <div>
+              <dt>Phone</dt>
+              <dd><a href={`tel:${site.phoneE164}`}>{site.phone}</a></dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd><a href={`mailto:${site.email}`}>{site.email}</a></dd>
+            </div>
+            <div>
+              <dt>Address</dt>
+              <dd>
+                <a href={mapUrl} rel="noopener">{site.address.street}, {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}</a>
+              </dd>
+            </div>
+            <div>
+              <dt>Business hours</dt>
+              <dd>Mon – Fri: 7:00 AM – 4:00 PM<br />Saturday &amp; Sunday: Closed</dd>
+            </div>
+          </dl>
+          <a class="btn btn--outline btn--block" href={mapUrl} rel="noopener">Get directions</a>
+        </div>
+        <div class="contact__form">
+          <h2 class="h3">Send us a message</h2>
+          <QuoteForm kind="contact" />
+        </div>
       </div>
-      <QuoteForm kind="contact" />
     </div>
   </section>
 </Base>
@@ -26,17 +68,51 @@ import { site } from '../config/site';
 <style>
   .contact {
     display: grid;
-    gap: 32px;
-  }
-
-  address {
-    font-style: normal;
-    line-height: 1.8;
+    gap: 24px;
+    margin-top: 32px;
   }
 
   @media (min-width: 900px) {
     .contact {
-      grid-template-columns: 1fr 1.4fr;
+      grid-template-columns: 1fr 1.3fr;
+      align-items: start;
     }
+  }
+
+  .contact__details,
+  .contact__form {
+    padding: 24px;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  .contact__details img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    border-radius: calc(var(--radius) - 4px);
+  }
+
+  dl {
+    display: grid;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  dt {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  dd {
+    margin: 2px 0 0;
+    font-weight: 600;
+  }
+
+  .h3 {
+    font-size: 1.4rem;
   }
 </style>

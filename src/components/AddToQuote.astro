@@ -1,0 +1,72 @@
+---
+// "Add to Quote" form shared by product and service pages. The id must be
+// unique across both (services are prefixed with "service:").
+interface Props {
+  id: string;
+  title: string;
+  url: string;
+  options?: { name: string; values: string[] }[];
+  label?: string;
+}
+
+const { id, title, url, options = [], label = 'Add to Quote' } = Astro.props;
+---
+
+<form class="add-form" data-add-to-quote data-id={id} data-title={title} data-url={url}>
+  {options.map((opt, i) => (
+    <div class="field">
+      <label for={`opt-${i}`}>{opt.name}</label>
+      <select id={`opt-${i}`} name={opt.name} required>
+        {opt.values.map((v) => <option>{v}</option>)}
+      </select>
+    </div>
+  ))}
+  <div class="field qty-field">
+    <label for="qty">Quantity</label>
+    <input id="qty" name="__qty" type="number" min="1" max="999" value="1" inputmode="numeric" />
+  </div>
+  <button class="btn btn--block" type="submit">{label}</button>
+  <p class="add-form__status" role="status" aria-live="polite" hidden>
+    Added. <a href="/quote/">View your quote (<span data-quote-count>0</span>)</a>
+  </p>
+  <noscript>
+    <p><a href="/contact/">Contact us</a> to request a quote.</p>
+  </noscript>
+</form>
+
+<script>
+  import { addItem } from '../scripts/quote-store';
+
+  document.querySelectorAll<HTMLFormElement>('[data-add-to-quote]').forEach((form) => {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const qty = Number(data.get('__qty')) || 1;
+      data.delete('__qty');
+      const options = Object.fromEntries([...data.entries()].map(([k, v]) => [k, String(v)]));
+      addItem({
+        id: form.dataset.id!,
+        title: form.dataset.title!,
+        url: form.dataset.url!,
+        options,
+        qty: Math.max(1, Math.min(999, Math.round(qty))),
+      });
+      form.querySelector<HTMLElement>('.add-form__status')!.hidden = false;
+    });
+  });
+</script>
+
+<style>
+  .qty-field input {
+    max-width: 120px;
+  }
+
+  .add-form__status {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    background: #e8f5ec;
+    color: var(--color-success);
+    font-weight: 600;
+  }
+</style>

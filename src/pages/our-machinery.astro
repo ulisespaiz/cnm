@@ -1,0 +1,141 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { site } from '../config/site';
+import { getEquipment } from '../lib/content';
+import { breadcrumbs } from '../lib/schema';
+
+const equipment = await getEquipment();
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Our Machinery', path: '/our-machinery/' },
+];
+---
+
+<Base
+  title="Our Machinery: Lathes, CNC, Waterjet & Laser"
+  description={`The lathes, CNC mill and turning center, Flow waterjet and fiber laser ${site.legalName} uses for precision parts in ${site.address.city}, CA.`}
+  jsonLd={[breadcrumbs(crumbs)]}
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <p class="eyebrow">Our Machinery</p>
+      <h1>Built on the best tools <span class="mark">in the trade</span></h1>
+      <p class="lead">
+        At {site.name}, we take great pride in the state-of-the-art machinery we use to deliver high-quality,
+        precision-crafted products. Every machine in our shop is chosen for its reliability, accuracy, and capability.
+      </p>
+      <p><a class="btn btn--red" href="/quote/">Request a Quote</a></p>
+
+      <div class="machines">
+        {equipment.map((m, i) => (
+          <article class="machine" id={m.id}>
+            {m.data.image && (
+              <Image src={m.data.image} alt={m.data.name} widths={[480, 800, 1100]} sizes="(min-width: 900px) 540px, 100vw" loading={i === 0 ? 'eager' : 'lazy'} />
+            )}
+            <div class="machine__body">
+              <span class="num">{String(i + 1).padStart(2, '0')}</span>
+              <h2>{m.data.name}</h2>
+              <p>{m.data.text}</p>
+              {m.data.features.length > 0 && (
+                <>
+                  <p class="features-label">{m.data.featuresLabel}</p>
+                  <ul class="features">
+                    {m.data.features.map((f) => (
+                      <li>
+                        <strong>{f.name}</strong>
+                        <span class="muted">{f.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+  <CtaBand heading="Need a part made?" text="Send us your drawing or sample part and we will quote it." />
+</Base>
+
+<style>
+  .machines {
+    display: grid;
+    gap: 24px;
+    margin-top: 40px;
+  }
+
+  .machine {
+    display: grid;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    scroll-margin-top: 96px;
+  }
+
+  @media (min-width: 900px) {
+    .machine {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .machine:nth-child(even) img {
+      order: 2;
+    }
+  }
+
+  .machine img {
+    width: 100%;
+    height: 100%;
+    min-height: 260px;
+    object-fit: cover;
+  }
+
+  .machine__body {
+    padding: clamp(20px, 3vw, 36px);
+  }
+
+  .machine h2 {
+    font-size: clamp(1.4rem, 2vw + 0.8rem, 2rem);
+  }
+
+  .num {
+    display: inline-block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+
+  .features-label {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+  }
+
+  .features {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 640px) {
+    .features {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .features li {
+    display: grid;
+    gap: 2px;
+    padding-left: 14px;
+    border-left: 3px solid var(--color-accent);
+  }
+</style>

@@ -1,0 +1,137 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { site } from '../../config/site';
+import { getProducts, getServices, serviceUrl, categoryUrl } from '../../lib/content';
+import { breadcrumbs, faqPage } from '../../lib/schema';
+
+const services = await getServices();
+const packagingParts = await getProducts('hayssen');
+const path = '/industries/food-processing-agriculture/';
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Food Processing & Agriculture', path },
+];
+
+const faqs = [
+  {
+    q: 'Do you make replacement parts for food processing equipment?',
+    a: `Yes. ${site.legalName} specializes in precision-engineered solutions for the food processing and agriculture industries, machining replacement and custom parts from your drawing, a worn sample or a description.`,
+  },
+  {
+    q: 'Do you carry parts for Hayssen packaging machines?',
+    a: 'Yes. Our parts store includes Hayssen vertical form fill seal (VFFS) parts. Ask us about the part you need and we will quote it.',
+  },
+  {
+    q: 'Where are you located?',
+    a: `Our shop is at ${site.address.street}, ${site.address.city}, CA ${site.address.postalCode}, serving customers across Monterey County. Local pickup is available, or we can ship.`,
+  },
+];
+---
+
+<Base
+  title="Machine Shop for Food Processing & Agriculture in Salinas, CA"
+  description={`Replacement parts, machining, cutting, welding and fabrication for food processing, packaging and agriculture equipment. ${site.legalName}, ${site.address.city}, CA.`}
+  jsonLd={[breadcrumbs(crumbs), faqPage(faqs)]}
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <p class="eyebrow">Industries</p>
+      <h1>Parts and fabrication for <span class="mark">food processing</span> &amp; agriculture</h1>
+      <p class="lead">
+        With more than 30 years of industry experience, {site.legalName} specializes in providing precision-engineered
+        solutions for the food processing and agriculture industries in the Salinas Valley and across Monterey County.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn--red" href="/quote/">Request a Quote</a>
+        <a class="btn btn--outline" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt">
+    <div class="container">
+      <h2>What we do for processors and growers</h2>
+      <div class="grid">
+        {services.map((s) => (
+          <a class="card" href={serviceUrl(s)}>
+            <div class="card__body">
+              <h3>{s.data.title}</h3>
+              <p class="muted">{s.data.summary}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+      <ul class="ticks points">
+        <li>Replacement parts machined to spec from your drawing or a worn sample</li>
+        <li>Custom fabrication with or without blueprints</li>
+        <li>Local pickup in {site.address.city} or fast shipping</li>
+        <li>Responses within 24 hours to quotes and custom part requests</li>
+      </ul>
+    </div>
+  </section>
+
+  {packagingParts.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <h2>Packaging equipment parts</h2>
+        <p>Parts for Hayssen vertical form fill seal machines are available in our <a href={categoryUrl('hayssen')}>parts store</a>.</p>
+        <div class="grid">
+          {packagingParts.map((p) => <ProductCard product={p} />)}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section section--alt">
+    <div class="container faq-wrap">
+      <h2>Common questions</h2>
+      {faqs.map((f, i) => (
+        <details class="faq" open={i === 0}>
+          <summary>{f.q}</summary>
+          <p>{f.a}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+
+  <CtaBand heading="Down a part?" text="Tell us what broke and we will get back to you within one business day." />
+</Base>
+
+<style>
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .points {
+    margin-top: 28px;
+  }
+
+  .faq-wrap {
+    max-width: 820px;
+  }
+
+  .faq {
+    margin-bottom: 12px;
+    border-radius: var(--radius);
+    background: var(--color-bg);
+  }
+
+  .faq summary {
+    min-height: 56px;
+    padding: 14px 20px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .faq p {
+    margin: 0;
+    padding: 0 20px 18px;
+    color: var(--color-muted);
+  }
+</style>

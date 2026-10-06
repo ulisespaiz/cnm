@@ -1,15 +1,16 @@
-# CNM website
+# C&M Machine Shop website
 
 Static rebuild of the Elementor/WordPress site: a product catalog where
 visitors build a quote list and send it by email. Built with
-[Astro](https://astro.build), hosted on Cloudflare Pages from this repo, with
+[Astro](https://astro.build), hosted on Cloudflare Workers (static assets) from this repo, with
 forms delivered by [Web3Forms](https://web3forms.com).
 
 ## Status
 
-The framework is done. Content is placeholder until the Simply Static export is
-extracted (see [Content extraction](#content-extraction)). `npm run prelaunch`
-lists everything still left before DNS can point here.
+Content and design are rebuilt from the Simply Static export of cmmachshop.com
+(services, machinery, about, contact, 4 products in 4 categories, brand colors,
+Geist font, logo). `npm run prelaunch` lists everything still left before DNS
+can point here.
 
 ## Local development
 
@@ -30,6 +31,9 @@ SHOW_DRAFTS=1 npm run build   # production build including drafts, for review
 | Product categories | `src/content/categories.json` |
 | Products (one file each) | `src/content/products/*.md` |
 | Product images | `src/assets/products/` (referenced from product files) |
+| Services (one file each) | `src/content/services/*.md` |
+| Machinery | `src/content/equipment.json`, images in `src/assets/equipment/` |
+| Home page sections, FAQ, work gallery | `src/pages/index.astro` |
 | City pages (one file each) | `src/content/areas/*.md` |
 | Colors, fonts, spacing | tokens at the top of `src/styles/global.css` |
 | Old URL → new URL redirects | `public/_redirects` |
@@ -58,7 +62,7 @@ order: 10
 Long description in Markdown.
 ```
 
-The URL is `/products/<category-id>/<file-name>/`.
+The URL is `/shop/<category-id>/<file-name>/`.
 
 ### City pages: publishing rules
 
@@ -76,48 +80,75 @@ LocalBusiness `areaServed` data.
 
 1. Create an access key at web3forms.com using the inbox that should receive
    quotes. The key is public by design: it can only send mail to that inbox.
-2. Set `PUBLIC_WEB3FORMS_KEY` in Cloudflare Pages (Settings → Variables and
-   Secrets) for Production and Preview, and in `.env` locally.
+2. Set `PUBLIC_WEB3FORMS_KEY` as a build variable in the Cloudflare Worker
+   (Settings → Builds → Variables and secrets), and in `.env` locally.
 3. Submit a test quote from the deployed site and confirm it arrives (check
    spam the first time and allow-list the sender).
 
 The email contains the selected products (name, options, quantity, link),
 the customer's details, city and preferred contact method. Spam protection is
-a honeypot field; add Web3Forms' hCaptcha or move to a Cloudflare Pages
-Function with Turnstile if spam gets through. File uploads are not supported
+a honeypot field; add Web3Forms' hCaptcha or move the form to a Cloudflare Worker
+with Turnstile if spam gets through. File uploads are not supported
 on the Web3Forms free plan; see the plan in the PR if customers need them.
 
 If JavaScript fails, the form still posts directly to Web3Forms and redirects
 to `/quote/thanks/`. If the request fails, the customer sees a prefilled
 `mailto:` fallback.
 
-## Deploying (Cloudflare Pages)
+## Deploying (Cloudflare Workers)
 
-1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git →
-   select this repo.
-2. Build command `npm run build`, output directory `dist`, environment variable
-   `NODE_VERSION=22` plus `PUBLIC_WEB3FORMS_KEY`.
-3. Every push to `main` deploys; every other branch gets a preview URL.
-4. Before go-live: `npm run prelaunch` passes, `public/_redirects` covers the
-   old URLs, then add the custom domain in Pages.
-5. After go-live: submit `/sitemap-index.xml` in Google Search Console and
-   Bing Webmaster Tools, and update the website link on the Google Business
-   Profile.
+The site deploys as a static-assets Worker named `cnmwebsite`, configured in
+`wrangler.jsonc` (no Worker script, no Astro adapter). Workers Builds is
+connected to this repo:
 
-## Content extraction
+- Deploy command: `npx wrangler deploy` (the default). `wrangler.jsonc`
+  runs `npm run build` first, so a separate build command is optional.
+- Variables: `PUBLIC_WEB3FORMS_KEY` must be available at **build** time
+  (Settings > Builds > Variables and secrets), since Astro inlines it.
+- Every push to `main` deploys to production; other branches get preview
+  builds and a status check on the PR.
+- `_redirects` and `_headers` in `public/` are applied by Workers Static
+  Assets; `404.html` is served for unknown paths.
 
-Source: the Simply Static export (`simply-static-1-1791239758.zip`), to be
-committed on the `site-export` branch under `_export/`. Never deploy the export
-itself.
+Before go-live: `npm run prelaunch` passes, then add the custom domain
+(Settings > Domains & Routes) and a www-to-apex redirect rule.
 
-1. **Inventory**: list every HTML page with its URL path, page type
-   (product / category / content / utility / junk) and the images it really
-   uses (not every resized copy WordPress generated).
-2. **Extraction**: for each product, write `src/content/products/<slug>.md`
-   in the format above, keep the original copy, and copy only the largest
-   original of each image used into `src/assets/products/`. Write the
-   categories, About copy and business details into the config.
-3. **Redirects**: map every old URL to its new path in `public/_redirects`.
-4. **Brand**: lift colors, fonts and logo from the export into the CSS tokens.
-5. **Verify**: `npm run build`, check each page on a phone-sized screen,
-   `npm run prelaunch`.
+Test locally with Cloudflare's runtime: `npx wrangler dev` (builds, then
+serves `dist` with the redirects and headers applied).
+
+## Search and AI visibility
+
+Built in:
+
+- `robots.txt` allows everything and names AI crawlers explicitly (OpenAI,
+  Anthropic, Perplexity, Google-Extended, Apple, Bing, DuckDuckGo, Meta).
+- `llms.txt` is generated from the content collections, so it never drifts.
+- JSON-LD on every page: LocalBusiness (logo, founding date, hours, contact
+  point, area served, services catalog, `knowsAbout`) and WebSite; plus
+  Service, Product, BreadcrumbList and FAQPage where relevant.
+- Default share image `public/og.jpg` (regenerate if the brand changes).
+- Q&A sections on every service page and the industry page.
+
+Do these at launch; they matter more than anything in the code:
+
+1. **Cloudflare: allow AI crawlers.** Cloudflare can block AI bots at the
+   edge regardless of robots.txt. Check Security > Bots and AI Crawl Control
+   and make sure search/assistant crawlers are allowed.
+2. **Cloudflare: turn on Crawler Hints** (Caching > Configuration). It
+   pings IndexNow, which Bing, and through it Copilot and ChatGPT search,
+   use to pick up changes fast.
+3. **Google Business Profile**: claim or verify it, category "Machine
+   shop", the same name/address/phone as the site, hours, photos, and the
+   website link. Then put its URL in `site.social.googleBusiness` and the
+   map pin in `site.geo`.
+4. **Bing Places** and **Apple Business Connect**: same details. Bing data
+   feeds ChatGPT search and Copilot; Apple feeds Siri and Maps.
+5. **Search Console and Bing Webmaster Tools**: submit `/sitemap-index.xml`.
+6. **Reviews**: ask happy customers for Google reviews. Ratings were
+   removed from the site until real reviews exist.
+
+## Content source
+
+Rebuilt from the Simply Static export (`_export/simply-static-1-1791239758.zip`
+on the `site-export` branch). Never deploy the export itself. Old URLs are
+mapped in `public/_redirects`.

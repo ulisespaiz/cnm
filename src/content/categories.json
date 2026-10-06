@@ -1,8 +1,6 @@
 [
-  {
-    "id": "sample-category",
-    "title": "Sample Category",
-    "summary": "Placeholder category. Replaced by the real categories extracted from the existing site.",
-    "order": 1
-  }
+  { "id": "aluminum", "title": "Aluminum", "summary": "Aluminum shaft collars and components.", "order": 1 },
+  { "id": "bushings", "title": "Bushings", "summary": "Bronze flanged bushings.", "order": 2 },
+  { "id": "hayssen", "title": "Hayssen", "summary": "Hayssen vertical form fill seal packaging machines.", "order": 3 },
+  { "id": "mitter", "title": "Mitter", "summary": "Gear miters for transmitting motion between intersecting shafts.", "order": 4 }
 ]

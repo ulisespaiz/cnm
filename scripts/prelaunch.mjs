@@ -23,7 +23,7 @@ if (readFileSync('src/config/site.ts', 'utf8').includes("'https://example.com'")
   problems.push('src/config/site.ts  site.url is still https://example.com');
 }
 if (!process.env.PUBLIC_WEB3FORMS_KEY) {
-  problems.push('PUBLIC_WEB3FORMS_KEY is not set (set it in Cloudflare Pages > Settings > Variables)');
+  problems.push('PUBLIC_WEB3FORMS_KEY is not set (set it as a Workers Builds variable in Cloudflare)');
 }
 
 if (problems.length) {
