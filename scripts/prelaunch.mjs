@@ -22,8 +22,8 @@ for (const file of ['src/config/site.ts', ...walk('src/pages'), ...walk('src/con
 if (readFileSync('src/config/site.ts', 'utf8').includes("'https://example.com'")) {
   problems.push('src/config/site.ts  site.url is still https://example.com');
 }
-if (!process.env.PUBLIC_WEB3FORMS_KEY) {
-  problems.push('PUBLIC_WEB3FORMS_KEY is not set (set it as a Workers Builds variable in Cloudflare)');
+if (!process.env.PUBLIC_WEB3FORMS_KEY && !/WEB3FORMS_KEY = '[0-9a-f-]{36}'/.test(readFileSync('src/config/forms.ts', 'utf8'))) {
+  problems.push('src/config/forms.ts  no Web3Forms access key (set WEB3FORMS_KEY or PUBLIC_WEB3FORMS_KEY)');
 }
 
 if (problems.length) {
