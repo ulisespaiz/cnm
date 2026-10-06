@@ -1,5 +1,6 @@
 ---
-// Grid of featured parts (parts with featured: true, else the first few).
+// Grid of featured parts (parts with featured: true, else the first few with
+// a photo). Used on the home page.
 import PartCard from './PartCard.astro';
 import { getParts } from '../lib/parts';
 
@@ -13,20 +14,24 @@ const featured = all.filter((p) => p.data.featured);
 const parts = (featured.length ? featured : all.filter((p) => p.data.images.length)).slice(0, limit);
 ---
 
-<div class="featured-parts">
-  {parts.map((p, i) => <PartCard part={p} eager={i < 2} />)}
-</div>
+<ul class="featured-parts">
+  {parts.map((p, i) => <li><PartCard part={p} eager={i < 2} /></li>)}
+</ul>
 
 <style>
   .featured-parts {
     display: grid;
-    gap: 16px;
-    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   @media (min-width: 900px) {
     .featured-parts {
-      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 </style>

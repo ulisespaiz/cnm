@@ -1,0 +1,36 @@
+---
+// Checkbox filter groups for the parts list. part-filter.ts keeps the counts
+// live and moves this form between the desktop sidebar and the mobile sheet.
+import '../styles/store.css';
+
+interface Option {
+  value: string;
+  label: string;
+  n: number;
+}
+
+interface Props {
+  groups: { name: 'section' | 'type' | 'width' | 'side'; title: string; options: Option[] }[];
+}
+
+const { groups } = Astro.props;
+---
+
+<form class="filters" data-filters aria-label="Filter parts">
+  {
+    groups
+      .filter((g) => g.options.length)
+      .map((g) => (
+        <fieldset class="filters__group" data-fgroup={g.name}>
+          <legend>{g.title}</legend>
+          {g.options.map((o) => (
+            <label class="filters__opt">
+              <input type="checkbox" name={g.name} value={o.value} />
+              <span data-flabel>{o.label}</span>
+              <span class="filters__n" data-fcount>{o.n}</span>
+            </label>
+          ))}
+        </fieldset>
+      ))
+  }
+</form>

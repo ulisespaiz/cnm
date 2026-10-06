@@ -109,16 +109,19 @@ export function breadcrumbs(items: { name: string; path: string }[]) {
   };
 }
 
-// No `offers`: prices are quote-only, so this will not earn product rich
-// results, but it describes the part to search and AI engines. No `brand`:
-// most parts are not C&M-branded, and a wrong brand is worse than none.
+// A replacement part. No `offers` (prices are quote-only) and deliberately no
+// `brand`, `mpn` or `seller`: the Hayssen number is listed as a plain
+// "Hayssen part number" property and the part is tied to the machine it
+// replaces through isAccessoryOrSparePartFor, so nothing claims the part is
+// made by, or sold on behalf of, the machine's manufacturer.
 export function product(p: {
   name: string;
   description: string;
   path: string;
   images: string[];
   category: string;
-  specs: { label: string; value: string }[];
+  sku: string; // C&M number
+  oem: string; // Hayssen part number
 }) {
   return {
     '@context': 'https://schema.org',
@@ -126,18 +129,27 @@ export function product(p: {
     name: p.name,
     description: p.description,
     url: abs(p.path),
+    sku: p.sku,
     category: p.category,
     ...(p.images.length ? { image: p.images.map(abs) } : {}),
-    ...(p.specs.length
-      ? {
-          additionalProperty: p.specs.map((s) => ({
-            '@type': 'PropertyValue',
-            name: s.label,
-            value: s.value,
-          })),
-        }
-      : {}),
-    seller: { '@id': abs('/#business') },
+    additionalProperty: [{ '@type': 'PropertyValue', name: 'Hayssen part number', value: p.oem }],
+    isAccessoryOrSparePartFor: { '@type': 'Product', name: 'Hayssen VFFS packaging machine' },
+  };
+}
+
+// A list of pages (a section's parts, for example).
+export function itemList(items: { name: string; path: string }[], name?: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    ...(name ? { name } : {}),
+    numberOfItems: items.length,
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      url: abs(item.path),
+    })),
   };
 }
 

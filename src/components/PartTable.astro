@@ -1,0 +1,178 @@
+---
+// The browsable parts list: toolbar (count, sort, filters), filter sidebar on
+// desktop / bottom sheet on phones, and every row rendered in HTML so the list
+// works for search engines, Ctrl-F and no-JS visitors. part-filter.ts hides,
+// reorders and counts rows in place.
+import PartRow from './PartRow.astro';
+import FilterPanel from './FilterPanel.astro';
+import { typeLabels } from './store';
+import { sectionUrl, type Part, type Section } from '../lib/parts';
+import { site } from '../config/site';
+import '../styles/store.css';
+
+interface Props {
+  parts: Part[];
+  sections: Section[]; // sections that appear in `parts`, in display order
+  grouped?: boolean; // section headers (store home)
+  lockSection?: boolean; // hide the Section filter (section pages)
+  eager?: number; // rows whose photos load immediately
+}
+
+const { parts, sections, grouped = false, lockSection = false, eager = 0 } = Astro.props;
+const titles = new Map(sections.map((s) => [s.id, s.data.title]));
+
+const countBy = (pick: (p: Part) => string | undefined) => {
+  const m = new Map<string, number>();
+  for (const p of parts) {
+    const v = pick(p);
+    if (v) m.set(v, (m.get(v) ?? 0) + 1);
+  }
+  return m;
+};
+const bySection = countBy((p) => p.data.section.id);
+const byType = countBy((p) => p.data.type);
+const byWidth = countBy((p) => p.data.attrs.width);
+const bySide = countBy((p) => p.data.attrs.side);
+
+const groups = [
+  ...(lockSection
+    ? []
+    : [{ name: 'section' as const, title: 'Section', options: sections.map((s) => ({ value: s.id, label: s.data.title, n: bySection.get(s.id) ?? 0 })) }]),
+  {
+    name: 'type' as const,
+    title: 'Part type',
+    options: [...byType]
+      .map(([value, n]) => ({ value, label: typeLabels[value as keyof typeof typeLabels], n }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
+  },
+  { name: 'width' as const, title: 'Width', options: [...byWidth].sort().map(([value, n]) => ({ value, label: `${value}″`, n })) },
+  { name: 'side' as const, title: 'Side', options: [...bySide].sort().map(([value, n]) => ({ value, label: value === 'LH' ? 'Left (LH)' : 'Right (RH)', n })) },
+];
+
+let lastSection = '';
+---
+
+<div class="plist" data-plist data-lock-section={lockSection ? '' : undefined}>
+  <div class="plist__toolbar">
+    <p class="plist__count" data-count aria-live="polite">Showing all {parts.length} parts</p>
+    <div class="plist__tools">
+      <button type="button" class="btn btn--outline plist__filterbtn" data-open-filters>
+        Filters <span data-filter-n></span>
+      </button>
+      <label class="plist__sort">
+        <span>Sort</span>
+        <select data-sort>
+          <option value="best" hidden>Best match</option>
+          <option value="catalog" selected>Catalog order</option>
+          <option value="pn">Part # A–Z</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </label>
+    </div>
+  </div>
+  <div class="plist__chips" data-chips hidden></div>
+
+  <div class="plist__body">
+    <aside class="plist__side" data-side-host aria-label="Filters">
+      <FilterPanel groups={groups} />
+    </aside>
+    <div class="plist__main">
+      <div class="plist__head" aria-hidden="true">
+        <span></span>
+        <span>Part</span>
+        <span>Hayssen part #</span>
+        <span>C&amp;M #</span>
+        <span>Quantity</span>
+      </div>
+      <ol class="plist__rows" data-rows aria-label="Parts">
+        {
+          parts.map((p, i) => {
+            const head = grouped && p.data.section.id !== lastSection ? p.data.section.id : null;
+            lastSection = p.data.section.id;
+            const s = sections.find((x) => x.id === p.data.section.id)!;
+            return (
+              <>
+                {head && (
+                  <li class="phead" data-head={head}>
+                    <h2>{titles.get(head)}</h2>
+                    <span class="phead__n">· <span data-gcount>{bySection.get(head)}</span></span>
+                    <a class="phead__link" href={sectionUrl(s)}>
+                      View section<span class="visually-hidden"> {titles.get(head)}</span>
+                    </a>
+                  </li>
+                )}
+                <PartRow part={p} sectionTitle={titles.get(p.data.section.id) ?? ''} eager={i < eager} priority={i < Math.min(eager, 4)} />
+              </>
+            );
+          })
+        }
+      </ol>
+      <div class="pempty" data-empty hidden>
+        <h3 data-empty-title>No parts match</h3>
+        <p>Send us the part number and we'll check it. {site.replyTime}.</p>
+        <div class="pempty__actions">
+          <button type="button" class="btn btn--red" data-request-part data-empty-request>Request this part</button>
+          <button type="button" class="btn btn--outline" data-clear>Clear filters</button>
+          <a class="btn btn--outline" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <dialog class="sheet" data-sheet aria-label="Filter parts">
+    <div class="sheet__head">
+      <h2>Filters</h2>
+      <button type="button" class="iconbtn" data-sheet-close aria-label="Close filters">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+      </button>
+    </div>
+    <div class="sheet__body" data-sheet-host></div>
+    <div class="sheet__foot">
+      <button type="button" class="linkbtn" data-clear>Clear</button>
+      <button type="button" class="btn" data-sheet-show data-sheet-close>Show parts</button>
+    </div>
+  </dialog>
+</div>
+
+<script>
+  import '../scripts/part-filter';
+</script>
+
+<style>
+  .plist__body {
+    display: block;
+  }
+
+  .plist__side {
+    display: none;
+  }
+
+  .plist__filterbtn {
+    padding-inline: 18px;
+  }
+
+  @media (min-width: 1024px) {
+    .plist__body {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .plist__side {
+      position: sticky;
+      top: calc(var(--store-header) + 16px);
+      display: block;
+      max-height: calc(100vh - var(--store-header) - 32px);
+      overflow: auto;
+      padding: 18px 18px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    .plist__filterbtn {
+      display: none;
+    }
+  }
+</style>

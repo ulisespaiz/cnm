@@ -1,0 +1,85 @@
+---
+// Instant parts search (ARIA combobox). Behaviour: src/scripts/part-search.ts.
+// Hero field on /shop/, sticky bar under the header on other store pages.
+// Without JavaScript the form submits to /shop/?q=.
+import { site } from '../config/site';
+import { typeLabels } from './store';
+import '../styles/store.css';
+
+interface Props {
+  variant?: 'hero' | 'bar';
+  placeholder?: string;
+}
+
+const { variant = 'bar', placeholder = 'Part # or name, e.g. 03187A0897' } = Astro.props;
+const id = `psearch-${variant}`;
+---
+
+<div
+  class={`psearch psearch--${variant}`}
+  data-part-search
+  data-types={JSON.stringify(typeLabels)}
+  data-reply={`We reply within ${site.replyTimeShort}.`}
+  data-phone={site.phone}
+  data-tel={site.phoneE164}
+>
+  <form class="psearch__form" role="search" action="/shop/" method="get">
+    <div class="psearch__field">
+      <label class="visually-hidden" for={`${id}-input`}>Search parts by Hayssen part number or name</label>
+      <svg class="psearch__icon" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <input
+        class="psearch__input"
+        id={`${id}-input`}
+        name="q"
+        type="search"
+        role="combobox"
+        aria-expanded="false"
+        aria-controls={`${id}-list`}
+        aria-autocomplete="list"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        enterkeyhint="search"
+        placeholder={placeholder}
+      />
+      <button type="button" class="iconbtn psearch__clear" data-ps-clear hidden aria-label="Clear search">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+      </button>
+    </div>
+    {variant === 'hero' && <button type="submit" class="btn psearch__go">Search</button>}
+  </form>
+  <div class="psearch__panel" data-ps-panel hidden>
+    <div class="visually-hidden" role="status" aria-live="polite" data-ps-status></div>
+    <ul class="ps-list" role="listbox" id={`${id}-list`} aria-label="Matching parts"></ul>
+    <div data-ps-extra></div>
+  </div>
+</div>
+
+<script>
+  import '../scripts/part-search';
+</script>
+
+<style>
+  .psearch__field {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .psearch__go {
+    flex: none;
+    min-height: 60px;
+    padding-inline: 28px;
+  }
+
+  .psearch--bar .psearch__input {
+    min-height: 48px;
+  }
+
+  /* phones: the keyboard's Search key submits; the field gets the full width */
+  @media (max-width: 479px) {
+    .psearch__go {
+      display: none;
+    }
+  }
+</style>
