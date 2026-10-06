@@ -300,28 +300,48 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
 
     .nav-desktop {
       display: flex;
-      gap: 26px;
-      margin-right: 12px;
+      gap: 22px;
+      margin-right: 16px;
     }
 
     .nav-desktop a {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 44px;
       min-height: 44px;
+      font-size: 0.9375rem;
       font-weight: 500;
+    }
+
+    /* Mouse-driven desktop header: compact buttons (touch sizes stay below 1100px). */
+    .header-actions .btn {
+      min-height: 40px;
+      padding: 0 14px;
+      font-size: 0.9375rem;
+    }
+
+    .header-actions .btn svg {
+      width: 18px;
+      height: 18px;
     }
   }
 
   @media (min-width: 1280px) {
+    .nav-desktop {
+      gap: 28px;
+    }
+  }
+
+  /* The phone number only joins the header when there is room to breathe. */
+  @media (min-width: 1440px) {
     .header-phone {
       display: inline-flex;
       align-items: center;
       min-height: 44px;
-      margin-right: 6px;
+      margin-right: 8px;
       color: var(--color-text);
-      font-weight: 700;
+      font-size: 0.9375rem;
+      font-weight: 600;
       text-decoration: none;
       white-space: nowrap;
     }
