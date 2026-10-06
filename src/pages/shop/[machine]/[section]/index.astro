@@ -12,13 +12,17 @@ import PartRequestForm from '../../../../components/PartRequestForm.astro';
 import StoreDisclaimer from '../../../../components/StoreDisclaimer.astro';
 import { getParts, getSections, machineUrl, partUrl, sectionUrl } from '../../../../lib/parts';
 import { breadcrumbs, itemList } from '../../../../lib/schema';
+import { site } from '../../../../config/site';
 import '../../../../styles/store.css';
 
+// Parts shop off (site.store.enabled): no pages.
 export const getStaticPaths = (async () =>
-  (await getSections()).map((section) => ({
-    params: { machine: section.data.machine.id, section: section.id },
-    props: { section },
-  }))) satisfies GetStaticPaths;
+  site.store.enabled
+    ? (await getSections()).map((section) => ({
+        params: { machine: section.data.machine.id, section: section.id },
+        props: { section },
+      }))
+    : []) satisfies GetStaticPaths;
 
 const { section } = Astro.props;
 const machine = (await getEntry(section.data.machine))!;

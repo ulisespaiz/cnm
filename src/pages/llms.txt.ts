@@ -7,12 +7,14 @@ import { hoursSentence } from '../lib/hours';
 // llms.txt (https://llmstxt.org): a plain-Markdown map of the site for AI
 // assistants. Generated from the same content as the pages so it never drifts.
 // Every part is listed with its Hayssen part number so an assistant can map
-// a number to a page.
+// a number to a page. With the parts shop off (site.store.enabled) the whole
+// parts catalog section, and every mention of it, is left out.
 export const GET: APIRoute = async () => {
   const abs = (path: string) => new URL(path, site.url).href;
+  const shopOn = site.store.enabled;
   const services = await getServices();
-  const sections = await getSections();
-  const parts = await getParts();
+  const sections = shopOn ? await getSections() : [];
+  const parts = shopOn ? await getParts() : [];
   const machines = await getEquipment();
 
   const partsBySection = sections
@@ -24,9 +26,24 @@ export const GET: APIRoute = async () => {
     })
     .join('\n\n');
 
+  const catalogPitch = shopOn
+    ? `, plus a catalog of ${parts.length} replacement parts for Hayssen VFFS packaging machines, searchable by Hayssen part number`
+    : '';
+  const catalogSection = shopOn
+    ? `## Parts catalog: Hayssen VFFS replacement parts
+
+Catalog home: ${abs(machineUrl('hayssen-vffs'))}. Search by part number: ${abs('/shop/')}. Machine-readable index: ${abs('/shop/search-index.json')}.
+
+${site.store.disclaimer}
+
+${partsBySection}
+
+`
+    : '';
+
   const body = `# ${site.legalName}
 
-> Family-owned machine shop in ${site.address.city}, California, founded in ${site.founded}. Custom CNC machining, water-jet and laser cutting, welding, metal work and custom fabrication, plus a catalog of ${parts.length} replacement parts for Hayssen VFFS packaging machines, searchable by Hayssen part number. Pricing is by quote.
+> Family-owned machine shop in ${site.address.city}, California, founded in ${site.founded}. Custom CNC machining, water-jet and laser cutting, welding, metal work and custom fabrication${catalogPitch}. Pricing is by quote.
 
 - Address: ${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}
 - Phone: ${site.phone}
@@ -40,15 +57,7 @@ export const GET: APIRoute = async () => {
 
 ${services.map((s) => `- [${s.data.title}](${abs(serviceUrl(s))}): ${s.data.summary}`).join('\n')}
 
-## Parts catalog: Hayssen VFFS replacement parts
-
-Catalog home: ${abs(machineUrl('hayssen-vffs'))}. Search by part number: ${abs('/shop/')}. Machine-readable index: ${abs('/shop/search-index.json')}.
-
-${site.store.disclaimer}
-
-${partsBySection}
-
-## Equipment
+${catalogSection}## Equipment
 
 ${machines.map((m) => `- ${m.data.name}`).join('\n')}
 

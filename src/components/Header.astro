@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import logo from '../assets/site/cnm-logo.png';
 import { site, nav } from '../config/site';
 
+const shopOn = site.store.enabled;
 const path = Astro.url.pathname;
 const links = [{ label: 'Home', href: '/' }, ...nav];
 const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
@@ -25,25 +26,35 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
 
       <!-- 768px and up: labelled buttons. Under 768px: icon-only cart button. -->
       <a class="btn btn--red cart-btn" href="/quote/">
-        <svg class="cart-btn__icon" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m15 11-1 9"></path><path d="m19 11-4-7"></path><path d="M2 11h20"></path>
-          <path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"></path>
-          <path d="m5 11 4-7"></path><path d="m9 11 1 9"></path>
-        </svg>
-        <span class="cart-btn__label">Cart</span>
-        <span class="visually-hidden"> (quote list)</span>
+        {shopOn ? (
+          <svg class="cart-btn__icon" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 11-1 9"></path><path d="m19 11-4-7"></path><path d="M2 11h20"></path>
+            <path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"></path>
+            <path d="m5 11 4-7"></path><path d="m9 11 1 9"></path>
+          </svg>
+        ) : (
+          <svg class="cart-btn__icon" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect>
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path>
+          </svg>
+        )}
+        <span class="cart-btn__label">{shopOn ? 'Cart' : 'Get a Quote'}</span>
+        {shopOn ? <span class="visually-hidden"> (quote list)</span> : <span class="visually-hidden cart-btn__sr"> Get a quote</span>}
         <span class="badge" data-quote-count hidden>0</span>
       </a>
-      <a class="btn shop-btn" href="/shop/" aria-label="Shop">
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
-          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-          <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
-          <path d="M2 7h20"></path>
-          <path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"></path>
-        </svg>
-        <span class="shop-btn__label">Shop</span>
-      </a>
+      {shopOn && (
+        <a class="btn shop-btn" href="/shop/" aria-label="Shop">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+            <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+            <path d="M2 7h20"></path>
+            <path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"></path>
+          </svg>
+          <span class="shop-btn__label">Shop</span>
+        </a>
+      )}
     </div>
 
     <button class="burger-btn" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu" data-menu-toggle>
@@ -55,7 +66,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     {links.map((item) => (
       <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
     ))}
-    <a href="/quote/">My quote list <span class="badge" data-quote-count hidden>0</span></a>
+    <a href="/quote/">{shopOn ? 'My quote list' : 'Get a Quote'} <span class="badge" data-quote-count hidden>0</span></a>
     <a href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
   </nav>
 </header>
@@ -288,6 +299,11 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
 
     .cart-btn__label {
       display: inline;
+    }
+
+    /* Parts shop off: the visible "Get a Quote" label replaces the phone-only text. */
+    .cart-btn__sr {
+      display: none;
     }
   }
 

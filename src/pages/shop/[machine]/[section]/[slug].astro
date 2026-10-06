@@ -20,11 +20,15 @@ import { breadcrumbs, product } from '../../../../lib/schema';
 import { site } from '../../../../config/site';
 import '../../../../styles/store.css';
 
+// Parts shop off (site.store.enabled): no pages. The part photos are still emitted by the
+// parts collection; the shop-switch integration in astro.config.mjs deletes them from dist.
 export const getStaticPaths = (async () =>
-  (await getParts()).map((part) => ({
-    params: { machine: part.data.machine.id, section: part.data.section.id, slug: part.id },
-    props: { part },
-  }))) satisfies GetStaticPaths;
+  site.store.enabled
+    ? (await getParts()).map((part) => ({
+        params: { machine: part.data.machine.id, section: part.data.section.id, slug: part.id },
+        props: { part },
+      }))
+    : []) satisfies GetStaticPaths;
 
 const { part } = Astro.props;
 const d = part.data;

@@ -8,9 +8,11 @@ import { getServices, serviceUrl } from '../../lib/content';
 import { getParts, getSections, sectionUrl, machineUrl } from '../../lib/parts';
 import { breadcrumbs, faqPage } from '../../lib/schema';
 
+// Parts shop switch (site.store.enabled): off hides the Hayssen section and its FAQ entry.
+const shopOn = site.store.enabled;
 const services = await getServices();
-const partCount = (await getParts()).length;
-const sections = await getSections('hayssen-vffs');
+const partCount = shopOn ? (await getParts()).length : 0;
+const sections = shopOn ? await getSections('hayssen-vffs') : [];
 const path = '/industries/food-processing-agriculture/';
 const crumbs = [
   { name: 'Home', path: '/' },
@@ -22,10 +24,14 @@ const faqs = [
     q: 'Do you make replacement parts for food processing equipment?',
     a: `Yes. ${site.legalName} specializes in precision-engineered solutions for the food processing and agriculture industries, machining replacement and custom parts from your drawing, a worn sample or a description.`,
   },
-  {
-    q: 'Do you carry parts for Hayssen packaging machines?',
-    a: `Yes. Our parts catalog lists ${partCount} replacement parts for Hayssen vertical form fill seal (VFFS) machines, searchable by Hayssen part number. If yours is not listed, send us the number and we will quote it.`,
-  },
+  ...(shopOn
+    ? [
+        {
+          q: 'Do you carry parts for Hayssen packaging machines?',
+          a: `Yes. Our parts catalog lists ${partCount} replacement parts for Hayssen vertical form fill seal (VFFS) machines, searchable by Hayssen part number. If yours is not listed, send us the number and we will quote it.`,
+        },
+      ]
+    : []),
   {
     q: 'Where are you located?',
     a: `Our shop is at ${site.address.street}, ${site.address.city}, CA ${site.address.postalCode}, serving customers across Monterey County. Local pickup is available, or we can ship.`,
@@ -35,14 +41,16 @@ const faqs = [
 
 <Base
   title="Machine Shop for Food Processing & Agriculture in Salinas, CA"
-  description={`Replacement parts, machining, cutting, welding and fabrication for food processing, packaging and agriculture equipment. ${site.legalName}, ${site.address.city}, CA.`}
+  description={shopOn
+    ? `Replacement parts, machining, cutting, welding and fabrication for food processing, packaging and agriculture equipment. ${site.legalName}, ${site.address.city}, CA.`
+    : `Replacement parts made to your drawing or sample, plus machining, cutting, welding and fabrication for food processing, packaging and agriculture equipment. ${site.legalName}, ${site.address.city}, CA.`}
   jsonLd={[breadcrumbs(crumbs), faqPage(faqs)]}
 >
   <section class="section">
     <div class="container">
       <Breadcrumbs items={crumbs} />
       <p class="eyebrow">Industries</p>
-      <h1>Parts and fabrication for <span class="mark">food processing</span> &amp; agriculture</h1>
+      <h1>{shopOn ? 'Parts' : 'Replacement parts'} and fabrication for <span class="mark">food processing</span> &amp; agriculture</h1>
       <p class="lead">
         With more than 30 years of industry experience, {site.legalName} specializes in providing precision-engineered
         solutions for the food processing and agriculture industries in the Salinas Valley and across Monterey County.
@@ -70,33 +78,35 @@ const faqs = [
       <ul class="ticks points">
         <li>Replacement parts machined to spec from your drawing or a worn sample</li>
         <li>Custom fabrication with or without blueprints</li>
-        <li>Local pickup in {site.address.city} or fast shipping</li>
+        <li>{shopOn ? <>Local pickup in {site.address.city} or fast shipping</> : <>Pickup in {site.address.city}, or ask about shipping</>}</li>
         <li>{site.replyTime} to quotes and custom part requests</li>
       </ul>
     </div>
   </section>
 
-  <section class="section">
-    <div class="container">
-      <h2>Replacement parts for Hayssen VFFS machines</h2>
-      <p>
-        Our <a href={machineUrl('hayssen-vffs')}>parts catalog</a> lists {partCount} replacement parts for Hayssen vertical form
-        fill seal packaging machines, searchable by Hayssen part number:
-        {sections.map((sec, i) => (
-          <>
-            <a href={sectionUrl(sec)}>{sec.data.title}</a>{i < sections.length - 1 ? ', ' : '.'}
-          </>
-        ))}
-      </p>
-      <FeaturedParts />
-    </div>
-  </section>
+  {shopOn && (
+    <section class="section">
+      <div class="container">
+        <h2>Replacement parts for Hayssen VFFS machines</h2>
+        <p>
+          Our <a href={machineUrl('hayssen-vffs')}>parts catalog</a> lists {partCount} replacement parts for Hayssen vertical form
+          fill seal packaging machines, searchable by Hayssen part number:
+          {sections.map((sec, i) => (
+            <>
+              <a href={sectionUrl(sec)}>{sec.data.title}</a>{i < sections.length - 1 ? ', ' : '.'}
+            </>
+          ))}
+        </p>
+        <FeaturedParts />
+      </div>
+    </section>
+  )}
 
-  <section class="section section--alt">
+  <section class:list={['section', { 'section--alt': shopOn }]}>
     <div class="container faq-wrap">
       <h2>Common questions</h2>
       {faqs.map((f, i) => (
-        <details class="faq" open={i === 0}>
+        <details class:list={['faq', { 'faq--card': !shopOn }]} open={i === 0}>
           <summary>{f.q}</summary>
           <p>{f.a}</p>
         </details>
@@ -126,6 +136,11 @@ const faqs = [
     margin-bottom: 12px;
     border-radius: var(--radius);
     background: var(--color-bg);
+  }
+
+  /* Parts shop off: the FAQ sits on the page background, so its cards turn white. */
+  .faq--card {
+    background: var(--color-surface);
   }
 
   .faq summary {

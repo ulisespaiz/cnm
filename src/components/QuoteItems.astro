@@ -1,29 +1,45 @@
 ---
 // "Items in Your Request" card: the live quote list (rendered by
 // src/scripts/quote-page.ts), the reference, summary, drawing box and the
-// bulk paste panel.
+// bulk paste panel. With the parts shop off (site.store.enabled) there is no
+// catalog to match against, so the empty state points to the services instead
+// and the bulk paste panel is left out.
 import { site } from '../config/site';
 import QuoteSummary from './QuoteSummary.astro';
 import BulkPaste from './BulkPaste.astro';
+
+const shopOn = site.store.enabled;
 ---
 
 <section class="qcard qcard--items" aria-labelledby="items-title">
   <header class="qcard__head">
-    <h2 id="items-title" class="qcard__title qcard__title--red">Items in Your Request</h2>
+    <h2 id="items-title" class="qcard__title qcard__title--red">{shopOn ? 'Items in Your Request' : 'Your Request'}</h2>
     <p class="qref">Reference <strong data-quote-ref>Q-</strong></p>
   </header>
 
   <div class="qcard__body">
     <div class="qempty" data-quote-empty>
-      <h3 tabindex="-1" data-quote-empty-title>Your quote list is empty</h3>
-      <p class="muted">
-        Add replacement parts for Hayssen VFFS machines from the catalog, or describe what you need in the form and we'll quote it. For
-        machining, cutting or fabrication, see our <a href="/services/">services</a>.
-      </p>
+      <h3 tabindex="-1" data-quote-empty-title>{shopOn ? 'Your quote list is empty' : 'Nothing added yet'}</h3>
+      {shopOn ? (
+        <p class="muted">
+          Add replacement parts for Hayssen VFFS machines from the catalog, or describe what you need in the form and we'll quote it. For
+          machining, cutting or fabrication, see our <a href="/services/">services</a>.
+        </p>
+      ) : (
+        <p class="muted">
+          Just fill in the form and tell us what you need, or add a service from our <a href="/services/">services</a> pages.
+        </p>
+      )}
       <div class="qempty__actions">
-        <a class="btn" href="/shop/">Browse the catalog</a>
-        <a class="btn btn--outline" href="/shop/">Search by part number</a>
-        <a class="btn btn--outline" href="#bulk">Paste a list</a>
+        {shopOn ? (
+          <>
+            <a class="btn" href="/shop/">Browse the catalog</a>
+            <a class="btn btn--outline" href="/shop/">Search by part number</a>
+            <a class="btn btn--outline" href="#bulk">Paste a list</a>
+          </>
+        ) : (
+          <a class="btn" href="/services/">See our services</a>
+        )}
       </div>
     </div>
 
@@ -41,7 +57,7 @@ import BulkPaste from './BulkPaste.astro';
       </p>
     </div>
 
-    <BulkPaste />
+    {shopOn && <BulkPaste />}
   </div>
 </section>
 
