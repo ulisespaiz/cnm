@@ -1,0 +1,28 @@
+---
+// Placeholder section page: replaced by the parts store build.
+import type { GetStaticPaths } from 'astro';
+import Base from '../../../../layouts/Base.astro';
+import PartCard from '../../../../components/PartCard.astro';
+import { getParts, getSections } from '../../../../lib/parts';
+
+export const getStaticPaths = (async () =>
+  (await getSections()).map((section) => ({
+    params: { machine: section.data.machine.id, section: section.id },
+    props: { section },
+  }))) satisfies GetStaticPaths;
+
+const { section } = Astro.props;
+const parts = await getParts({ section: section.id });
+---
+
+<Base title={`${section.data.title} for Hayssen VFFS`} description={section.data.blurb}>
+  <section class="section">
+    <div class="container">
+      <h1>{section.data.title}</h1>
+      <p>{section.data.blurb}</p>
+      <div class="grid">
+        {parts.map((p) => <PartCard part={p} />)}
+      </div>
+    </div>
+  </section>
+</Base>

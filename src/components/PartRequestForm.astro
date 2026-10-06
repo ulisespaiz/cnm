@@ -1,0 +1,14 @@
+---
+// "Can't find your part?" block. Placeholder: the quote/forms work replaces
+// this with a real Web3Forms request form (prefilled from search).
+import { site } from '../config/site';
+---
+
+<section class="part-request" id="request">
+  <h2 class="part-request__title">Can't find your part?</h2>
+  <p>Send us the part number and we'll check it. {site.replyTime}.</p>
+  <p>
+    <a class="btn" href="/quote/">Request a part by number</a>
+    <a class="btn btn--outline" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
+  </p>
+</section>

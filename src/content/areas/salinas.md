@@ -3,7 +3,7 @@ city: Salinas
 county: Monterey County
 summary: TODO one sentence on what you do for customers in Salinas, specific to Salinas.
 nearby: [Castroville, Prunedale, Gonzales, Chualar]
-featuredProducts: []
+featuredParts: []
 faqs: []
 draft: true
 ---

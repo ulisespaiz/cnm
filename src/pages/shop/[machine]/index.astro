@@ -1,0 +1,24 @@
+---
+// Placeholder machine hub: replaced by the parts store build.
+import type { GetStaticPaths } from 'astro';
+import Base from '../../../layouts/Base.astro';
+import { getMachines, getSections, sectionUrl } from '../../../lib/parts';
+
+export const getStaticPaths = (async () =>
+  (await getMachines()).map((machine) => ({ params: { machine: machine.id }, props: { machine } }))) satisfies GetStaticPaths;
+
+const { machine } = Astro.props;
+const sections = await getSections(machine.id);
+---
+
+<Base title={`${machine.data.name} Replacement Parts`} description={machine.data.summary}>
+  <section class="section">
+    <div class="container">
+      <h1>{machine.data.name} replacement parts</h1>
+      <p>{machine.data.summary}</p>
+      <ul>
+        {sections.map((s) => <li><a href={sectionUrl(s)}>{s.data.title}</a></li>)}
+      </ul>
+    </div>
+  </section>
+</Base>

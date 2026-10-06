@@ -6,11 +6,14 @@
 # Redirect the www host to the apex in Cloudflare (Rules > Redirect Rules);
 # this file only matches paths.
 
-# Products (WooCommerce)
-/product/0-250-1-4-aluminum-clamp-collar/        /shop/aluminum/0-250-1-4-aluminum-clamp-collar/        301
-/product/1-x-1-1-4-x-1-bronze-flanged-bushing/   /shop/bushings/1-x-1-1-4-x-1-bronze-flanged-bushing/   301
-/product/1616-gear-mitter/                       /shop/mitter/1616-gear-mitter/                         301
-/product/hayssen-vertical-form-fill-seal/        /shop/hayssen/hayssen-vertical-form-fill-seal/         301
+# Products and categories (WooCommerce). The old products were placeholders;
+# send them to the new Hayssen parts catalog.
+/product/0-250-1-4-aluminum-clamp-collar/        /shop/   301
+/product/1-x-1-1-4-x-1-bronze-flanged-bushing/   /shop/   301
+/product/1616-gear-mitter/                       /shop/   301
+/product/hayssen-vertical-form-fill-seal/        /shop/hayssen-vffs/   301
+/product-category/hayssen/                       /shop/hayssen-vffs/   301
+/shop/hayssen/                                   /shop/hayssen-vffs/   301
 
 # Quote flow
 /request-a-quote/   /quote/   301
@@ -32,7 +35,7 @@
 /blog-post-title-5/    /   301
 
 # Wildcards last
-/product-category/:category/   /shop/:category/   301
+/product-category/*             /shop/             301
 /product/*                     /shop/             301
 /my-account/*                  /                  301
 /author/*                      /                  301

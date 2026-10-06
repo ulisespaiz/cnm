@@ -1,0 +1,32 @@
+---
+// Grid of featured parts (parts with featured: true, else the first few).
+import PartCard from './PartCard.astro';
+import { getParts } from '../lib/parts';
+
+interface Props {
+  limit?: number;
+}
+
+const { limit = 4 } = Astro.props;
+const all = await getParts();
+const featured = all.filter((p) => p.data.featured);
+const parts = (featured.length ? featured : all.filter((p) => p.data.images.length)).slice(0, limit);
+---
+
+<div class="featured-parts">
+  {parts.map((p, i) => <PartCard part={p} eager={i < 2} />)}
+</div>
+
+<style>
+  .featured-parts {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 900px) {
+    .featured-parts {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>

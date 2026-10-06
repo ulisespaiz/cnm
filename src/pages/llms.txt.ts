@@ -1,43 +1,52 @@
 import type { APIRoute } from 'astro';
 import { site, serviceAreas } from '../config/site';
-import {
-  getActiveCategories,
-  getEquipment,
-  getProducts,
-  getServices,
-  categoryUrl,
-  productUrl,
-  serviceUrl,
-} from '../lib/content';
+import { getEquipment, getServices, serviceUrl } from '../lib/content';
+import { getParts, getSections, machineUrl, partUrl, sectionUrl } from '../lib/parts';
+import { hoursSentence } from '../lib/hours';
 
 // llms.txt (https://llmstxt.org): a plain-Markdown map of the site for AI
 // assistants. Generated from the same content as the pages so it never drifts.
+// Every part is listed with its Hayssen part number so an assistant can map
+// a number to a page.
 export const GET: APIRoute = async () => {
   const abs = (path: string) => new URL(path, site.url).href;
   const services = await getServices();
-  const categories = await getActiveCategories();
-  const products = await getProducts();
+  const sections = await getSections();
+  const parts = await getParts();
   const machines = await getEquipment();
+
+  const partsBySection = sections
+    .map((s) => {
+      const list = parts.filter((p) => p.data.section.id === s.id);
+      return `### [${s.data.title}](${abs(sectionUrl(s))})\n\n${list
+        .map((p) => `- [${p.data.name}](${abs(partUrl(p))}): Hayssen part ${p.data.oem}, C&M ${p.data.cm}`)
+        .join('\n')}`;
+    })
+    .join('\n\n');
 
   const body = `# ${site.legalName}
 
-> Family-owned machine shop in ${site.address.city}, California, founded in ${site.founded}. Custom CNC machining, water-jet and laser cutting, welding, metal work and custom fabrication, plus a parts store. Serves food processing, agriculture and industrial customers across Monterey County. Pricing is by quote.
+> Family-owned machine shop in ${site.address.city}, California, founded in ${site.founded}. Custom CNC machining, water-jet and laser cutting, welding, metal work and custom fabrication, plus a catalog of ${parts.length} replacement parts for Hayssen VFFS packaging machines, searchable by Hayssen part number. Pricing is by quote.
 
 - Address: ${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}
 - Phone: ${site.phone}
 - Email: ${site.email}
-- Hours: Monday–Friday 7:00 AM–4:00 PM Pacific; closed Saturday and Sunday
+- Hours (Pacific Time): ${hoursSentence()}
 - Request a quote: ${abs('/quote/')}
+- Reply time: ${site.replyTime}
 - Service area: ${serviceAreas.join(', ')}
 
 ## Services
 
 ${services.map((s) => `- [${s.data.title}](${abs(serviceUrl(s))}): ${s.data.summary}`).join('\n')}
 
-## Parts store
+## Parts catalog: Hayssen VFFS replacement parts
 
-${categories.map((c) => `- [${c.data.title}](${abs(categoryUrl(c.id))})`).join('\n')}
-${products.map((p) => `- [${p.data.title}](${abs(productUrl(p))}): ${p.data.summary}`).join('\n')}
+Catalog home: ${abs(machineUrl('hayssen-vffs'))}. Search by part number: ${abs('/shop/')}. Machine-readable index: ${abs('/shop/search-index.json')}.
+
+${site.store.disclaimer}
+
+${partsBySection}
 
 ## Equipment
 

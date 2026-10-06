@@ -1,0 +1,30 @@
+---
+// Placeholder part page: replaced by the parts store build.
+import type { GetStaticPaths } from 'astro';
+import { Image } from 'astro:assets';
+import { getEntry } from 'astro:content';
+import Base from '../../../../layouts/Base.astro';
+import AddToQuote from '../../../../components/AddToQuote.astro';
+import { getParts, partUrl } from '../../../../lib/parts';
+
+export const getStaticPaths = (async () =>
+  (await getParts()).map((part) => ({
+    params: { machine: part.data.machine.id, section: part.data.section.id, slug: part.id },
+    props: { part },
+  }))) satisfies GetStaticPaths;
+
+const { part } = Astro.props;
+const { data } = part;
+const section = await getEntry(data.section);
+---
+
+<Base title={`${data.name} ${data.oem}`} description={`${data.name}, Hayssen part number ${data.oem}, C&M ${data.cm}.`}>
+  <section class="section">
+    <div class="container">
+      <h1>{data.name}</h1>
+      <p>Hayssen part # {data.oem} · {data.cm} · {section?.data.title}</p>
+      {data.images[0] && <Image src={data.images[0]} alt={data.imageAlt} width={250} />}
+      <AddToQuote id={part.id} title={data.name} url={partUrl(part)} />
+    </div>
+  </section>
+</Base>

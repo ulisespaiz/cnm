@@ -27,9 +27,29 @@ export const site = {
   },
   geo: { lat: 0, lng: 0 }, // TODO from the Google Business Profile pin
 
+  // Every visible hours line (footer, contact, store, llms.txt) and the
+  // JSON-LD render from this list via src/lib/hours.ts.
+  // Saturday 10-2 per the owner ("I think"): CONFIRM before launch.
   hours: [
     { days: ['Mo', 'Tu', 'We', 'Th', 'Fr'], opens: '07:00', closes: '16:00' },
+    { days: ['Sa'], opens: '10:00', closes: '14:00' },
   ],
+
+  // One promise, used everywhere a reply time is mentioned.
+  replyTime: 'We reply within 1–2 business days',
+  replyTimeShort: '1–2 business days',
+
+  // Parts store copy. Do not invent lead times or stock: leave leadTime null
+  // until the owner supplies one.
+  store: {
+    pickup: 'Local pickup at 772 Vertin Ave, Salinas',
+    shipping: 'Shipping available: ask on your quote', // CONFIRM carrier/policy with owner
+    leadTime: null as string | null,
+    leadTimeFallback: 'Lead time confirmed on your quote',
+    madeTo: 'Made to match your part number, sample or print',
+    disclaimer:
+      'Hayssen is a trademark of its respective owner. C&M Machine Shop Inc. is an independent machine shop and is not affiliated with, sponsored or endorsed by Hayssen or BW Packaging Systems. Part numbers are listed only to identify the machine parts our replacements fit.',
+  },
 
   // Topics the shop is known for; feeds schema.org knowsAbout and llms.txt.
   expertise: [

@@ -1,10 +1,10 @@
 ---
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
-import ProductCard from '../components/ProductCard.astro';
+import FeaturedParts from '../components/FeaturedParts.astro';
 import CtaBand from '../components/CtaBand.astro';
 import { site } from '../config/site';
-import { getEquipment, getProducts, getServices, serviceUrl } from '../lib/content';
+import { getEquipment, getServices, serviceUrl } from '../lib/content';
 import { faqPage } from '../lib/schema';
 import banner from '../assets/site/metal-piece-4.png';
 import shopPhoto from '../assets/work/our-work-3.jpg';
@@ -17,7 +17,6 @@ import work6 from '../assets/work/our-work-6.jpg';
 
 const services = await getServices();
 const machines = await getEquipment();
-const featured = (await getProducts()).filter((p) => p.data.featured).slice(0, 4);
 const yearsInBusiness = new Date().getFullYear() - 2002;
 
 const work = [
@@ -126,11 +125,9 @@ const faqs = [
         </article>
       </div>
 
-      {featured.length > 0 && (
-        <div class="grid featured">
-          {featured.map((p) => <ProductCard product={p} />)}
-        </div>
-      )}
+      <div class="featured">
+        <FeaturedParts />
+      </div>
     </div>
   </section>
 

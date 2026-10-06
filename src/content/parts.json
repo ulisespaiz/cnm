@@ -1,0 +1,2635 @@
+[
+ {
+  "id": "10217a3165-air-cylinder-special-1-5in-bore-x-3-5in-stroke",
+  "machine": "hayssen-vffs",
+  "section": "stagger",
+  "name": "Air Cylinder, Special (1.5\" Bore x 3.5\" Stroke)",
+  "nameRaw": "CYL.SPEC. AIR (1.5B X 3.5S)",
+  "oem": "10217A3165",
+  "oemKey": "10217A3165",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0001",
+  "type": "cylinder",
+  "attrs": {
+   "size": "1.5\" Bore x 3.5\" Stroke"
+  },
+  "images": [
+   "./../assets/parts/10217a3165-cm-0001.jpg"
+  ],
+  "imageAlt": "Air Cylinder, Special (1.5\" Bore x 3.5\" Stroke), Hayssen part number 10217A3165",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 1,
+  "flags": []
+ },
+ {
+  "id": "03187a0897-rail-guide-cr",
+  "machine": "hayssen-vffs",
+  "section": "stagger",
+  "name": "Rail Guide CR",
+  "nameRaw": "RAIL GUIDE CR",
+  "oem": "03187A0897",
+  "oemKey": "03187A0897",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0002",
+  "type": "guide-support",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03187a0897-cm-0002.jpg"
+  ],
+  "imageAlt": "Rail Guide CR, Hayssen part number 03187A0897",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 2,
+  "flags": [
+   "Verify: 03187 prefix differs from the rest of the Stagger series (03186); matches pattern but may be a typo."
+  ]
+ },
+ {
+  "id": "03186b0311-plate-mounting-rh-cr",
+  "machine": "hayssen-vffs",
+  "section": "stagger",
+  "name": "Plate Mounting RH CR",
+  "nameRaw": "PLATE MOUNTING RH CR",
+  "oem": "03186B0311",
+  "oemKey": "03186B0311",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0003",
+  "type": "plate",
+  "attrs": {
+   "side": "RH"
+  },
+  "images": [
+   "./../assets/parts/03186b0311-cm-0003.jpg"
+  ],
+  "imageAlt": "Plate Mounting RH CR, Hayssen part number 03186B0311",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 3,
+  "flags": []
+ },
+ {
+  "id": "03186b0312-plate-mounting-lh-cr",
+  "machine": "hayssen-vffs",
+  "section": "stagger",
+  "name": "Plate Mounting LH CR",
+  "nameRaw": "PLATE MOUNTING L.H CR",
+  "oem": "03186B0312",
+  "oemKey": "03186B0312",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0004",
+  "type": "plate",
+  "attrs": {
+   "side": "LH"
+  },
+  "images": [
+   "./../assets/parts/03186b0312-cm-0004.jpg"
+  ],
+  "imageAlt": "Plate Mounting LH CR, Hayssen part number 03186B0312",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 4,
+  "flags": []
+ },
+ {
+  "id": "03186d0379-carrier-stagger-cr-arm",
+  "machine": "hayssen-vffs",
+  "section": "stagger",
+  "name": "Carrier Stagger CR (Arm)",
+  "nameRaw": "CARRIER STAGGER CR (ARM)",
+  "oem": "03186D0379",
+  "oemKey": "03186D0379",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0005",
+  "type": "guide-support",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03186d0379-cm-0005.jpg"
+  ],
+  "imageAlt": "Carrier Stagger CR (Arm), Hayssen part number 03186D0379",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 5,
+  "flags": []
+ },
+ {
+  "id": "03187a0718-block-back-up",
+  "machine": "hayssen-vffs",
+  "section": "stagger",
+  "name": "Block Back-Up",
+  "nameRaw": "BLOCK BACK-UP",
+  "oem": "03187A0718",
+  "oemKey": "03187A0718",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0006",
+  "type": "block",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03187a0718-cm-0006.jpg"
+  ],
+  "imageAlt": "Block Back-Up, Hayssen part number 03187A0718",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 6,
+  "flags": []
+ },
+ {
+  "id": "03187a0717-block-clamp",
+  "machine": "hayssen-vffs",
+  "section": "stagger",
+  "name": "Block Clamp",
+  "nameRaw": "BLOCK CLAMP",
+  "oem": "03187A0717",
+  "oemKey": "03187A0717",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0007",
+  "type": "block",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03187a0717-cm-0007.jpg"
+  ],
+  "imageAlt": "Block Clamp, Hayssen part number 03187A0717",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 7,
+  "flags": []
+ },
+ {
+  "id": "03187a0720-block-guide",
+  "machine": "hayssen-vffs",
+  "section": "stagger",
+  "name": "Block Guide",
+  "nameRaw": "BLOCK GUIDE",
+  "oem": "03187A0720",
+  "oemKey": "03187A0720",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0008",
+  "type": "block",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03187a0720-cm-0008.jpg"
+  ],
+  "imageAlt": "Block Guide, Hayssen part number 03187A0720",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 8,
+  "flags": [
+   "OEM contains a space in source (\"03187 A0720\"); normalized."
+  ]
+ },
+ {
+  "id": "03186a0229-assembly-cable",
+  "machine": "hayssen-vffs",
+  "section": "stagger",
+  "name": "Assembly Cable",
+  "nameRaw": "ASSEMBLY CABLE",
+  "oem": "03186A0229",
+  "oemKey": "03186A0229",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0009",
+  "type": "assembly",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03186a0229-cm-0009.jpg"
+  ],
+  "imageAlt": "Assembly Cable, Hayssen part number 03186A0229",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 9,
+  "flags": []
+ },
+ {
+  "id": "10187a3264-pulley-phenolic",
+  "machine": "hayssen-vffs",
+  "section": "stagger",
+  "name": "Pulley Phenolic",
+  "nameRaw": "PULLEY PHENOLIC",
+  "oem": "10187A3264",
+  "oemKey": "10187A3264",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0010",
+  "type": "pulley",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10187a3264-cm-0010.jpg"
+  ],
+  "imageAlt": "Pulley Phenolic, Hayssen part number 10187A3264",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 10,
+  "flags": []
+ },
+ {
+  "id": "03047c3517-bracket-roller-cr",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Bracket Roller CR",
+  "nameRaw": "BRACKET ROLLER CR",
+  "oem": "03047C3517",
+  "oemKey": "03047C3517",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0011",
+  "type": "bracket",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03047c3517-cm-0011.jpg"
+  ],
+  "imageAlt": "Bracket Roller CR, Hayssen part number 03047C3517",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 11,
+  "flags": []
+ },
+ {
+  "id": "03046b0747-plate-roller-mounting-cr",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Plate Roller Mounting CR",
+  "nameRaw": "PLATE ROLLER MTG CR",
+  "oem": "03046B0747",
+  "oemKey": "03046B0747",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0012",
+  "type": "plate",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03046b0747-cm-0012.jpg"
+  ],
+  "imageAlt": "Plate Roller Mounting CR, Hayssen part number 03046B0747",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 12,
+  "flags": []
+ },
+ {
+  "id": "10057a3479-bolt-shoulder",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Bolt Shoulder",
+  "nameRaw": "BOLT SHOULDER",
+  "oem": "10057A3479",
+  "oemKey": "10057A3479",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0013",
+  "type": "fastener",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10057a3479-cm-0013.jpg"
+  ],
+  "imageAlt": "Bolt Shoulder, Hayssen part number 10057A3479",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 13,
+  "flags": []
+ },
+ {
+  "id": "03046a0397-roller-cr",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Roller CR",
+  "nameRaw": "ROLLER CR",
+  "oem": "03046A0397",
+  "oemKey": "03046A0397",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0014",
+  "type": "roller-hub",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03046a0397-cm-0014.jpg"
+  ],
+  "imageAlt": "Roller CR, Hayssen part number 03046A0397",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 14,
+  "flags": []
+ },
+ {
+  "id": "03047b3475-post",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Post",
+  "nameRaw": "POST",
+  "oem": "03047B3475",
+  "oemKey": "03047B3475",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0015",
+  "type": "roller-hub",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03047b3475-cm-0015.jpg"
+  ],
+  "imageAlt": "Post, Hayssen part number 03047B3475",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 15,
+  "flags": []
+ },
+ {
+  "id": "03047b3478-insert-bracket",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Insert Bracket",
+  "nameRaw": "INSERT BRACKET",
+  "oem": "03047B3478",
+  "oemKey": "03047B3478",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0016",
+  "type": "bracket",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03047b3478-cm-0016.jpg"
+  ],
+  "imageAlt": "Insert Bracket, Hayssen part number 03047B3478",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 16,
+  "flags": []
+ },
+ {
+  "id": "03047b4296-stainless-steel-block-take-up",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Stainless Steel Block Take-Up",
+  "nameRaw": "SS BLOCK TAKE-UP",
+  "oem": "03047B4296",
+  "oemKey": "03047B4296",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0017",
+  "type": "block",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03047b4296-cm-0017.jpg"
+  ],
+  "imageAlt": "Stainless Steel Block Take-Up, Hayssen part number 03047B4296",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 17,
+  "flags": []
+ },
+ {
+  "id": "10047a0955-spring-compression",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Spring Compression",
+  "nameRaw": "SPRING COMPRESSION",
+  "oem": "10047A0955",
+  "oemKey": "10047A0955",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0018",
+  "type": "spring",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10047a0955-cm-0018.jpg"
+  ],
+  "imageAlt": "Spring Compression, Hayssen part number 10047A0955",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 18,
+  "flags": []
+ },
+ {
+  "id": "03047a3126-hub-idler",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Hub Idler",
+  "nameRaw": "HUB IDLER",
+  "oem": "03047A3126",
+  "oemKey": "03047A3126",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0019",
+  "type": "roller-hub",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03047a3126-cm-0019.jpg"
+  ],
+  "imageAlt": "Hub Idler, Hayssen part number 03047A3126",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 19,
+  "flags": []
+ },
+ {
+  "id": "10777b2960-shaft-drive",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Shaft Drive",
+  "nameRaw": "SHAFT DRIVE",
+  "oem": "10777B2960",
+  "oemKey": "10777B2960",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0020",
+  "type": "shaft",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10777b2960-cm-0020.jpg"
+  ],
+  "imageAlt": "Shaft Drive, Hayssen part number 10777B2960",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 20,
+  "flags": [
+   "OEM 10777B2960 shares its last 5 characters with PULLEY-XL24T W/ FLANGES (10187B2960); verify neither is a copy error."
+  ]
+ },
+ {
+  "id": "10187b2960-pulley-xl24t-with-flanges",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Pulley-XL24T with Flanges",
+  "nameRaw": "PULLEY-XL24T W/ FLANGES",
+  "oem": "10187B2960",
+  "oemKey": "10187B2960",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0021",
+  "type": "pulley",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10187b2960-cm-0021.jpg"
+  ],
+  "imageAlt": "Pulley-XL24T with Flanges, Hayssen part number 10187B2960",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 21,
+  "flags": [
+   "OEM 10187B2960 shares its last 5 characters with SHAFT DRIVE (10777B2960); verify neither is a copy error."
+  ]
+ },
+ {
+  "id": "03047a2510-block-teflon-take-up",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Block-Teflon Take-Up",
+  "nameRaw": "BLOCK-TEFLON TAKE-UP",
+  "oem": "03047A2510",
+  "oemKey": "03047A2510",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0022",
+  "type": "block",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03047a2510-cm-0022.jpg"
+  ],
+  "imageAlt": "Block-Teflon Take-Up, Hayssen part number 03047A2510",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 22,
+  "flags": []
+ },
+ {
+  "id": "03047b3502-pulley-idler",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Pulley Idler",
+  "nameRaw": "PULLEY IDLER",
+  "oem": "03047B3502",
+  "oemKey": "03047B3502",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0023",
+  "type": "pulley",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03047b3502-cm-0023.jpg"
+  ],
+  "imageAlt": "Pulley Idler, Hayssen part number 03047B3502",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 23,
+  "flags": []
+ },
+ {
+  "id": "10777a1241-shaft-1-000-x-36-812",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Shaft 1.000 x 36.812",
+  "nameRaw": "SHAFT 1.000 X 36.812",
+  "oem": "10777A1241",
+  "oemKey": "10777A1241",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0024",
+  "type": "shaft",
+  "attrs": {
+   "size": "1.000 x 36.812"
+  },
+  "images": [
+   "./../assets/parts/10777a1241-cm-0024.jpg"
+  ],
+  "imageAlt": "Shaft 1.000 x 36.812, Hayssen part number 10777A1241",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 24,
+  "flags": []
+ },
+ {
+  "id": "10777a0035-shaft-1-000-x-30-812",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Shaft 1.000 x 30.812",
+  "nameRaw": "SHAFT 1.000 X 30.812",
+  "oem": "10777A0035",
+  "oemKey": "10777A0035",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0025",
+  "type": "shaft",
+  "attrs": {
+   "size": "1.000 x 30.812"
+  },
+  "images": [
+   "./../assets/parts/10777a0035-cm-0025.jpg"
+  ],
+  "imageAlt": "Shaft 1.000 x 30.812, Hayssen part number 10777A0035",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 25,
+  "flags": []
+ },
+ {
+  "id": "10117a1767-bearing-linear",
+  "machine": "hayssen-vffs",
+  "section": "pull-belt",
+  "name": "Bearing Linear",
+  "nameRaw": "BEARING LINEAR",
+  "oem": "10117A1767",
+  "oemKey": "10117A1767",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0026",
+  "type": "bushing-bearing",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10117a1767-cm-0026.jpg"
+  ],
+  "imageAlt": "Bearing Linear, Hayssen part number 10117A1767",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 26,
+  "flags": []
+ },
+ {
+  "id": "03027b7098-latch-plate",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Latch Plate",
+  "nameRaw": "LATCH PLATE",
+  "oem": "03027B7098",
+  "oemKey": "03027B7098",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0027",
+  "type": "plate",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027b7098-cm-0027.jpg",
+   "./../assets/parts/03027b7098-cm-0027-2.jpg"
+  ],
+  "imageAlt": "Latch Plate, Hayssen part number 03027B7098",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 27,
+  "flags": [
+   "Listed twice in source (second PLATEN PARTS section, same OEM); merged into one entry with both photos."
+  ]
+ },
+ {
+  "id": "10057a1822-shoulder-screw",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Shoulder Screw",
+  "nameRaw": "SHOULDER SCREW",
+  "oem": "10057A1822",
+  "oemKey": "10057A1822",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0028",
+  "type": "fastener",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10057a1822-cm-0028.jpg",
+   "./../assets/parts/10057a1822-cm-0028-2.jpg"
+  ],
+  "imageAlt": "Shoulder Screw, Hayssen part number 10057A1822",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 28,
+  "flags": [
+   "Listed twice in source (second PLATEN PARTS section, same OEM); merged into one entry with both photos."
+  ]
+ },
+ {
+  "id": "10047a0022-spring-1-2-x-1-1-8-long",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Spring ½ x 1 1/8 Long",
+  "nameRaw": "SPRING ½ X 1 1/8 LG",
+  "oem": "10047A0022",
+  "oemKey": "10047A0022",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0029",
+  "type": "spring",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10047a0022-cm-0029.jpg",
+   "./../assets/parts/10047a0022-cm-0029-2.jpg"
+  ],
+  "imageAlt": "Spring ½ x 1 1/8 Long, Hayssen part number 10047A0022",
+  "sharedPhoto": false,
+  "aka": [
+   "Spring"
+  ],
+  "availability": "ask",
+  "featured": false,
+  "order": 29,
+  "flags": [
+   "Listed twice in source (second section lists it as plain \"SPRING\", same OEM); merged, kept the dimensioned name and both photos."
+  ]
+ },
+ {
+  "id": "03487c3142-platen-bar-poly-5-16-x-22-3-4",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Platen Bar Poly 5/16 x 22 ¾",
+  "nameRaw": "PLATEN BAR POLY 5/16 X 22 ¾",
+  "oem": "03487C3142",
+  "oemKey": "03487C3142",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0030",
+  "type": "plate",
+  "attrs": {
+   "size": "5/16 x 22 ¾"
+  },
+  "images": [
+   "./../assets/parts/03487c3142-cm-0030.jpg",
+   "./../assets/parts/03487c3142-cm-0030-2.jpg"
+  ],
+  "imageAlt": "Platen Bar Poly 5/16 x 22 ¾, Hayssen part number 03487C3142",
+  "sharedPhoto": false,
+  "aka": [
+   "Bar Poly 5/16 x 22\""
+  ],
+  "availability": "ask",
+  "featured": false,
+  "order": 30,
+  "flags": [
+   "Listed twice in source (\"PLATEN BAR POLY 5/16 X 22 3/4\" and \"BAR POLY 5/16 X 22\\\"\", same OEM); merged. Confirm length (22 3/4\" vs 22\")."
+  ]
+ },
+ {
+  "id": "03026d2836-platen-body-sii-5cr",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Platen Body SII 5CR",
+  "nameRaw": "PLATEN BODY SII 5CR",
+  "oem": "03026D2836",
+  "oemKey": "03026D2836",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0031",
+  "type": "plate",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026d2836-cm-0031.jpg",
+   "./../assets/parts/03026d2836-cm-0031-2.jpg"
+  ],
+  "imageAlt": "Platen Body SII 5CR, Hayssen part number 03026D2836",
+  "sharedPhoto": false,
+  "aka": [
+   "Platen Body SII CR"
+  ],
+  "availability": "ask",
+  "featured": false,
+  "order": 31,
+  "flags": [
+   "Listed twice in source (\"PLATEN BODY SII 5CR\" and \"PLATEN BODY SII CR\", same OEM); merged. Confirm whether name is 5CR or CR."
+  ]
+ },
+ {
+  "id": "03026d3489-bracket-guided-pivot",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Bracket Guided Pivot",
+  "nameRaw": "BRACKET GUIDED PIVOT",
+  "oem": "03026D3489",
+  "oemKey": "03026D3489",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0032",
+  "type": "bracket",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026d3489-cm-0032.jpg",
+   "./../assets/parts/03026d3489-cm-0032-2.jpg"
+  ],
+  "imageAlt": "Bracket Guided Pivot, Hayssen part number 03026D3489",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 32,
+  "flags": [
+   "Listed twice in source (second PLATEN PARTS section, same OEM); merged into one entry with both photos."
+  ]
+ },
+ {
+  "id": "03487e2553-insulator-plate",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Insulator Plate",
+  "nameRaw": "INSULATOR PLATE",
+  "oem": "03487E2553",
+  "oemKey": "03487E2553",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0033",
+  "type": "insulator",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487e2553-cm-0033.jpg"
+  ],
+  "imageAlt": "Insulator Plate, Hayssen part number 03487E2553",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 33,
+  "flags": [
+   "Similar to INSULATOR TOOL PLATE in the second PLATEN PARTS section, but OEM differs (03487E2553 vs 03487A2555); verify whether same part."
+  ]
+ },
+ {
+  "id": "03487b2446-catch-plate",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Catch Plate",
+  "nameRaw": "CATCH PLATE",
+  "oem": "03487B2446",
+  "oemKey": "03487B2446",
+  "oemAlt": [
+   "030487C3142"
+  ],
+  "oemVerify": true,
+  "cm": "CM-0034",
+  "type": "plate",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487b2446-cm-0034.jpg",
+   "./../assets/parts/03487b2446-cm-0034-2.jpg"
+  ],
+  "imageAlt": "Catch Plate, Hayssen part number 03487B2446",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 34,
+  "flags": [
+   "OEM in first listing was \"030487C3142\" (11 chars, same as Platen Bar Poly CM-0030 with an extra 0). The second CATCH PLATE listing, same photo style, has 03487B2446, so that is used here and the two listings were merged. Confirm."
+  ]
+ },
+ {
+  "id": "03025b7031-stainless-steel-pivot-link-6-3-8in-center-to-center-of-hole",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Stainless Steel Pivot Link 6 3/8\" Center to Center of Holes",
+  "nameRaw": "SS PIVOT LINK 6 3/8 CENTER TO CENTER OF HOLES",
+  "oem": "03025B7031",
+  "oemKey": "03025B7031",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0035",
+  "type": "link",
+  "attrs": {
+   "size": "6 3/8\" center to center"
+  },
+  "images": [
+   "./../assets/parts/03025b7031-cm-0035.jpg"
+  ],
+  "imageAlt": "Stainless Steel Pivot Link 6 3/8\" Center to Center of Holes, Hayssen part number 03025B7031",
+  "sharedPhoto": true,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 35,
+  "flags": [
+   "Image image35.jpeg is reused for 2 parts (CM-0035, CM-0037)."
+  ]
+ },
+ {
+  "id": "03027b9107-sleeve-adjustment",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Sleeve Adjustment",
+  "nameRaw": "SLEEVE ADJ",
+  "oem": "03027B9107",
+  "oemKey": "03027B9107",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0036",
+  "type": "insert-spacer",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027b9107-cm-0036.jpg"
+  ],
+  "imageAlt": "Sleeve Adjustment, Hayssen part number 03027B9107",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 36,
+  "flags": []
+ },
+ {
+  "id": "030265286-stainless-steel-pivot-link-6in-center-to-center-of-holes",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Stainless Steel Pivot Link 6\" Center to Center of Holes",
+  "nameRaw": "SS PIVOT LINK 6” CENTER TO CENTER OF HOLES",
+  "oem": "03026-5286",
+  "oemKey": "030265286",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0037",
+  "type": "link",
+  "attrs": {
+   "size": "6\" center to center"
+  },
+  "images": [
+   "./../assets/parts/030265286-cm-0037.jpg"
+  ],
+  "imageAlt": "Stainless Steel Pivot Link 6\" Center to Center of Holes, Hayssen part number 03026-5286",
+  "sharedPhoto": true,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 37,
+  "flags": [
+   "Image image35.jpeg is reused for 2 parts (CM-0035, CM-0037).",
+   "OEM contains a hyphen and does not follow the standard pattern; verify against the original part.",
+   "OEM in source is \"03026-5286\" (hyphenated, only 9 letters/digits); likely 03026B5286 but unverified, so original kept. Confirm."
+  ]
+ },
+ {
+  "id": "03027a7377-spacer",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Spacer",
+  "nameRaw": "SPACER",
+  "oem": "03027A7377",
+  "oemKey": "03027A7377",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0038",
+  "type": "insert-spacer",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a7377-cm-0038.jpg"
+  ],
+  "imageAlt": "Spacer, Hayssen part number 03027A7377",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 38,
+  "flags": [
+   "Label missing \"OEM\" in source (line reads \"#number\"); treated as the OEM number."
+  ]
+ },
+ {
+  "id": "03027a9240-screw-link-arm",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Screw Link Arm",
+  "nameRaw": "SCREW LINK ARM",
+  "oem": "03027A9240",
+  "oemKey": "03027A9240",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0039",
+  "type": "fastener",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9240-cm-0039.jpg"
+  ],
+  "imageAlt": "Screw Link Arm, Hayssen part number 03027A9240",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 39,
+  "flags": [
+   "OEM number shared with CM-0046 Aluminum Arm Link Black Anodized — confirm"
+  ]
+ },
+ {
+  "id": "03027a9504-shaft-floating",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Shaft Floating",
+  "nameRaw": "SHAFT FLOATING",
+  "oem": "03027A9504",
+  "oemKey": "03027A9504",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0040",
+  "type": "shaft",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9504-cm-0040.jpg"
+  ],
+  "imageAlt": "Shaft Floating, Hayssen part number 03027A9504",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 40,
+  "flags": []
+ },
+ {
+  "id": "03027a9499-fixed-shaft-die-carrier",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Fixed Shaft - Die Carrier",
+  "nameRaw": "FIXED SHAFT- DIE CARRIER",
+  "oem": "03027A9499",
+  "oemKey": "03027A9499",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0041",
+  "type": "shaft",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9499-cm-0041.jpg"
+  ],
+  "imageAlt": "Fixed Shaft - Die Carrier, Hayssen part number 03027A9499",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 41,
+  "flags": [
+   "Ambiguous image: image40 and image41 are standalone lines after this part and before SHAFT CARRIER ACTUATOR; both photos show long rods. Document rule would give both to SHAFT CARRIER ACTUATOR, leaving this part with no photo, so image40 was assigned here and image41 to SHAFT CARRIER ACTUATOR. Verify with owner."
+  ]
+ },
+ {
+  "id": "03027b7381-shaft-carrier-actuator",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Shaft Carrier Actuator",
+  "nameRaw": "SHAFT CARRIER ACTUATOR",
+  "oem": "03027B7381",
+  "oemKey": "03027B7381",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0042",
+  "type": "shaft",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027b7381-cm-0042.jpg"
+  ],
+  "imageAlt": "Shaft Carrier Actuator, Hayssen part number 03027B7381",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 42,
+  "flags": [
+   "Ambiguous image: image41 assigned here, image40 assigned to FIXED SHAFT- DIE CARRIER (both photos are long shafts and cannot be told apart reliably). Verify with owner."
+  ]
+ },
+ {
+  "id": "03027a8608-insert-tie-bar-teflon",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Insert Tie Bar Teflon",
+  "nameRaw": "INSERT TIE BAR TEFLON",
+  "oem": "03027A8608",
+  "oemKey": "03027A8608",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0043",
+  "type": "insert-spacer",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a8608-cm-0043.jpg"
+  ],
+  "imageAlt": "Insert Tie Bar Teflon, Hayssen part number 03027A8608",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 43,
+  "flags": [
+   "OEM number shared with CM-0044 Teflon Insert Casting — confirm"
+  ]
+ },
+ {
+  "id": "03027a8608-teflon-insert-casting",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Teflon Insert Casting",
+  "nameRaw": "TEFLON INSERT CASTING",
+  "oem": "03027A8608",
+  "oemKey": "03027A8608",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0044",
+  "type": "insert-spacer",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a8608-cm-0044.jpg"
+  ],
+  "imageAlt": "Teflon Insert Casting, Hayssen part number 03027A8608",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 44,
+  "flags": [
+   "OEM number shared with CM-0043 Insert Tie Bar Teflon — confirm"
+  ]
+ },
+ {
+  "id": "03027a6449-aluminum-arm-link-black-anodized",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Aluminum Arm Link Black Anodized",
+  "nameRaw": "ALUM ARM LINK BLACK ANODIZED",
+  "oem": "03027A6449",
+  "oemKey": "03027A6449",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0045",
+  "type": "link",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a6449-cm-0045.jpg"
+  ],
+  "imageAlt": "Aluminum Arm Link Black Anodized, Hayssen part number 03027A6449",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 45,
+  "flags": []
+ },
+ {
+  "id": "03027a9240-aluminum-arm-link-black-anodized",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Aluminum Arm Link Black Anodized",
+  "nameRaw": "ALUM ARM LINK BLACK ANODIZED",
+  "oem": "03027A9240",
+  "oemKey": "03027A9240",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0046",
+  "type": "link",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9240-cm-0046.jpg"
+  ],
+  "imageAlt": "Aluminum Arm Link Black Anodized, Hayssen part number 03027A9240",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 46,
+  "flags": [
+   "OEM number shared with CM-0039 Screw Link Arm — confirm"
+  ]
+ },
+ {
+  "id": "10117a0255-bearing-ball-1in",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Bearing Ball 1\"",
+  "nameRaw": "BEARING BALL 1”",
+  "oem": "10117A0255",
+  "oemKey": "10117A0255",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0047",
+  "type": "bushing-bearing",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10117a0255-cm-0047.jpg"
+  ],
+  "imageAlt": "Bearing Ball 1\", Hayssen part number 10117A0255",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 47,
+  "flags": []
+ },
+ {
+  "id": "03026e1891-stainless-steel-shaft-for-jaw-carrier-1in-x-26-875-long-wit",
+  "machine": "hayssen-vffs",
+  "section": "actuator",
+  "name": "Stainless Steel Shaft for Jaw Carrier 1\" x 26.875 Long, with 2 Keyways & 2 Tapered Holes (Only Shaft)",
+  "nameRaw": "SS SHAFT FOR JAW CARRIER 1”X 26.875 LG W/2 K-WAYS & 2 TAPPERED HOLES (ONLY SHAFT)",
+  "oem": "03026E1891",
+  "oemKey": "03026E1891",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0048",
+  "type": "shaft",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026e1891-cm-0048.jpg"
+  ],
+  "imageAlt": "Stainless Steel Shaft for Jaw Carrier 1\" x 26.875 Long, with 2 Keyways & 2 Tapered Holes (Only Shaft), Hayssen part number 03026E1891",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 48,
+  "flags": [],
+  "note": "Shaft only"
+ },
+ {
+  "id": "10187a4537-pulley-at-10-28t",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Pulley AT 10.28T",
+  "nameRaw": "PULLEY AT 10.28T",
+  "oem": "10187A4537",
+  "oemKey": "10187A4537",
+  "oemAlt": [
+   "1018A4537"
+  ],
+  "oemVerify": true,
+  "cm": "CM-0049",
+  "type": "pulley",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10187a4537-cm-0049.jpg"
+  ],
+  "imageAlt": "Pulley AT 10.28T, Hayssen part number 10187A4537",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 49,
+  "flags": [
+   "OEM in source was \"1018A4537\" (9 chars); corrected to 10187A4537 (sister part CM-0055 Pulley AT 10-50T is 10187A4538). Confirm."
+  ]
+ },
+ {
+  "id": "03487b7819-gearbox-mount-guide",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Gearbox Mount Guide",
+  "nameRaw": "GEARBOX MOUNT GUIDE",
+  "oem": "03487B7819",
+  "oemKey": "03487B7819",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0050",
+  "type": "guide-support",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487b7819-cm-0050.jpg"
+  ],
+  "imageAlt": "Gearbox Mount Guide, Hayssen part number 03487B7819",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 50,
+  "flags": []
+ },
+ {
+  "id": "03487b4168-support-bracket",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Support Bracket",
+  "nameRaw": "SUPPORT BRACKET",
+  "oem": "03487B4168",
+  "oemKey": "03487B4168",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0051",
+  "type": "bracket",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487b4168-cm-0051.jpg"
+  ],
+  "imageAlt": "Support Bracket, Hayssen part number 03487B4168",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 51,
+  "flags": []
+ },
+ {
+  "id": "03487a7822-guide-insert",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Guide Insert",
+  "nameRaw": "GUIDE INSERT",
+  "oem": "03487A7822",
+  "oemKey": "03487A7822",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0052",
+  "type": "insert-spacer",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487a7822-cm-0052.jpg"
+  ],
+  "imageAlt": "Guide Insert, Hayssen part number 03487A7822",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 52,
+  "flags": []
+ },
+ {
+  "id": "03487b7821-tensioner-support",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Tensioner Support",
+  "nameRaw": "TENSIONER SUPPORT",
+  "oem": "03487B7821",
+  "oemKey": "03487B7821",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0053",
+  "type": "guide-support",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487b7821-cm-0053.jpg"
+  ],
+  "imageAlt": "Tensioner Support, Hayssen part number 03487B7821",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 53,
+  "flags": []
+ },
+ {
+  "id": "03487c3861-support-bracket-output-shaft",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Support Bracket Output Shaft",
+  "nameRaw": "SUPPORT BRACKET OUTPUT SHAFT",
+  "oem": "03487C3861",
+  "oemKey": "03487C3861",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0054",
+  "type": "shaft",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487c3861-cm-0054.jpg"
+  ],
+  "imageAlt": "Support Bracket Output Shaft, Hayssen part number 03487C3861",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 54,
+  "flags": []
+ },
+ {
+  "id": "10187a4538-pulley-at-10-50t",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Pulley AT 10-50T",
+  "nameRaw": "PULLEY AT 10-50T",
+  "oem": "10187A4538",
+  "oemKey": "10187A4538",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0055",
+  "type": "pulley",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10187a4538-cm-0055.jpg"
+  ],
+  "imageAlt": "Pulley AT 10-50T, Hayssen part number 10187A4538",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 55,
+  "flags": []
+ },
+ {
+  "id": "03487a7820-tensioning-plate",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Tensioning Plate",
+  "nameRaw": "TENSIONING PLATE",
+  "oem": "03487A7820",
+  "oemKey": "03487A7820",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0056",
+  "type": "plate",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487a7820-cm-0056.jpg"
+  ],
+  "imageAlt": "Tensioning Plate, Hayssen part number 03487A7820",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 56,
+  "flags": []
+ },
+ {
+  "id": "03026b3398-drive-link-assembly",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Drive Link Assembly",
+  "nameRaw": "DRIVE LINK ASSY",
+  "oem": "03026B3398",
+  "oemKey": "03026B3398",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0057",
+  "type": "assembly",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026b3398-cm-0057.jpg"
+  ],
+  "imageAlt": "Drive Link Assembly, Hayssen part number 03026B3398",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 57,
+  "flags": []
+ },
+ {
+  "id": "03487e7817-support-plate-5-cr",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Support Plate 5-CR",
+  "nameRaw": "SUPPORT PLATE 5-CR",
+  "oem": "03487E7817",
+  "oemKey": "03487E7817",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0058",
+  "type": "plate",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487e7817-cm-0058.jpg"
+  ],
+  "imageAlt": "Support Plate 5-CR, Hayssen part number 03487E7817",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 58,
+  "flags": []
+ },
+ {
+  "id": "03487c3976-link-bar",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Link Bar",
+  "nameRaw": "LINK BAR",
+  "oem": "03487C3976",
+  "oemKey": "03487C3976",
+  "oemAlt": [
+   "030487C3976"
+  ],
+  "oemVerify": true,
+  "cm": "CM-0059",
+  "type": "link",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487c3976-cm-0059.jpg"
+  ],
+  "imageAlt": "Link Bar, Hayssen part number 03487C3976",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 59,
+  "flags": [
+   "OEM in source was \"030487C3976\" (11 chars); corrected to 03487C3976 to match the 03487 Servo series. Confirm."
+  ]
+ },
+ {
+  "id": "03487b3868-outrigger-support-bracket",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Outrigger Support Bracket",
+  "nameRaw": "OUTRIGGER SUPPORT BRACKET",
+  "oem": "03487B3868",
+  "oemKey": "03487B3868",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0060",
+  "type": "bracket",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487b3868-cm-0060.jpg"
+  ],
+  "imageAlt": "Outrigger Support Bracket, Hayssen part number 03487B3868",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 60,
+  "flags": []
+ },
+ {
+  "id": "03026a2024-pin-clevis",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Pin Clevis",
+  "nameRaw": "PIN CLEVIS",
+  "oem": "03026A2024",
+  "oemKey": "03026A2024",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0061",
+  "type": "fastener",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026a2024-cm-0061.jpg"
+  ],
+  "imageAlt": "Pin Clevis, Hayssen part number 03026A2024",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 61,
+  "flags": []
+ },
+ {
+  "id": "03487c7816-output-shaft",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Output Shaft",
+  "nameRaw": "OUTPUT SHAFT",
+  "oem": "03487C7816",
+  "oemKey": "03487C7816",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0062",
+  "type": "shaft",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487c7816-cm-0062.jpg"
+  ],
+  "imageAlt": "Output Shaft, Hayssen part number 03487C7816",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 62,
+  "flags": []
+ },
+ {
+  "id": "03026b3374-outrigger-plate-assembly",
+  "machine": "hayssen-vffs",
+  "section": "servo",
+  "name": "Outrigger Plate Assembly",
+  "nameRaw": "OUTRIGGER PLATE ASSY",
+  "oem": "03026B3374",
+  "oemKey": "03026B3374",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0063",
+  "type": "assembly",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026b3374-cm-0063.jpg"
+  ],
+  "imageAlt": "Outrigger Plate Assembly, Hayssen part number 03026B3374",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 63,
+  "flags": []
+ },
+ {
+  "id": "03027a9225-support-air-tube-cr",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Support Air Tube CR",
+  "nameRaw": "SUPPORT AIR TUBE CR",
+  "oem": "03027A9225",
+  "oemKey": "03027A9225",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0064",
+  "type": "guide-support",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9225-cm-0064.jpg"
+  ],
+  "imageAlt": "Support Air Tube CR, Hayssen part number 03027A9225",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 64,
+  "flags": []
+ },
+ {
+  "id": "03047a2643-block-anchor-cr",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Block Anchor CR",
+  "nameRaw": "BLOCK ANCHOR CR",
+  "oem": "03047A2643",
+  "oemKey": "03047A2643",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0065",
+  "type": "block",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03047a2643-cm-0065.jpg"
+  ],
+  "imageAlt": "Block Anchor CR, Hayssen part number 03047A2643",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 65,
+  "flags": []
+ },
+ {
+  "id": "03027b1346-assembly-air-tube",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Assembly Air Tube",
+  "nameRaw": "ASSY. AIR TUBE",
+  "oem": "03027B1346",
+  "oemKey": "03027B1346",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0066",
+  "type": "assembly",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027b1346-cm-0066.jpg"
+  ],
+  "imageAlt": "Assembly Air Tube, Hayssen part number 03027B1346",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 69,
+  "flags": []
+ },
+ {
+  "id": "03027a9229-bar-air-tube-mounting-cr",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Bar Air Tube Mounting CR",
+  "nameRaw": "BAR AIR TUBE MTG CR",
+  "oem": "03027A9229",
+  "oemKey": "03027A9229",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0067",
+  "type": "bar",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9229-cm-0067.jpg"
+  ],
+  "imageAlt": "Bar Air Tube Mounting CR, Hayssen part number 03027A9229",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 71,
+  "flags": [
+   "Label reads \"CM#\" instead of \"OEM #\" in source; treated as the OEM number."
+  ]
+ },
+ {
+  "id": "03487a2555-insulator-tool-plate",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Insulator Tool Plate",
+  "nameRaw": "INSULATOR TOOL PLATE",
+  "oem": "03487A2555",
+  "oemKey": "03487A2555",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0068",
+  "type": "insulator",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487a2555-cm-0068.jpg"
+  ],
+  "imageAlt": "Insulator Tool Plate, Hayssen part number 03487A2555",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 74,
+  "flags": [
+   "Similar to INSULATOR PLATE in the first PLATEN PARTS section, but OEM differs (03487A2555 vs 03487E2553); verify whether same part."
+  ]
+ },
+ {
+  "id": "03487a2025-bracket-plunger",
+  "machine": "hayssen-vffs",
+  "section": "platen",
+  "name": "Bracket Plunger",
+  "nameRaw": "BRACKET PLUNGER",
+  "oem": "03487A2025",
+  "oemKey": "03487A2025",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0069",
+  "type": "bracket",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03487a2025-cm-0069.jpg"
+  ],
+  "imageAlt": "Bracket Plunger, Hayssen part number 03487A2025",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 75,
+  "flags": []
+ },
+ {
+  "id": "10047f0969-spring-compression-975-long-x-660-od",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Spring Compression .975 Long x .660 OD",
+  "nameRaw": "SPRING COMP .975 LG X .660 OD",
+  "oem": "10047F0969",
+  "oemKey": "10047F0969",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0070",
+  "type": "spring",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10047f0969-cm-0070.jpg"
+  ],
+  "imageAlt": "Spring Compression .975 Long x .660 OD, Hayssen part number 10047F0969",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 77,
+  "flags": []
+ },
+ {
+  "id": "03027a9299-block-cylinder-pivot",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Block Cylinder Pivot",
+  "nameRaw": "BLOCK CYLINDER PIVOT",
+  "oem": "03027A9299",
+  "oemKey": "03027A9299",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0071",
+  "type": "block",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9299-cm-0071.jpg"
+  ],
+  "imageAlt": "Block Cylinder Pivot, Hayssen part number 03027A9299",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 78,
+  "flags": []
+ },
+ {
+  "id": "11177f0193-square-head-stainless-steel-1-4-20-long",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Square Head Stainless Steel ¼-20 Long",
+  "nameRaw": "SQ HEAD SS ¼-20 LG",
+  "oem": "11177F0193",
+  "oemKey": "11177F0193",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0072",
+  "type": "fastener",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/11177f0193-cm-0072.jpg"
+  ],
+  "imageAlt": "Square Head Stainless Steel ¼-20 Long, Hayssen part number 11177F0193",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 79,
+  "flags": []
+ },
+ {
+  "id": "03027a9345-plate-backup-16in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Plate Backup 16\"",
+  "nameRaw": "PLATE BACKUP 16”",
+  "oem": "03027A9345",
+  "oemKey": "03027A9345",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0073",
+  "type": "plate",
+  "attrs": {
+   "width": "16"
+  },
+  "images": [
+   "./../assets/parts/03027a9345-cm-0073.jpg"
+  ],
+  "imageAlt": "Plate Backup 16\", Hayssen part number 03027A9345",
+  "sharedPhoto": true,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 80,
+  "flags": [
+   "Image image79.jpeg is reused for 2 parts (CM-0073, CM-0089)."
+  ]
+ },
+ {
+  "id": "03026a1566-drive-link",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Drive Link",
+  "nameRaw": "DRIVE LINK",
+  "oem": "03026A1566",
+  "oemKey": "03026A1566",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0074",
+  "type": "link",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026a1566-cm-0074.jpg"
+  ],
+  "imageAlt": "Drive Link, Hayssen part number 03026A1566",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 81,
+  "flags": []
+ },
+ {
+  "id": "03026b1878-bar-support-14in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Bar Support (14\")",
+  "nameRaw": "BAR SUPPORT (14”)",
+  "oem": "03026B1878",
+  "oemKey": "03026B1878",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0075",
+  "type": "bar",
+  "attrs": {
+   "width": "14"
+  },
+  "images": [
+   "./../assets/parts/03026b1878-cm-0075.jpg"
+  ],
+  "imageAlt": "Bar Support (14\"), Hayssen part number 03026B1878",
+  "sharedPhoto": true,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 82,
+  "flags": [
+   "Image image81.jpeg is reused for 2 parts (CM-0075, CM-0079)."
+  ]
+ },
+ {
+  "id": "03027a9086-link-stiffener",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Link Stiffener",
+  "nameRaw": "LINK STIFFENER",
+  "oem": "03027A9086",
+  "oemKey": "03027A9086",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0076",
+  "type": "link",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9086-cm-0076.jpg"
+  ],
+  "imageAlt": "Link Stiffener, Hayssen part number 03027A9086",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 83,
+  "flags": []
+ },
+ {
+  "id": "03026a1567-link-knife",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Link Knife",
+  "nameRaw": "LINK KNIFE",
+  "oem": "03026A1567",
+  "oemKey": "03026A1567",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0077",
+  "type": "link",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026a1567-cm-0077.jpg"
+  ],
+  "imageAlt": "Link Knife, Hayssen part number 03026A1567",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 84,
+  "flags": []
+ },
+ {
+  "id": "10217a2848-air-knife-cylinder",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Air Knife Cylinder",
+  "nameRaw": "AIR KNIFE CYLINER",
+  "oem": "10217A2848",
+  "oemKey": "10217A2848",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0078",
+  "type": "cylinder",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10217a2848-cm-0078.jpg"
+  ],
+  "imageAlt": "Air Knife Cylinder, Hayssen part number 10217A2848",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 85,
+  "flags": []
+ },
+ {
+  "id": "03026b1899-bar-support-16in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Bar Support (16\")",
+  "nameRaw": "BAR SUPPORT (16”)",
+  "oem": "03026B1899",
+  "oemKey": "03026B1899",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0079",
+  "type": "bar",
+  "attrs": {
+   "width": "16"
+  },
+  "images": [
+   "./../assets/parts/03026b1899-cm-0079.jpg"
+  ],
+  "imageAlt": "Bar Support (16\"), Hayssen part number 03026B1899",
+  "sharedPhoto": true,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 86,
+  "flags": [
+   "Image image81.jpeg is reused for 2 parts (CM-0075, CM-0079)."
+  ]
+ },
+ {
+  "id": "03026a2018-drive-link",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Drive Link",
+  "nameRaw": "DRIVE LINK",
+  "oem": "03026A2018",
+  "oemKey": "03026A2018",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0080",
+  "type": "link",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026a2018-cm-0080.jpg"
+  ],
+  "imageAlt": "Drive Link, Hayssen part number 03026A2018",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 87,
+  "flags": []
+ },
+ {
+  "id": "10107a1652-eye-cylinder",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Eye Cylinder",
+  "nameRaw": "EYE CYLINDER",
+  "oem": "10107A1652",
+  "oemKey": "10107A1652",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0081",
+  "type": "cylinder",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/10107a1652-cm-0081.jpg"
+  ],
+  "imageAlt": "Eye Cylinder, Hayssen part number 10107A1652",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 88,
+  "flags": []
+ },
+ {
+  "id": "03026a1531-link-knife",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Link Knife",
+  "nameRaw": "LINK KNIFE",
+  "oem": "03026A1531",
+  "oemKey": "03026A1531",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0082",
+  "type": "link",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026a1531-cm-0082.jpg"
+  ],
+  "imageAlt": "Link Knife, Hayssen part number 03026A1531",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 89,
+  "flags": []
+ },
+ {
+  "id": "03026a1530-drive-link",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Drive Link",
+  "nameRaw": "DRIVE LINK",
+  "oem": "03026A1530",
+  "oemKey": "03026A1530",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0083",
+  "type": "link",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026a1530-cm-0083.jpg"
+  ],
+  "imageAlt": "Drive Link, Hayssen part number 03026A1530",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 90,
+  "flags": [
+   "Label missing \"OEM\" in source (line reads \"#number\"); treated as the OEM number."
+  ]
+ },
+ {
+  "id": "10496b1986-seal-front-face-14in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Seal Front Face 14\"",
+  "nameRaw": "SEAL FRONT FACE 14”",
+  "oem": "10496B1986",
+  "oemKey": "10496B1986",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0084",
+  "type": "seal-face",
+  "attrs": {
+   "width": "14"
+  },
+  "images": [
+   "./../assets/parts/10496b1986-cm-0084.jpg"
+  ],
+  "imageAlt": "Seal Front Face 14\", Hayssen part number 10496B1986",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 91,
+  "flags": []
+ },
+ {
+  "id": "10496b1958-seal-face-front-16in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Seal Face Front 16\"",
+  "nameRaw": "SEAL FACE FRONT 16”",
+  "oem": "10496B1958",
+  "oemKey": "10496B1958",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0085",
+  "type": "seal-face",
+  "attrs": {
+   "width": "16"
+  },
+  "images": [
+   "./../assets/parts/10496b1958-cm-0085.jpg"
+  ],
+  "imageAlt": "Seal Face Front 16\", Hayssen part number 10496B1958",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 92,
+  "flags": []
+ },
+ {
+  "id": "03027c9098-gripper-rear",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Gripper Rear",
+  "nameRaw": "GRIPPER REAR",
+  "oem": "03027C9098",
+  "oemKey": "03027C9098",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0086",
+  "type": "knife-gripper",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027c9098-cm-0086.jpg"
+  ],
+  "imageAlt": "Gripper Rear, Hayssen part number 03027C9098",
+  "sharedPhoto": true,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 93,
+  "flags": [
+   "Image image91.jpeg is reused for 2 parts (CM-0086, CM-0101).",
+   "CM CATALOG # line is missing in source for this part."
+  ]
+ },
+ {
+  "id": "03027a9783-phenolic-insulator-16in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Phenolic Insulator 16\"",
+  "nameRaw": "PHENOLIC INSULATOR 16”",
+  "oem": "03027A9783",
+  "oemKey": "03027A9783",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0087",
+  "type": "insulator",
+  "attrs": {
+   "width": "16"
+  },
+  "images": [
+   "./../assets/parts/03027a9783-cm-0087.jpg"
+  ],
+  "imageAlt": "Phenolic Insulator 16\", Hayssen part number 03027A9783",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 94,
+  "flags": []
+ },
+ {
+  "id": "03487b3642-phenolic-insulator-14in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Phenolic Insulator 14\"",
+  "nameRaw": "PHENOLIC INSULATOR 14”",
+  "oem": "03487B3642",
+  "oemKey": "03487B3642",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0088",
+  "type": "insulator",
+  "attrs": {
+   "width": "14"
+  },
+  "images": [
+   "./../assets/parts/03487b3642-cm-0088.jpg"
+  ],
+  "imageAlt": "Phenolic Insulator 14\", Hayssen part number 03487B3642",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 95,
+  "flags": []
+ },
+ {
+  "id": "03047b3504-plate-back-up-14in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Plate Back-Up 14\"",
+  "nameRaw": "PLATE BACK-UP 14”",
+  "oem": "03047B3504",
+  "oemKey": "03047B3504",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0089",
+  "type": "plate",
+  "attrs": {
+   "width": "14"
+  },
+  "images": [
+   "./../assets/parts/03047b3504-cm-0089.jpg"
+  ],
+  "imageAlt": "Plate Back-Up 14\", Hayssen part number 03047B3504",
+  "sharedPhoto": true,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 96,
+  "flags": [
+   "Image image79.jpeg is reused for 2 parts (CM-0073, CM-0089)."
+  ]
+ },
+ {
+  "id": "03027a8286-floating-bushing",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Floating Bushing",
+  "nameRaw": "FLOATING BUSHING",
+  "oem": "03027A8286",
+  "oemKey": "03027A8286",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0090",
+  "type": "bushing-bearing",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a8286-cm-0090.jpg"
+  ],
+  "imageAlt": "Floating Bushing, Hayssen part number 03027A8286",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 97,
+  "flags": []
+ },
+ {
+  "id": "03027a8287-fixed-bushing",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Fixed Bushing",
+  "nameRaw": "FIXED BUSHING",
+  "oem": "03027A8287",
+  "oemKey": "03027A8287",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0091",
+  "type": "bushing-bearing",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a8287-cm-0091.jpg"
+  ],
+  "imageAlt": "Fixed Bushing, Hayssen part number 03027A8287",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 98,
+  "flags": []
+ },
+ {
+  "id": "03027a9275-plate-mounting",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Plate Mounting",
+  "nameRaw": "PLATE MOUNTING",
+  "oem": "03027A9275",
+  "oemKey": "03027A9275",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0092",
+  "type": "plate",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9275-cm-0092.jpg"
+  ],
+  "imageAlt": "Plate Mounting, Hayssen part number 03027A9275",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 99,
+  "flags": [
+   "OEM number shared with CM-0100 Plate Jaw Mounting — confirm"
+  ]
+ },
+ {
+  "id": "03026a1842-housing-spring",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Housing Spring",
+  "nameRaw": "HOUSING SPRING",
+  "oem": "03026A1842",
+  "oemKey": "03026A1842",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0093",
+  "type": "other",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026a1842-cm-0093.jpg"
+  ],
+  "imageAlt": "Housing Spring, Hayssen part number 03026A1842",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 100,
+  "flags": []
+ },
+ {
+  "id": "03026a1540-drive-link",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Drive Link",
+  "nameRaw": "DRIVE LINK",
+  "oem": "03026A1540",
+  "oemKey": "03026A1540",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0094",
+  "type": "link",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026a1540-cm-0094.jpg"
+  ],
+  "imageAlt": "Drive Link, Hayssen part number 03026A1540",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 101,
+  "flags": []
+ },
+ {
+  "id": "03026a1876-knife-holder-14in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Knife Holder 14\"",
+  "nameRaw": "KNIFE HOLDER 14”",
+  "oem": "03026A1876",
+  "oemKey": "03026A1876",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0095",
+  "type": "knife-gripper",
+  "attrs": {
+   "width": "14"
+  },
+  "images": [
+   "./../assets/parts/03026a1876-cm-0095.jpg"
+  ],
+  "imageAlt": "Knife Holder 14\", Hayssen part number 03026A1876",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 102,
+  "flags": []
+ },
+ {
+  "id": "03026a1895-knife-holder-16in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Knife Holder 16\"",
+  "nameRaw": "KNIFE HOLDER 16”",
+  "oem": "03026A1895",
+  "oemKey": "03026A1895",
+  "oemAlt": [
+   "030261895"
+  ],
+  "oemVerify": true,
+  "cm": "CM-0096",
+  "type": "knife-gripper",
+  "attrs": {
+   "width": "16"
+  },
+  "images": [
+   "./../assets/parts/03026a1895-cm-0096.jpg"
+  ],
+  "imageAlt": "Knife Holder 16\", Hayssen part number 03026A1895",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 103,
+  "flags": [
+   "OEM in source was \"030261895\" (9 chars); corrected to 03026A1895 (Knife Holder 14\" is 03026A1876). Confirm."
+  ]
+ },
+ {
+  "id": "10496b1904-rear-seal-face-14in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Rear Seal Face 14\"",
+  "nameRaw": "REAR SEAL FACE 14”",
+  "oem": "10496B1904",
+  "oemKey": "10496B1904",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0097",
+  "type": "seal-face",
+  "attrs": {
+   "width": "14"
+  },
+  "images": [
+   "./../assets/parts/10496b1904-cm-0097.jpg"
+  ],
+  "imageAlt": "Rear Seal Face 14\", Hayssen part number 10496B1904",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 104,
+  "flags": []
+ },
+ {
+  "id": "10496c1340-rear-seal-face-16in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Rear Seal Face 16\"",
+  "nameRaw": "REAR SEAL FACE 16”",
+  "oem": "10496C1340",
+  "oemKey": "10496C1340",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0098",
+  "type": "seal-face",
+  "attrs": {
+   "width": "16"
+  },
+  "images": [
+   "./../assets/parts/10496c1340-cm-0098.jpg"
+  ],
+  "imageAlt": "Rear Seal Face 16\", Hayssen part number 10496C1340",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 105,
+  "flags": []
+ },
+ {
+  "id": "03026c3304-plate-jaw-mounting",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Plate Jaw Mounting",
+  "nameRaw": "PLATE JAW MTG",
+  "oem": "03026C3304",
+  "oemKey": "03026C3304",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0099",
+  "type": "plate",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03026c3304-cm-0099.jpg"
+  ],
+  "imageAlt": "Plate Jaw Mounting, Hayssen part number 03026C3304",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 106,
+  "flags": []
+ },
+ {
+  "id": "03027a9275-plate-jaw-mounting",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Plate Jaw Mounting",
+  "nameRaw": "PLATE JAW MTG",
+  "oem": "03027A9275",
+  "oemKey": "03027A9275",
+  "oemAlt": [],
+  "oemVerify": true,
+  "cm": "CM-0100",
+  "type": "plate",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9275-cm-0100.jpg"
+  ],
+  "imageAlt": "Plate Jaw Mounting, Hayssen part number 03027A9275",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 107,
+  "flags": [
+   "OEM number shared with CM-0092 Plate Mounting — confirm"
+  ]
+ },
+ {
+  "id": "03487c3540-rear-gripper-14in",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Rear Gripper 14\"",
+  "nameRaw": "REAR GRIPPER 14”",
+  "oem": "03487C3540",
+  "oemKey": "03487C3540",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0101",
+  "type": "knife-gripper",
+  "attrs": {
+   "width": "14"
+  },
+  "images": [
+   "./../assets/parts/03487c3540-cm-0101.jpg"
+  ],
+  "imageAlt": "Rear Gripper 14\", Hayssen part number 03487C3540",
+  "sharedPhoto": true,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 108,
+  "flags": [
+   "Image image91.jpeg is reused for 2 parts (CM-0086, CM-0101)."
+  ]
+ },
+ {
+  "id": "03027a9087-spring-retainer",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Spring Retainer",
+  "nameRaw": "SPRING RETAINER",
+  "oem": "03027A9087",
+  "oemKey": "03027A9087",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0102",
+  "type": "other",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9087-cm-0102.jpg"
+  ],
+  "imageAlt": "Spring Retainer, Hayssen part number 03027A9087",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 109,
+  "flags": []
+ },
+ {
+  "id": "03027a9760-insulator",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Insulator",
+  "nameRaw": "INSULATOR",
+  "oem": "03027A9760",
+  "oemKey": "03027A9760",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0103",
+  "type": "insulator",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9760-cm-0103.jpg"
+  ],
+  "imageAlt": "Insulator, Hayssen part number 03027A9760",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 110,
+  "flags": []
+ },
+ {
+  "id": "03027a9300-pin-pivot",
+  "machine": "hayssen-vffs",
+  "section": "seal-faces",
+  "name": "Pin Pivot",
+  "nameRaw": "PIN PIVOT",
+  "oem": "03027A9300",
+  "oemKey": "03027A9300",
+  "oemAlt": [],
+  "oemVerify": false,
+  "cm": "CM-0104",
+  "type": "fastener",
+  "attrs": {},
+  "images": [
+   "./../assets/parts/03027a9300-cm-0104.jpg"
+  ],
+  "imageAlt": "Pin Pivot, Hayssen part number 03027A9300",
+  "sharedPhoto": false,
+  "aka": [],
+  "availability": "ask",
+  "featured": false,
+  "order": 111,
+  "flags": []
+ }
+]

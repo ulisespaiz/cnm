@@ -1,14 +1,16 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
-import ProductCard from '../../components/ProductCard.astro';
+import FeaturedParts from '../../components/FeaturedParts.astro';
 import CtaBand from '../../components/CtaBand.astro';
 import { site } from '../../config/site';
-import { getProducts, getServices, serviceUrl, categoryUrl } from '../../lib/content';
+import { getServices, serviceUrl } from '../../lib/content';
+import { getParts, getSections, sectionUrl, machineUrl } from '../../lib/parts';
 import { breadcrumbs, faqPage } from '../../lib/schema';
 
 const services = await getServices();
-const packagingParts = await getProducts('hayssen');
+const partCount = (await getParts()).length;
+const sections = await getSections('hayssen-vffs');
 const path = '/industries/food-processing-agriculture/';
 const crumbs = [
   { name: 'Home', path: '/' },
@@ -22,7 +24,7 @@ const faqs = [
   },
   {
     q: 'Do you carry parts for Hayssen packaging machines?',
-    a: 'Yes. Our parts store includes Hayssen vertical form fill seal (VFFS) parts. Ask us about the part you need and we will quote it.',
+    a: `Yes. Our parts catalog lists ${partCount} replacement parts for Hayssen vertical form fill seal (VFFS) machines, searchable by Hayssen part number. If yours is not listed, send us the number and we will quote it.`,
   },
   {
     q: 'Where are you located?',
@@ -74,17 +76,21 @@ const faqs = [
     </div>
   </section>
 
-  {packagingParts.length > 0 && (
-    <section class="section">
-      <div class="container">
-        <h2>Packaging equipment parts</h2>
-        <p>Parts for Hayssen vertical form fill seal machines are available in our <a href={categoryUrl('hayssen')}>parts store</a>.</p>
-        <div class="grid">
-          {packagingParts.map((p) => <ProductCard product={p} />)}
-        </div>
-      </div>
-    </section>
-  )}
+  <section class="section">
+    <div class="container">
+      <h2>Replacement parts for Hayssen VFFS machines</h2>
+      <p>
+        Our <a href={machineUrl('hayssen-vffs')}>parts catalog</a> lists {partCount} replacement parts for Hayssen vertical form
+        fill seal packaging machines, searchable by Hayssen part number:
+        {sections.map((sec, i) => (
+          <>
+            <a href={sectionUrl(sec)}>{sec.data.title}</a>{i < sections.length - 1 ? ', ' : '.'}
+          </>
+        ))}
+      </p>
+      <FeaturedParts />
+    </div>
+  </section>
 
   <section class="section section--alt">
     <div class="container faq-wrap">

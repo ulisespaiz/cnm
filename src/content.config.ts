@@ -2,38 +2,82 @@ import { defineCollection, reference } from 'astro:content';
 import { file, glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
-// Product categories: one JSON array, ordered as listed.
-const categories = defineCollection({
-  loader: file('src/content/categories.json'),
-  schema: ({ image }) =>
-    z.object({
-      title: z.string(),
-      summary: z.string(),
-      image: image().optional(),
-      order: z.number().default(0),
-    }),
+// Parts catalog. One machine (Hayssen VFFS) with six sections; every part is
+// identified by its OEM (Hayssen) number and a C&M catalog number.
+// Data: src/content/machines.json, sections.json, parts.json. Images live in
+// src/assets/parts/. Validation runs at build time in src/lib/parts.ts.
+const machines = defineCollection({
+  loader: file('src/content/machines.json'),
+  schema: z.object({
+    name: z.string(), // "Hayssen VFFS"
+    summary: z.string(),
+    models: z.array(z.string()).default([]), // owner to fill once known
+    order: z.number().default(0),
+  }),
 });
 
-// One Markdown file per product. The body is the long description.
-const products = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/products' }),
+const sections = defineCollection({
+  loader: file('src/content/sections.json'),
+  schema: z.object({
+    machine: reference('machines'),
+    title: z.string(), // "Stagger Parts"
+    blurb: z.string(), // unique 1-2 sentence intro (SEO)
+    order: z.number(),
+  }),
+});
+
+const PART_TYPES = [
+  'spring',
+  'shaft',
+  'pulley',
+  'bracket',
+  'plate',
+  'link',
+  'bushing-bearing',
+  'seal-face',
+  'cylinder',
+  'block',
+  'fastener',
+  'assembly',
+  'insulator',
+  'knife-gripper',
+  'roller-hub',
+  'insert-spacer',
+  'bar',
+  'guide-support',
+  'other',
+] as const;
+
+const parts = defineCollection({
+  loader: file('src/content/parts.json'),
   schema: ({ image }) =>
     z.object({
-      title: z.string(),
-      category: reference('categories'),
-      summary: z.string().max(220),
-      images: z.array(z.object({ src: image(), alt: z.string() })).default([]),
-      // Choices the customer picks before adding to the quote (size, finish, ...).
-      options: z
-        .array(z.object({ name: z.string(), values: z.array(z.string()).min(1) }))
-        .default([]),
-      specs: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
+      machine: reference('machines'),
+      section: reference('sections'),
+      name: z.string(), // cleaned display name
+      nameRaw: z.string(), // exactly as in the source catalog
+      oem: z.string(), // display form, e.g. 03187A0897
+      oemKey: z.string(), // normalized: uppercase A-Z0-9 only
+      oemAlt: z.array(z.string()).default([]), // extra keys that must also match (typos as written in the source)
+      oemVerify: z.boolean().default(false), // owner must confirm the number
+      cm: z.string(), // C&M catalog number, CM-0001
+      type: z.enum(PART_TYPES),
+      attrs: z
+        .object({
+          width: z.enum(['14', '16']).optional(),
+          side: z.enum(['LH', 'RH']).optional(),
+          size: z.string().optional(),
+        })
+        .default({}),
+      images: z.array(image()).default([]),
+      imageAlt: z.string(),
+      sharedPhoto: z.boolean().default(false), // photo also used for a similar part
+      aka: z.array(z.string()).default([]), // other names the part is listed under
+      note: z.string().optional(),
+      availability: z.enum(['ask', 'in-stock', 'made-to-order']).default('ask'),
       featured: z.boolean().default(false),
-      order: z.number().default(0),
-      seoTitle: z.string().optional(),
-      seoDescription: z.string().max(160).optional(),
-      // Drafts render in `astro dev` only, never in a production build.
-      draft: z.boolean().default(false),
+      order: z.number(), // catalog order
+      flags: z.array(z.string()).default([]), // data-quality notes for the owner (not shown)
     }),
 });
 
@@ -48,7 +92,7 @@ const areas = defineCollection({
     seoTitle: z.string().optional(),
     seoDescription: z.string().max(160).optional(),
     nearby: z.array(z.string()).default([]),
-    featuredProducts: z.array(reference('products')).default([]),
+    featuredParts: z.array(reference('parts')).default([]),
     faqs: z.array(z.object({ q: z.string(), a: z.string() })).default([]),
     draft: z.boolean().default(true),
   }),
@@ -91,4 +135,4 @@ const equipment = defineCollection({
     }),
 });
 
-export const collections = { categories, products, areas, services, equipment };
+export const collections = { machines, sections, parts, areas, services, equipment };
