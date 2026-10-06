@@ -9,7 +9,7 @@ import { site } from '../config/site';
       <h1>Privacy Policy</h1>
       <p><em>Template: have the business review this before launch.</em></p>
       <h2>What we collect</h2>
-      <p>When you send a quote request or message, we receive the details you enter (name, email, phone, city, project details and the products you selected). Your quote list is stored in your own browser until you send it.</p>
+      <p>When you send a quote request or message, we receive the details you enter ({site.store.enabled ? 'name, email, phone, city, project details and the products you selected' : 'name, email, phone, company, delivery preference, ZIP code, project details and the services or part numbers you add to your request'}). Your quote list is stored in your own browser until you send it.</p>
       <h2>How it is delivered</h2>
       <p>Form submissions are relayed to our inbox by Web3Forms, a form-processing service. We use the information only to respond to your request.</p>
       <h2>Sharing</h2>

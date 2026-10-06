@@ -27,6 +27,7 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
   data-kind={kind}
   data-fallback-email={site.email}
   data-reply-time={site.replyTime}
+  data-shop={site.store.enabled ? undefined : 'off'}
 >
   {missingKey && (
     <p class="form-alert form-alert--error" role="alert">
@@ -152,7 +153,8 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
         const items = getItems();
         const notes = String(data.get('message') || '').trim();
         if (!items.length && !notes) {
-          return 'Add a part or service to your quote, or describe what you need in the notes.';
+          // With the parts shop off (data-shop="off") there is no catalog to add parts from.
+          return `Add a ${form.dataset.shop === 'off' ? '' : 'part or '}service to your quote, or describe what you need in the notes.`;
         }
         ref = quoteRef();
         const company = String(data.get('company') || '').trim();

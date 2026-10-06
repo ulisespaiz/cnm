@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import { site } from '../config/site';
 ---
 
 <Base title="Page Not Found" noindex>
@@ -7,7 +8,14 @@ import Base from '../layouts/Base.astro';
     <div class="container prose">
       <h1>Page not found</h1>
       <p>That page moved or no longer exists.</p>
-      <p><a class="btn" href="/shop/">Browse products</a></p>
+      {site.store.enabled ? (
+        <p><a class="btn" href="/shop/">Browse products</a></p>
+      ) : (
+        <p class="btn-row">
+          <a class="btn" href="/services/">Our services</a>
+          <a class="btn btn--outline" href="/quote/">Get a quote</a>
+        </p>
+      )}
     </div>
   </section>
 </Base>

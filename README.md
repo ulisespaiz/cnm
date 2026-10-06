@@ -27,6 +27,7 @@ SHOW_DRAFTS=1 npm run build   # production build including drafts, for review
 | What | Where |
 |---|---|
 | Business name, phone, address, hours, domain | `src/config/site.ts` |
+| Parts shop on/off switch | `store.enabled` in `src/config/site.ts` |
 | Cities offered in the form and listed on the hub | `serviceAreas` in `src/config/site.ts` |
 | Product categories | `src/content/categories.json` |
 | Products (one file each) | `src/content/products/*.md` |
@@ -75,6 +76,44 @@ whole site. The template in each draft lists what to gather.
 
 Cities without a page are still listed on `/service-areas/` and in the
 LocalBusiness `areaServed` data.
+
+## Parts shop on/off
+
+The Hayssen parts catalog under `/shop/` is hidden from the public until the
+owner is ready. One line in `src/config/site.ts` controls it:
+
+```ts
+store: {
+  enabled: false, // Parts shop switch (see README "Parts shop on/off")
+```
+
+All the shop code stays in the repo; flip it to `true` to launch.
+
+**While it is `false`** (the build output, not just the links):
+
+- No `/shop/` pages are generated: no catalog, section or part pages and no
+  `search-index.json`. The build also deletes anything left in `dist/shop/`,
+  keeps `/shop/` out of the sitemap, and deletes the part photos and shop
+  scripts and styles that no page uses from `dist/_astro/`, so none of them
+  stays a public URL.
+- `/shop` and `/shop/*` answer with a `302` to `/quote/` (the build appends
+  these rules to `dist/_redirects`; the old `/product/*` links in
+  `public/_redirects` are rewritten in `dist/_redirects` to `302` straight to
+  `/quote/` too, so no redirect names a shop path).
+- Nothing else points at the shop: the Shop nav item, header button and footer
+  column, the home page search, Parts Store section and Hayssen FAQ, the
+  Hayssen section and FAQ on the food processing page, the quote page's catalog
+  wording and bulk paste, `llms.txt`, and the 404 and thank-you buttons.
+- The red header button reads "Get a Quote" and the quote page does not fetch
+  the catalog: a `?part=` number is added to the quote list as a plain line for
+  the shop to look up.
+- Quotes, the part-number request form, services and everything else work as
+  before.
+
+**Preview the shop** without launching it: set `enabled: true` locally and run
+`npm run dev`, or push a branch with it set to `true` and use the Cloudflare
+preview build for that branch. Do not merge that to `main` until you want the
+shop public.
 
 ## Quote form (Web3Forms)
 

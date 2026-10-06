@@ -13,6 +13,9 @@ import { breadcrumbs, itemList } from '../../lib/schema';
 import { site } from '../../config/site';
 import '../../styles/store.css';
 
+// Parts shop off (site.store.enabled): render nothing, send visitors to the quote page.
+if (!site.store.enabled) return Astro.redirect('/quote/', 302);
+
 const sections = await getSections();
 const parts = await getParts();
 const machineId = sections[0]?.data.machine.id ?? 'hayssen-vffs';

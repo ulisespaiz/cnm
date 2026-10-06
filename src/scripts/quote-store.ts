@@ -20,6 +20,7 @@ export interface QuoteItem {
   options: Record<string, string>;
   qty: number; // 1-999
   note?: string; // per-line note, max 300 chars
+  noCatalog?: boolean; // custom line made while the parts shop is off: there is no catalog to be "not in"
 }
 
 interface QuoteState {
@@ -118,15 +119,18 @@ export function addItem(item: Omit<QuoteItem, 'key' | 'kind' | 'options'> & { ki
 }
 
 // A part that is not in the catalog, identified only by the number typed.
-export function addCustom({ oem, qty = 1, note }: { oem: string; qty?: number; note?: string }) {
+// `catalog: false` is for the parts shop being off: the line is just the number
+// to look up, with no "not in catalog" wording.
+export function addCustom({ oem, qty = 1, note, catalog = true }: { oem: string; qty?: number; note?: string; catalog?: boolean }) {
   const clean = oem.trim().toUpperCase();
   return addItem({
     kind: 'custom',
     id: `custom:${clean.replace(/[^A-Z0-9]/g, '')}`,
-    title: `Part # ${clean} (not in catalog)`,
+    title: catalog ? `Part # ${clean} (not in catalog)` : `Part # ${clean}`,
     oem: clean,
     qty,
     note,
+    ...(catalog ? {} : { noCatalog: true }),
   });
 }
 
@@ -193,7 +197,7 @@ export function summarize(items = getItems()) {
     .map((i, n) => {
       const head =
         i.kind === 'custom'
-          ? `${n + 1}. [NOT IN CATALOG] ${i.oem ?? i.title} | qty ${i.qty}`
+          ? `${n + 1}. [${i.noCatalog ? 'PART # TO LOOK UP' : 'NOT IN CATALOG'}] ${i.oem ?? i.title} | qty ${i.qty}`
           : i.kind === 'service'
             ? `${n + 1}. SERVICE | ${i.title} | qty ${i.qty}`
             : `${n + 1}. ${i.oem ?? ''} | ${i.cm ?? ''} | ${i.title} | qty ${i.qty}`;

@@ -17,7 +17,8 @@ export const getStaticPaths = (async () => {
 const { area } = Astro.props;
 const { data } = area;
 const { Content } = await render(area);
-const products = (await getEntries(data.featuredParts)).filter(Boolean);
+// Featured parts are parts-shop pages: with the shop off (site.store.enabled) none are shown.
+const products = site.store.enabled ? (await getEntries(data.featuredParts)).filter(Boolean) : [];
 const crumbs = [
   { name: 'Home', path: '/' },
   { name: 'Service Areas', path: '/service-areas/' },

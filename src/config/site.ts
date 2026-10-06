@@ -7,9 +7,15 @@
 export const site = {
   name: 'C&M Machine Shop',
   legalName: 'C&M Machine Shop Inc.',
-  tagline: 'Precision machining, fabrication and parts in Salinas',
-  description:
-    'Family-owned machine shop in Salinas, CA since 2002. CNC machining, water-jet and laser cutting, welding, fabrication and a parts store.',
+  // Says "replacement parts" while the parts shop switch (store.enabled) is off: nothing is sold from stock then.
+  get tagline() {
+    return this.store.enabled ? 'Precision machining, fabrication and parts in Salinas' : 'Precision machining, fabrication and replacement parts in Salinas';
+  },
+  // Mentions the parts store only while the shop switch (store.enabled) is on.
+  get description() {
+    const tail = this.store.enabled ? ', fabrication and a parts store' : ' and fabrication';
+    return `Family-owned machine shop in Salinas, CA since 2002. CNC machining, water-jet and laser cutting, welding${tail}.`;
+  },
   url: 'https://cmmachshop.com',
   founded: 2002,
 
@@ -39,9 +45,12 @@ export const site = {
   replyTime: 'We reply within 1–2 business days',
   replyTimeShort: '1–2 business days',
 
-  // Parts store copy. Do not invent lead times or stock: leave leadTime null
-  // until the owner supplies one.
+  // Parts store. `enabled` is the one switch for the whole shop: false hides it
+  // from the public (README "Parts shop on/off"). Keep it a plain literal:
+  // astro.config.mjs imports this file. Do not invent lead times or stock:
+  // leave leadTime null until the owner supplies one.
   store: {
+    enabled: false, // Parts shop switch (see README "Parts shop on/off")
     pickup: 'Local pickup at 772 Vertin Ave, Salinas',
     shipping: 'Shipping available: ask on your quote', // CONFIRM carrier/policy with owner
     leadTime: null as string | null,
@@ -104,7 +113,7 @@ export const serviceAreas = [
 export const nav = [
   { label: 'About', href: '/about/' },
   { label: 'Services', href: '/services/' },
-  { label: 'Shop', href: '/shop/' },
+  ...(site.store.enabled ? [{ label: 'Shop', href: '/shop/' }] : []),
   { label: 'Our Machinery', href: '/our-machinery/' },
   { label: 'Contact', href: '/contact/' },
 ] as const;

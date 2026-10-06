@@ -1,5 +1,9 @@
 // /quote/ page behaviour: the items list, summary, reference, the bulk paste
 // panel and the /quote/?part=<number> link the store uses.
+//
+// Parts shop switch (site.store.enabled): the page root carries data-shop="off"
+// while the shop is off. Then there is no catalog index to fetch (it would 302
+// to this page), so a typed part number is added as a plain "look it up" line.
 
 import {
   addCustom,
@@ -50,11 +54,14 @@ function placeholderIcon() {
   return svg;
 }
 
+const shopOff = document.querySelector<HTMLElement>('.quote-page')?.dataset.shop === 'off';
+
 const label = (item: QuoteItem) => item.oem ?? item.title;
 
+// updateRow() flatMaps this, so it is always a list.
 function metaText(item: QuoteItem) {
-  if (item.kind === 'service') return 'Service';
-  if (item.kind === 'custom') return 'Not in catalog';
+  if (item.kind === 'service') return ['Service'];
+  if (item.kind === 'custom') return [item.noCatalog ? "We'll look it up" : 'Not in catalog'];
   return [item.oem && `Hayssen # ${item.oem}`, item.cm && `C&M # ${item.cm}`].filter(Boolean) as string[];
 }
 
@@ -227,6 +234,15 @@ document.querySelector('[data-clear-all]')?.addEventListener('click', () => {
   });
 });
 
+// A list saved while the shop was on can hold catalog lines. Their /shop/ pages now
+// redirect here, so turn each into a plain part-number line (no link, no thumbnail).
+if (shopOff) {
+  for (const item of getItems().filter((i) => i.kind === 'part')) {
+    removeItem(item.key);
+    addCustom({ oem: item.oem ?? item.title, qty: item.qty, note: item.note, catalog: false });
+  }
+}
+
 document.addEventListener('quote:change', render);
 render();
 
@@ -268,6 +284,11 @@ async function addFromUrl() {
   const qty = Math.max(1, Math.min(999, Math.round(Number(params.get('qty'))) || 1));
   // Drop the parameters first so a reload does not add the part again.
   history.replaceState(null, '', location.pathname + location.hash);
+  if (shopOff) {
+    addCustom({ oem: part, qty, catalog: false });
+    showToast(`Added ${qty} × ${part.toUpperCase()} (we'll look it up)`);
+    return;
+  }
   try {
     const rec = (await loadIndex()).find(part);
     if (rec) {

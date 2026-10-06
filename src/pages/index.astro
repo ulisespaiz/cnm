@@ -15,14 +15,18 @@ import waterjet from '../assets/equipment/Flow-Mach-500-Waterjet-Cutting-Machine
 import laser from '../assets/equipment/Laser-Cutting-Services.jpg';
 import verticalMill from '../assets/equipment/CNC-Vertical-Milling-Machine.jpg';
 
+// Parts shop switch (site.store.enabled): off hides every shop block on this page.
+const shopOn = site.store.enabled;
 const services = await getServices();
 const machines = await getEquipment();
-const parts = await getParts();
-const sections = (await getSections('hayssen-vffs')).map((s) => ({
-  title: s.data.title,
-  href: sectionUrl(s),
-  count: parts.filter((p) => p.data.section.id === s.id).length,
-}));
+const parts = shopOn ? await getParts() : [];
+const sections = shopOn
+  ? (await getSections('hayssen-vffs')).map((s) => ({
+      title: s.data.title,
+      href: sectionUrl(s),
+      count: parts.filter((p) => p.data.section.id === s.id).length,
+    }))
+  : [];
 // Owner's headline: "25 years of precision" (fixed, not computed).
 const yearsInBusiness = 25;
 
@@ -41,17 +45,23 @@ const faqs = [
     q: 'What services do you offer?',
     a: 'We offer a range of machining services including CNC milling, turning, fabrication, and custom part manufacturing. Our team is skilled in precision engineering for various industries.',
   },
-  {
-    q: 'Do you sell replacement parts for Hayssen machines?',
-    a: `Yes. Our parts catalog lists ${parts.length} replacement parts for Hayssen VFFS machines, searchable by Hayssen part number. If your part is not listed, send us the number and we will quote it.`,
-  },
+  ...(shopOn
+    ? [
+        {
+          q: 'Do you sell replacement parts for Hayssen machines?',
+          a: `Yes. Our parts catalog lists ${parts.length} replacement parts for Hayssen VFFS machines, searchable by Hayssen part number. If your part is not listed, send us the number and we will quote it.`,
+        },
+      ]
+    : []),
   {
     q: 'What materials do you use?',
     a: 'We work with a variety of materials including metals (aluminum, steel, titanium) and plastics. If you have specific material requirements, feel free to reach out.',
   },
   {
     q: 'How do I request a quote?',
-    a: `Add parts or services to your quote list and send it from our quote page, email us the details of your project, or call us directly at ${site.phone}. ${site.replyTime}.`,
+    a: shopOn
+      ? `Add parts or services to your quote list and send it from our quote page, email us the details of your project, or call us directly at ${site.phone}. ${site.replyTime}.`
+      : `Use our quote page to tell us what you need (a drawing, sample or part number is fine), email us the details, or call us directly at ${site.phone}. ${site.replyTime}.`,
   },
   {
     q: 'What is your typical turnaround time?',
@@ -70,36 +80,48 @@ const faqs = [
       <p class="eyebrow">Founded in {site.founded}</p>
       <h1>{yearsInBusiness} years of <span class="mark">precision.</span><br /> Still your machine shop.</h1>
       <p class="lead">
-        Custom machining &amp; fabrication services, and a parts store with {parts.length} replacement parts for Hayssen
-        VFFS machines.
+        {shopOn ? (
+          <>
+            Custom machining &amp; fabrication services, and a parts store with {parts.length} replacement parts for Hayssen
+            VFFS machines.
+          </>
+        ) : (
+          <>Custom machining and fabrication, plus replacement parts made to your drawing, sample or part number for food processing and packaging equipment.</>
+        )}
       </p>
 
-      <form class="part-search" action="/shop/" method="get" role="search">
-        <label for="hero-q">Search by Hayssen part #</label>
-        <div class="part-search__row">
-          <input
-            id="hero-q"
-            name="q"
-            type="search"
-            placeholder="e.g. 03187A0897"
-            autocomplete="off"
-            autocapitalize="characters"
-            spellcheck="false"
-            enterkeyhint="search"
-          />
-          <button class="btn btn--red" type="submit">Search</button>
-        </div>
-      </form>
+      {shopOn && (
+        <form class="part-search" action="/shop/" method="get" role="search">
+          <label for="hero-q">Search by Hayssen part #</label>
+          <div class="part-search__row">
+            <input
+              id="hero-q"
+              name="q"
+              type="search"
+              placeholder="e.g. 03187A0897"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              enterkeyhint="search"
+            />
+            <button class="btn btn--red" type="submit">Search</button>
+          </div>
+        </form>
+      )}
 
       <div class="hero__actions">
         <a class="btn btn--dark" href="/quote/">Get a Quote</a>
-        <a class="btn btn--outline" href="/shop/">Browse the Store</a>
+        {shopOn ? (
+          <a class="btn btn--outline" href="/shop/">Browse the Store</a>
+        ) : (
+          <a class="btn btn--outline" href="/services/">Our Services</a>
+        )}
       </div>
-      <dl class="stats">
+      <dl class:list={['stats', { 'stats--3': !shopOn }]}>
         <div><dt>Years in business</dt><dd>{yearsInBusiness}+</dd></div>
         <div><dt>Precision machines</dt><dd>{machines.length}</dd></div>
         <div><dt>Core services</dt><dd>{services.length}</dd></div>
-        <div class="stats__live"><dt>Parts in the store</dt><dd>{parts.length}</dd></div>
+        {shopOn && <div class="stats__live"><dt>Parts in the store</dt><dd>{parts.length}</dd></div>}
       </dl>
     </div>
   </section>
@@ -120,79 +142,81 @@ const faqs = [
     </div>
   </section>
 
-  <section class="section">
-    <div class="container">
-      <div class="split-head">
-        <div>
-          <p class="eyebrow">Parts Store</p>
-          <h2>The smarter way to get your <span class="text-blue">parts.</span></h2>
-        </div>
-        <p class="lead">
-          Replacement parts for Hayssen VFFS machines, made to match your part number, sample or print. Search by
-          Hayssen part number, add what you need to your quote list, and send it. Nothing to pay online.
-        </p>
-      </div>
-
-      <div class="store">
-        <div class="store__count">
-          <p class="store__eyebrow">Parts catalog</p>
-          <p class="store__num">{parts.length}</p>
-          <p class="store__label">replacement parts for Hayssen VFFS machines, in {sections.length} sections</p>
-          <div class="store__actions">
-            <a class="btn btn--red" href="/shop/">Browse all parts</a>
-            <a class="btn btn--light" href="/quote/#bulk">Paste a part list</a>
+  {shopOn && (
+    <section class="section">
+      <div class="container">
+        <div class="split-head">
+          <div>
+            <p class="eyebrow">Parts Store</p>
+            <h2>The smarter way to get your <span class="text-blue">parts.</span></h2>
           </div>
+          <p class="lead">
+            Replacement parts for Hayssen VFFS machines, made to match your part number, sample or print. Search by
+            Hayssen part number, add what you need to your quote list, and send it. Nothing to pay online.
+          </p>
         </div>
-        <ul class="store__sections" aria-label="Parts sections">
-          {sections.map((sec) => (
-            <li>
-              <a href={sec.href}>
-                <span class="store__sec-title">{sec.title}</span>
-                <span class="store__sec-count">{sec.count} parts <span aria-hidden="true">→</span></span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
 
-      <h3 class="featured__title">Featured parts</h3>
-      <div class="featured">
-        <FeaturedParts />
-      </div>
-      <div class="featured__actions">
-        <a class="btn btn--dark" href="/quote/#bulk">Paste a part list</a>
-        <a class="btn btn--outline" href="/shop/">Browse all parts</a>
-      </div>
-
-      <div class="bento">
-        <article class="bento__card">
-          <h3>Save time without sacrificing quality</h3>
-          <p class="muted">Skip the middleman. Order directly from a machine shop founded in {site.founded}. {site.store.madeTo}.</p>
-        </article>
-        <article class="bento__card">
-          <h3>3 steps to your part</h3>
-          <ol class="steps">
-            <li>Search by Hayssen part #</li>
-            <li>Send your quote request</li>
-            <li>Pick up in {site.address.city}, or ask about shipping</li>
-          </ol>
-        </article>
-        <article class="bento__card">
-          <h3>Quote support</h3>
-          <p class="muted">{site.replyTime} for quotes, orders, and custom part requests.</p>
-        </article>
-        <article class="bento__card bento__card--blue">
-          <h3>Focus on running your operation, not hunting for parts</h3>
-          <ul class="ticks ticks--light">
-            <li>No complicated ordering system</li>
-            <li>Fully customizable orders</li>
-            <li>Local pickup, or ask about shipping</li>
+        <div class="store">
+          <div class="store__count">
+            <p class="store__eyebrow">Parts catalog</p>
+            <p class="store__num">{parts.length}</p>
+            <p class="store__label">replacement parts for Hayssen VFFS machines, in {sections.length} sections</p>
+            <div class="store__actions">
+              <a class="btn btn--red" href="/shop/">Browse all parts</a>
+              <a class="btn btn--light" href="/quote/#bulk">Paste a part list</a>
+            </div>
+          </div>
+          <ul class="store__sections" aria-label="Parts sections">
+            {sections.map((sec) => (
+              <li>
+                <a href={sec.href}>
+                  <span class="store__sec-title">{sec.title}</span>
+                  <span class="store__sec-count">{sec.count} parts <span aria-hidden="true">→</span></span>
+                </a>
+              </li>
+            ))}
           </ul>
-          <a class="btn btn--light" href="/shop/">Shop All Parts</a>
-        </article>
+        </div>
+
+        <h3 class="featured__title">Featured parts</h3>
+        <div class="featured">
+          <FeaturedParts />
+        </div>
+        <div class="featured__actions">
+          <a class="btn btn--dark" href="/quote/#bulk">Paste a part list</a>
+          <a class="btn btn--outline" href="/shop/">Browse all parts</a>
+        </div>
+
+        <div class="bento">
+          <article class="bento__card">
+            <h3>Save time without sacrificing quality</h3>
+            <p class="muted">Skip the middleman. Order directly from a machine shop founded in {site.founded}. {site.store.madeTo}.</p>
+          </article>
+          <article class="bento__card">
+            <h3>3 steps to your part</h3>
+            <ol class="steps">
+              <li>Search by Hayssen part #</li>
+              <li>Send your quote request</li>
+              <li>Pick up in {site.address.city}, or ask about shipping</li>
+            </ol>
+          </article>
+          <article class="bento__card">
+            <h3>Quote support</h3>
+            <p class="muted">{site.replyTime} for quotes, orders, and custom part requests.</p>
+          </article>
+          <article class="bento__card bento__card--blue">
+            <h3>Focus on running your operation, not hunting for parts</h3>
+            <ul class="ticks ticks--light">
+              <li>No complicated ordering system</li>
+              <li>Fully customizable orders</li>
+              <li>Local pickup, or ask about shipping</li>
+            </ul>
+            <a class="btn btn--light" href="/shop/">Shop All Parts</a>
+          </article>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
 
   <section class="section section--alt">
     <div class="container about-split">
@@ -350,6 +374,21 @@ const faqs = [
   @media (min-width: 768px) {
     .stats {
       grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  /* Parts store off: three stats. The last spans the row on phones, then three columns. */
+  .stats--3 > div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 768px) {
+    .stats--3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stats--3 > div:last-child {
+      grid-column: auto;
     }
   }
 
