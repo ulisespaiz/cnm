@@ -94,6 +94,7 @@ import BulkPaste from './BulkPaste.astro';
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.875rem;
     letter-spacing: 0.02em;
+    white-space: nowrap;
   }
 
   .qcard__body {
@@ -189,7 +190,11 @@ import BulkPaste from './BulkPaste.astro';
     color: var(--color-muted);
     font-size: 0.88rem;
     line-height: 1.4;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+  }
+
+  .qi-list :global(.qi__code) {
+    white-space: nowrap;
   }
 
   .qi-list :global(.qi__meta[hidden]) {

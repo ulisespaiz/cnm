@@ -55,7 +55,7 @@ const label = (item: QuoteItem) => item.oem ?? item.title;
 function metaText(item: QuoteItem) {
   if (item.kind === 'service') return 'Service';
   if (item.kind === 'custom') return 'Not in catalog';
-  return [item.oem && `Hayssen # ${item.oem}`, item.cm && `C&M # ${item.cm}`].filter(Boolean).join(' · ');
+  return [item.oem && `Hayssen # ${item.oem}`, item.cm && `C&M # ${item.cm}`].filter(Boolean) as string[];
 }
 
 // ---------- Items list ----------
@@ -123,7 +123,17 @@ function buildRow(item: QuoteItem) {
 function updateRow(li: HTMLLIElement, item: QuoteItem) {
   const q = <T extends HTMLElement>(sel: string) => li.querySelector<T>(sel)!;
   q('.qi__name').textContent = item.title;
-  q('.qi__meta:not(.qi__opts)').textContent = metaText(item);
+  // Each code in its own no-wrap span so CM-0005 never splits at the hyphen.
+  const metaEl = q('.qi__meta:not(.qi__opts)');
+  const codes = metaText(item);
+  metaEl.replaceChildren(
+    ...codes.flatMap((text, i) => {
+      const span = document.createElement('span');
+      span.className = 'qi__code';
+      span.textContent = text;
+      return i ? [document.createTextNode(' · '), span] : [span];
+    }),
+  );
   const opts = q('.qi__opts');
   opts.textContent = Object.entries(item.options)
     .map(([k, v]) => `${k}: ${v}`)

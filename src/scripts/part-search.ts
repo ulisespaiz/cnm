@@ -36,6 +36,7 @@ interface Entry {
   idx: number;
   keys: string[];
   words: string[];
+  nameWords: string[];
 }
 
 let types: Record<string, string> = {};
@@ -69,6 +70,7 @@ export function loadIndex(): Promise<Entry[]> {
         idx,
         keys: [rec.k, rec.z, ...rec.a.map(oemKey)],
         words: words(`${rec.n} ${rec.w.join(' ')} ${rec.st} ${types[rec.y] ?? rec.y}`),
+        nameWords: words(`${rec.n} ${rec.w.join(' ')}`),
       }));
       return entries;
     })
@@ -135,7 +137,13 @@ export function search(q: string): Hit[] {
           fuzzy = true;
         }
       }
-      if (matched === tokens.length) score = fuzzy ? 20 : 40 + matched;
+      // Parts named for the query rank above parts that only match on
+      // their section or type ("plate" vs the Platen section).
+      const inName = tokens.every((t) => {
+        const alts = [t, ...(SYN[t] ?? [])];
+        return e.nameWords.some((w) => alts.some((a) => w.startsWith(a)));
+      });
+      if (matched === tokens.length) score = fuzzy ? 20 : 40 + matched + (inName ? 10 : 0);
     }
 
     if (score) hits.push({ rec: e.rec, score, at, len, idx: e.idx });
