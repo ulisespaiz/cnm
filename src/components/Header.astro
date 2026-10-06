@@ -34,7 +34,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
         <span class="visually-hidden"> (quote list)</span>
         <span class="badge" data-quote-count hidden>0</span>
       </a>
-      <a class="btn shop-btn" href="/shop/">
+      <a class="btn shop-btn" href="/shop/" aria-label="Shop">
         <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
           <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
@@ -42,7 +42,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
           <path d="M2 7h20"></path>
           <path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"></path>
         </svg>
-        Shop
+        <span class="shop-btn__label">Shop</span>
       </a>
     </div>
 
@@ -139,15 +139,25 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     color: var(--color-primary) !important;
   }
 
-  /* Cart + Shop. Phones: icon-only cart (the Shop link lives in the menu). */
+  /* Cart + Shop. Phones: icon-only buttons (48px), labelled from 768px. */
   .header-actions {
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
-  .header-phone,
+  .header-phone {
+    display: none;
+  }
+
   .shop-btn {
+    width: var(--tap);
+    min-width: var(--tap);
+    padding: 0;
+    border-radius: var(--radius);
+  }
+
+  .shop-btn__label {
     display: none;
   }
 
@@ -260,7 +270,11 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     }
 
     .shop-btn {
-      display: inline-flex;
+      width: auto;
+    }
+
+    .shop-btn__label {
+      display: inline;
     }
 
     .header-actions .btn {

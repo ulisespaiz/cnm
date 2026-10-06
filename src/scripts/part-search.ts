@@ -195,10 +195,25 @@ function initBox(root: HTMLElement) {
     } else input.removeAttribute('aria-activedescendant');
   }
 
+  // Phones: a fixed bottom bar (call/quote) covers the page bottom, so cap the
+  // panel to the space between its top edge and that bar.
+  function fit() {
+    if (panel.hidden) return;
+    const bar = document.querySelector<HTMLElement>('.mobile-bar, .addbar');
+    const barOn = bar && getComputedStyle(bar).display !== 'none';
+    const floor = barOn ? bar.getBoundingClientRect().top : window.innerHeight;
+    const room = Math.floor(floor - panel.getBoundingClientRect().top - 8);
+    if (barOn) panel.style.setProperty('--ps-room', `${Math.max(room, 140)}px`);
+    else panel.style.removeProperty('--ps-room');
+  }
+  window.addEventListener('resize', fit);
+  window.addEventListener('scroll', fit, { passive: true });
+
   function show(open: boolean) {
     panel.hidden = !open;
     input.setAttribute('aria-expanded', String(open));
     if (!open) setActive(-1);
+    else fit();
   }
 
   function oemHtml(h: Hit) {

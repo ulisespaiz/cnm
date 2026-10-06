@@ -193,8 +193,12 @@ list.addEventListener('click', (event) => {
     btn.textContent = open ? 'Hide note' : 'Add note';
     if (open) note.focus();
   } else if (action === 'remove') {
+    const neighbour = li.nextElementSibling ?? li.previousElementSibling;
     const removed = removeItem(key);
     if (removed) {
+      // The focused button's row is gone: hand focus to the next line's Remove button, or the empty-state heading.
+      const next = neighbour?.isConnected ? neighbour.querySelector<HTMLElement>('[data-action="remove"]') : null;
+      (next ?? document.querySelector<HTMLElement>('[data-quote-empty-title]'))?.focus({ preventScroll: true });
       showToast(`Removed ${label(removed.item)}`, {
         actionLabel: 'Undo',
         onAction: () => restoreItem(removed.item, removed.index),

@@ -15,7 +15,7 @@ import BulkPaste from './BulkPaste.astro';
 
   <div class="qcard__body">
     <div class="qempty" data-quote-empty>
-      <h3>Your quote list is empty</h3>
+      <h3 tabindex="-1" data-quote-empty-title>Your quote list is empty</h3>
       <p class="muted">
         Add replacement parts for Hayssen VFFS machines from the catalog, or describe what you need in the form and we'll quote it. For
         machining, cutting or fabrication, see our <a href="/services/">services</a>.
@@ -119,12 +119,6 @@ import BulkPaste from './BulkPaste.astro';
     margin-top: 16px;
   }
 
-  @media (min-width: 480px) {
-    .qempty__actions {
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    }
-  }
-
   .qi-list {
     margin: 0;
     padding: 0;
@@ -175,7 +169,9 @@ import BulkPaste from './BulkPaste.astro';
   }
 
   .qi-list :global(.qi__name) {
-    display: block;
+    display: flex;
+    align-items: center;
+    min-height: 44px; /* tap target: the name is the only link to the part page */
     color: var(--color-text);
     font-weight: 700;
     line-height: 1.3;

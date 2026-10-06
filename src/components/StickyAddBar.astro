@@ -21,8 +21,8 @@ const { data } = Astro.props;
     <PartAdd data={data} variant="bar" />
   </div>
   <div class="addbar__done">
-    <a class="btn btn--red addbar__view" href="/quote/">View quote (<span data-quote-count>0</span>) →</a>
-    <button type="button" class="btn btn--outline addbar__again" data-add-another>+ Add another</button>
+    <a class="btn btn--red addbar__view" href="/quote/"><span class="addbar__label">View quote (<span data-quote-count>0</span>) →</span></a>
+    <button type="button" class="btn btn--outline addbar__again" data-add-another>+ Add more</button>
   </div>
 </div>
 
@@ -70,21 +70,32 @@ const { data } = Astro.props;
     display: flex;
   }
 
-  .addbar__view {
-    flex: 1;
-    padding-inline: 12px;
+  .addbar__view,
+  .addbar__again {
+    min-width: 0;
+    padding-inline: 10px;
     white-space: nowrap;
+  }
+
+  .addbar__view {
+    flex: 1 1 auto;
   }
 
   .addbar__again {
-    flex: none;
-    padding-inline: 12px;
+    flex: 0 1 auto;
     background: #fff;
-    white-space: nowrap;
   }
 
-  .addbar__again:hover {
+  /* Keep the label readable while hovered or pressed (hover sticks after a tap). */
+  .addbar__again:hover,
+  .addbar__again:active {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
     color: #fff;
+  }
+
+  .addbar__label {
+    display: inline;
   }
 
   .addbar :global(.padd__add) {

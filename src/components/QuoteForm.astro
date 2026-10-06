@@ -13,7 +13,10 @@ interface Props {
 const { kind } = Astro.props;
 const isQuote = kind === 'quote';
 const thanks = new URL('/quote/thanks/', Astro.site ?? site.url).href;
-const missingKey = !forms.accessKey;
+// Only developers see this notice. Customers must never see a config error, so
+// production builds stay silent here (set PUBLIC_WEB3FORMS_KEY at build time).
+const missingKey = import.meta.env.DEV && !forms.accessKey;
+if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] PUBLIC_WEB3FORMS_KEY is not set: form posts will be rejected.');
 ---
 
 <form
