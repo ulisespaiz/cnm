@@ -65,10 +65,10 @@ export const serviceAreas = [
 ] as const;
 
 export const nav = [
-  { label: 'Services', href: '/services/' },
-  { label: 'Parts Store', href: '/products/' },
-  { label: 'Our Machinery', href: '/our-machinery/' },
   { label: 'About', href: '/about/' },
+  { label: 'Services', href: '/services/' },
+  { label: 'Shop', href: '/shop/' },
+  { label: 'Our Machinery', href: '/our-machinery/' },
   { label: 'Contact', href: '/contact/' },
 ] as const;
 

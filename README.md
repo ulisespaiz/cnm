@@ -1,4 +1,4 @@
-# CNM website
+# C&M Machine Shop website
 
 Static rebuild of the Elementor/WordPress site: a product catalog where
 visitors build a quote list and send it by email. Built with
@@ -7,9 +7,10 @@ forms delivered by [Web3Forms](https://web3forms.com).
 
 ## Status
 
-The framework is done. Content is placeholder until the Simply Static export is
-extracted (see [Content extraction](#content-extraction)). `npm run prelaunch`
-lists everything still left before DNS can point here.
+Content and design are rebuilt from the Simply Static export of cmmachshop.com
+(services, machinery, about, contact, 4 products in 4 categories, brand colors,
+Geist font, logo). `npm run prelaunch` lists everything still left before DNS
+can point here.
 
 ## Local development
 
@@ -30,6 +31,9 @@ SHOW_DRAFTS=1 npm run build   # production build including drafts, for review
 | Product categories | `src/content/categories.json` |
 | Products (one file each) | `src/content/products/*.md` |
 | Product images | `src/assets/products/` (referenced from product files) |
+| Services (one file each) | `src/content/services/*.md` |
+| Machinery | `src/content/equipment.json`, images in `src/assets/equipment/` |
+| Home page sections, FAQ, work gallery | `src/pages/index.astro` |
 | City pages (one file each) | `src/content/areas/*.md` |
 | Colors, fonts, spacing | tokens at the top of `src/styles/global.css` |
 | Old URL → new URL redirects | `public/_redirects` |
@@ -58,7 +62,7 @@ order: 10
 Long description in Markdown.
 ```
 
-The URL is `/products/<category-id>/<file-name>/`.
+The URL is `/shop/<category-id>/<file-name>/`.
 
 ### City pages: publishing rules
 
@@ -104,20 +108,8 @@ to `/quote/thanks/`. If the request fails, the customer sees a prefilled
    Bing Webmaster Tools, and update the website link on the Google Business
    Profile.
 
-## Content extraction
+## Content source
 
-Source: the Simply Static export (`simply-static-1-1791239758.zip`), to be
-committed on the `site-export` branch under `_export/`. Never deploy the export
-itself.
-
-1. **Inventory**: list every HTML page with its URL path, page type
-   (product / category / content / utility / junk) and the images it really
-   uses (not every resized copy WordPress generated).
-2. **Extraction**: for each product, write `src/content/products/<slug>.md`
-   in the format above, keep the original copy, and copy only the largest
-   original of each image used into `src/assets/products/`. Write the
-   categories, About copy and business details into the config.
-3. **Redirects**: map every old URL to its new path in `public/_redirects`.
-4. **Brand**: lift colors, fonts and logo from the export into the CSS tokens.
-5. **Verify**: `npm run build`, check each page on a phone-sized screen,
-   `npm run prelaunch`.
+Rebuilt from the Simply Static export (`_export/simply-static-1-1791239758.zip`
+on the `site-export` branch). Never deploy the export itself. Old URLs are
+mapped in `public/_redirects`.

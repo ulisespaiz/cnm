@@ -1,6 +1,7 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import { render } from 'astro:content';
+import { Image } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import AddToQuote from '../../components/AddToQuote.astro';
@@ -45,8 +46,14 @@ const serviceSchema = {
       <Breadcrumbs items={crumbs} />
       <div class="service">
         <div>
+          <p class="eyebrow">Services</p>
           <h1>{data.title}</h1>
-          <p class="lead">{data.summary}</p>
+          {data.image && (
+            <Image class="service__image" src={data.image} alt={data.imageAlt ?? data.title} widths={[480, 800, 1100]} sizes="(min-width: 900px) 700px, 100vw" loading="eager" fetchpriority="high" />
+          )}
+          <div class="prose">
+            <Content />
+          </div>
 
           {data.capabilities.length > 0 && (
             <ul class="capabilities">
@@ -61,16 +68,13 @@ const serviceSchema = {
 
           {data.materials.length > 0 && (
             <>
-              <h2>Materials</h2>
+              <h2 class="h3">{data.materialsLabel}</h2>
               <ul class="chips">
                 {data.materials.map((m) => <li>{m}</li>)}
               </ul>
             </>
           )}
 
-          <div class="prose">
-            <Content />
-          </div>
         </div>
 
         <aside class="service__quote">
@@ -121,18 +125,22 @@ const serviceSchema = {
   }
 
   .service__quote {
-    padding: 20px;
-    border: 1px solid var(--color-border);
+    padding: 24px;
     border-radius: var(--radius);
     background: var(--color-surface);
+    box-shadow: var(--shadow);
   }
 
   .service__call {
     margin-top: 12px;
   }
 
-  .lead {
-    font-size: 1.15rem;
+  .service__image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius);
+    margin-bottom: 24px;
   }
 
   .h3 {
@@ -155,7 +163,7 @@ const serviceSchema = {
 
   .capabilities li {
     padding: 16px;
-    border-left: 4px solid var(--color-primary);
+    border-left: 4px solid var(--color-accent);
     background: var(--color-surface);
     border-radius: 0 var(--radius) var(--radius) 0;
   }
@@ -174,6 +182,7 @@ const serviceSchema = {
 
   .chips li {
     padding: 6px 12px;
+    background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: 999px;
     font-size: 0.95rem;

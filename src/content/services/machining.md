@@ -1,19 +1,18 @@
 ---
-title: Precision Machining
-summary: CNC and manual milling and turning for complex parts with high accuracy and consistency, from prototypes to production runs.
-seoTitle: CNC Machining in Salinas, CA
-seoDescription: Precision CNC milling and turning in Salinas, CA. Custom parts from prototypes to production runs for food processing, agriculture and industry.
+title: "Machining"
+summary: "Our machining services include precision milling and turning, allowing us to create complex parts with high accuracy and consistency — ideal for both prototyping and large production runs."
+image: ../../assets/services/our-services-2.png
+imageAlt: "Machining"
 capabilities:
-  - name: Milling
-    text: Complex parts machined to your drawing with high accuracy and repeatability.
-  - name: Turning
-    text: Custom cylindrical components on manual and CNC lathes, including a FANUC-controlled CNC turning center.
-  - name: Prototype to production
-    text: One-off prototypes and replacement parts through larger production runs.
-order: 1
+  - name: "Milling"
+    text: "Multi-axis CNC milling for complex geometries and tight tolerances."
+  - name: "Turning"
+    text: "Precision CNC turning for cylindrical components at production scale."
+materialsLabel: "Materials We Machine"
+materials: ["Steel", "Aluminum", "Stainless Steel", "Titanium", "High-Performance Polymers"]
+order: 2
+seoTitle: "CNC Machining in Salinas, CA"
+seoDescription: "Precision CNC milling and turning in Salinas, CA, from prototypes to production runs, with tolerances as tight as ±0.001″. Request a quote."
+draft: false
 ---
-
-We machine parts from your technical drawings. No blueprint? Bring the worn
-part or describe what you need and we will help engineer a solution.
-
-See the lathes and CNC equipment we run on the [Our Machinery](/our-machinery/) page.
+Our machining services include precision milling and turning, allowing us to create complex parts with high accuracy and consistency — ideal for both prototyping and large production runs. We operate state-of-the-art CNC mills and lathes with multi-axis capability, achieving tolerances as tight as ±0.001″.

@@ -20,7 +20,7 @@ export const getStaticPaths = (async () => {
 const { category, products } = Astro.props;
 const crumbs = [
   { name: 'Home', path: '/' },
-  { name: 'Parts Store', path: '/products/' },
+  { name: 'Shop', path: '/shop/' },
   { name: category.data.title, path: categoryUrl(category.id) },
 ];
 ---

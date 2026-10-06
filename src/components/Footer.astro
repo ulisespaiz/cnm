@@ -5,61 +5,73 @@ import { getAreas, areaUrl } from '../lib/content';
 const areas = await getAreas();
 const year = new Date().getFullYear();
 const social = Object.entries(site.social).filter(([, url]) => url);
+const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+  `${site.legalName}, ${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}`,
+)}`;
 ---
 
 <footer class="site-footer">
   <div class="container site-footer__grid">
-    <div>
+    <div class="site-footer__about">
       <p class="site-footer__name">{site.name}</p>
-      <address>
-        {site.address.street}<br />
-        {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}<br />
-        <a href={`tel:${site.phoneE164}`}>{site.phone}</a><br />
-        <a href={`mailto:${site.email}`}>{site.email}</a>
-      </address>
+      <p>
+        {site.legalName} was founded in 2002 with a simple vision: to provide quality craftsmanship with integrity and
+        hard work. With over 30 years of industry experience, we remain a family-oriented business dedicated to
+        delivering precise, reliable, and honest service for every project.
+      </p>
     </div>
 
     <nav aria-label="Footer">
-      <p class="site-footer__heading">Explore</p>
+      <p class="site-footer__heading">Links</p>
       <ul>
+        <li><a href="/">Home</a></li>
         {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
         <li><a href="/quote/">Request a Quote</a></li>
         <li><a href="/service-areas/">Service Areas</a></li>
+        {areas.map((a) => <li><a href={areaUrl(a)}>{a.data.city}</a></li>)}
       </ul>
     </nav>
 
-    {areas.length > 0 && (
-      <nav aria-label="Service areas">
-        <p class="site-footer__heading">Service Areas</p>
-        <ul>
-          {areas.map((a) => <li><a href={areaUrl(a)}>{a.data.city}</a></li>)}
-        </ul>
-      </nav>
-    )}
-
-    {social.length > 0 && (
-      <div>
-        <p class="site-footer__heading">Follow</p>
-        <ul>
+    <div>
+      <p class="site-footer__heading">Contact info</p>
+      <address>
+        <a href={mapUrl} rel="noopener">
+          {site.address.street}<br />
+          {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}
+        </a><br />
+        <a href={`tel:${site.phoneE164}`}>{site.phone}</a><br />
+        <a href={`mailto:${site.email}`}>{site.email}</a>
+      </address>
+      {social.length > 0 && (
+        <ul class="site-footer__social">
           {social.map(([name, url]) => (
-            <li><a href={url} rel="noopener">{name}</a></li>
+            <li><a href={url} rel="noopener">{name[0].toUpperCase() + name.slice(1)}</a></li>
           ))}
         </ul>
-      </div>
-    )}
+      )}
+    </div>
+
+    <div>
+      <p class="site-footer__heading">Working hours</p>
+      <p>
+        Mon to Fri: 7:00am – 4:00pm<br />
+        Saturday: Closed<br />
+        Sunday: Closed
+      </p>
+    </div>
   </div>
 
   <div class="container site-footer__legal">
-    <p>© {year} {site.legalName.replace(/\.$/, '')}. <a href="/privacy/">Privacy Policy</a></p>
+    <p>© {year} {site.legalName.replace(/\.$/, '')}. All rights reserved. <a href="/privacy/">Privacy Policy</a></p>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    margin-top: 40px;
-    padding-top: 40px;
-    background: #14181c;
-    color: #c9d0d8;
+    padding-top: 56px;
+    background: var(--color-dark);
+    color: #b9bec5;
+    font-size: 0.97rem;
   }
 
   .site-footer a {
@@ -68,25 +80,36 @@ const social = Object.entries(site.social).filter(([, url]) => url);
   }
 
   .site-footer a:hover {
-    text-decoration: underline;
+    color: var(--color-accent);
   }
 
   .site-footer__grid {
     display: grid;
-    gap: 28px;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 32px;
+  }
+
+  @media (min-width: 700px) {
+    .site-footer__grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 1000px) {
+    .site-footer__grid {
+      grid-template-columns: 1.6fr 1fr 1.2fr 1fr;
+    }
   }
 
   .site-footer__name {
-    font-weight: 800;
-    font-size: 1.15rem;
+    font-weight: 700;
+    font-size: 1.2rem;
     color: #fff;
   }
 
   .site-footer__heading {
     font-weight: 700;
     color: #fff;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 
   .site-footer ul {
@@ -97,18 +120,22 @@ const social = Object.entries(site.social).filter(([, url]) => url);
 
   .site-footer li a {
     display: inline-block;
-    padding: 6px 0;
+    padding: 5px 0;
+  }
+
+  .site-footer__social {
+    margin-top: 10px !important;
   }
 
   address {
     font-style: normal;
-    line-height: 1.8;
+    line-height: 1.9;
   }
 
   .site-footer__legal {
-    margin-top: 28px;
+    margin-top: 40px;
     padding-block: 20px;
-    border-top: 1px solid #2a3038;
+    border-top: 1px solid #2e3237;
     font-size: 0.9rem;
   }
 </style>

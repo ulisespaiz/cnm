@@ -1,18 +1,28 @@
 ---
-title: Water-Jet & Laser Cutting
-summary: Laser, water-jet and shearing for a wide range of materials and thicknesses.
-seoTitle: Water-Jet & Laser Cutting in Salinas, CA
-seoDescription: Water-jet cutting, laser cutting and shearing in Salinas, CA for steel, aluminum, stainless, copper, brass, plastics, composites and rubber.
+title: "Cutting Services"
+summary: "We offer precise cutting solutions using advanced laser, water-jet, and shearing techniques for a wide variety of materials and thicknesses."
+image: ../../assets/services/our-services-1.png
+imageAlt: "Cutting Services"
 capabilities:
-  - name: Water-jet cutting
-    text: Precision cutting for complex shapes and heat-sensitive materials.
-  - name: Laser cutting
-    text: High-precision cuts with clean edges, suited to intricate designs and quick turnaround.
-  - name: Shearing
-    text: Clean, straight cuts in sheet metal with minimal distortion.
-materials: [Steel, Aluminum, Stainless steel, Copper, Brass, Plastics, Composites, Rubber]
-order: 2
+  - name: "Laser Cutting"
+    text: "High-precision cutting for intricate designs with exceptional edge quality."
+  - name: "Water-Jet Cutting"
+    text: "Versatile cutting for heat-sensitive materials and thick stock."
+  - name: "Shearing"
+    text: "Clean, straight cuts for sheet metal with minimal distortion."
+materialsLabel: "Materials We Cut"
+materials: ["Steel", "Aluminum", "Stainless Steel", "Copper", "Brass", "Plastics", "Composites", "Rubber"]
+order: 1
+seoTitle: "Water-Jet & Laser Cutting in Salinas, CA"
+seoDescription: "Laser, water-jet and shearing services in Salinas, CA for steel, aluminum, stainless, copper, brass, plastics and composites. Request a quote."
+draft: false
 ---
+We offer precise cutting solutions using advanced laser, water-jet, and shearing techniques for a wide variety of materials and thicknesses. Perfect for projects requiring clean, accurate cuts with tight tolerances and excellent surface finishes.
 
-Send us a drawing or DXF with the material, thickness and quantity, and we
-will quote the best cutting method for the part.
+### Water-Jet Cutting
+
+Precision cutting for various materials with our state-of-the-art water-jet technology. Perfect for complex shapes and heat-sensitive materials.
+
+### Laser Cutting
+
+High-precision laser cutting services with exceptional edge quality. Ideal for intricate designs and rapid production needs.

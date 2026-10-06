@@ -21,7 +21,7 @@ const products = defineCollection({
     z.object({
       title: z.string(),
       category: reference('categories'),
-      summary: z.string().max(200),
+      summary: z.string().max(220),
       images: z.array(z.object({ src: image(), alt: z.string() })).default([]),
       // Choices the customer picks before adding to the quote (size, finish, ...).
       options: z
@@ -58,17 +58,21 @@ const areas = defineCollection({
 // the quote list like a product.
 const services = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/services' }),
-  schema: z.object({
-    title: z.string(),
-    summary: z.string().max(200),
-    // Sub-capabilities shown as cards on the service page.
-    capabilities: z.array(z.object({ name: z.string(), text: z.string() })).default([]),
-    materials: z.array(z.string()).default([]),
-    order: z.number().default(0),
-    seoTitle: z.string().optional(),
-    seoDescription: z.string().max(160).optional(),
-    draft: z.boolean().default(false),
-  }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      summary: z.string().max(220),
+      image: image().optional(),
+      imageAlt: z.string().optional(),
+      // Sub-capabilities shown as cards on the service page and bullets on the home page.
+      capabilities: z.array(z.object({ name: z.string(), text: z.string() })).default([]),
+      materialsLabel: z.string().default('Materials'),
+      materials: z.array(z.string()).default([]),
+      order: z.number().default(0),
+      seoTitle: z.string().optional(),
+      seoDescription: z.string().max(160).optional(),
+      draft: z.boolean().default(false),
+    }),
 });
 
 // Shop equipment shown on /our-machinery/.
@@ -77,9 +81,10 @@ const equipment = defineCollection({
   schema: ({ image }) =>
     z.object({
       name: z.string(),
-      kind: z.string(),
       text: z.string(),
       image: image().optional(),
+      featuresLabel: z.string().default('Key Features'),
+      features: z.array(z.object({ name: z.string(), text: z.string() })).default([]),
       order: z.number().default(0),
     }),
 });

@@ -43,9 +43,9 @@ export async function getAreas() {
 }
 
 export const productUrl = (p: CollectionEntry<'products'>) =>
-  `/products/${p.data.category.id}/${p.id}/`;
+  `/shop/${p.data.category.id}/${p.id}/`;
 
-export const categoryUrl = (id: string) => `/products/${id}/`;
+export const categoryUrl = (id: string) => `/shop/${id}/`;
 
 export const serviceUrl = (s: CollectionEntry<'services'>) => `/services/${s.id}/`;
 

@@ -35,8 +35,8 @@ const missingKey = !forms.accessKey;
       <input id={`${kind}-name`} name="name" autocomplete="name" required />
     </div>
     <div class="field">
-      <label for={`${kind}-phone`}>Phone</label>
-      <input id={`${kind}-phone`} name="phone" type="tel" autocomplete="tel" inputmode="tel" />
+      <label for={`${kind}-phone`}>Phone{kind === 'quote' ? ' *' : ''}</label>
+      <input id={`${kind}-phone`} name="phone" type="tel" autocomplete="tel" inputmode="tel" required={kind === 'quote'} />
     </div>
   </div>
 
@@ -53,6 +53,11 @@ const missingKey = !forms.accessKey;
         <option>Other</option>
       </select>
     </div>
+  </div>
+
+  <div class="field">
+    <label for={`${kind}-company`}>Company / Organization</label>
+    <input id={`${kind}-company`} name="company" autocomplete="organization" />
   </div>
 
   <div class="field">

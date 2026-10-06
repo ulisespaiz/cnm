@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import logo from '../assets/site/cnm-logo.png';
 import { site, nav } from '../config/site';
 const path = Astro.url.pathname;
 const isActive = (href: string) => path === href || path.startsWith(href);
@@ -6,7 +8,9 @@ const isActive = (href: string) => path === href || path.startsWith(href);
 
 <header class="site-header">
   <div class="container site-header__inner">
-    <a class="brand" href="/">{site.name}</a>
+    <a class="brand" href="/" aria-label={`${site.name} home`}>
+      <Image src={logo} alt={`${site.name} logo`} height={56} densities={[1, 2]} loading="eager" />
+    </a>
 
     <nav class="nav-desktop" aria-label="Main">
       {nav.map((item) => (
@@ -16,9 +20,10 @@ const isActive = (href: string) => path === href || path.startsWith(href);
 
     <div class="header-actions">
       <a class="header-phone" href={`tel:${site.phoneE164}`}>{site.phone}</a>
-      <a class="btn quote-link" href="/quote/">
+      <a class="btn btn--red quote-link" href="/quote/">
         Quote <span class="badge" data-quote-count hidden>0</span>
       </a>
+      <a class="btn" href="/shop/">Shop</a>
     </div>
 
     <details class="nav-mobile">
@@ -29,7 +34,8 @@ const isActive = (href: string) => path === href || path.startsWith(href);
         {nav.map((item) => (
           <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
         ))}
-        <a href="/quote/">My Quote</a>
+        <a href="/quote/">My Quote <span class="badge" data-quote-count hidden>0</span></a>
+        <a href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
       </nav>
     </details>
   </div>
@@ -40,7 +46,8 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     position: sticky;
     top: 0;
     z-index: 50;
-    background: var(--color-bg);
+    background: rgb(255 255 255 / 0.96);
+    backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--color-border);
   }
 
@@ -48,15 +55,17 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     display: flex;
     align-items: center;
     gap: 16px;
-    min-height: 64px;
+    min-height: 72px;
   }
 
   .brand {
-    font-weight: 800;
-    font-size: 1.2rem;
-    color: var(--color-text);
-    text-decoration: none;
+    display: flex;
     margin-right: auto;
+  }
+
+  .brand img {
+    width: auto;
+    height: 48px;
   }
 
   .nav-desktop,
@@ -118,13 +127,14 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     right: 0;
     top: 100%;
     display: grid;
-    background: var(--color-bg);
+    background: #fff;
     border-bottom: 1px solid var(--color-border);
     box-shadow: var(--shadow);
   }
 
   .nav-mobile nav a {
     display: flex;
+    gap: 8px;
     align-items: center;
     min-height: 56px;
     padding: 0 var(--gutter);
@@ -138,19 +148,36 @@ const isActive = (href: string) => path === href || path.startsWith(href);
 
     .nav-desktop {
       display: flex;
-      gap: 24px;
+      gap: 28px;
+      margin-right: 8px;
+    }
+
+    .nav-desktop a {
+      font-weight: 500;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 10px;
+    }
+
+    .header-actions .btn {
+      min-height: 42px;
+      padding: 0 18px;
     }
 
     .header-phone {
+      margin-right: 6px;
       font-weight: 700;
       text-decoration: none;
       white-space: nowrap;
+    }
+
+    @media (max-width: 1100px) {
+      .header-phone {
+        display: none;
+      }
     }
   }
 </style>
