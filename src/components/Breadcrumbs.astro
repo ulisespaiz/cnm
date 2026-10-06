@@ -15,3 +15,56 @@ const { items } = Astro.props;
     ))}
   </ol>
 </nav>
+
+<style>
+  .breadcrumbs {
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+  }
+
+  .breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .breadcrumbs li {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .breadcrumbs li + li::before {
+    content: '/';
+    margin: 0 2px;
+    color: var(--color-muted);
+  }
+
+  /* 44px tap height without enlarging the visible text */
+  .breadcrumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 6px;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .breadcrumbs a:hover {
+    text-decoration: underline;
+  }
+
+  .breadcrumbs [aria-current='page'] {
+    padding: 0 6px;
+    overflow-wrap: anywhere;
+    color: var(--color-muted);
+  }
+
+  .breadcrumbs li:first-child a {
+    padding-left: 0;
+  }
+</style>

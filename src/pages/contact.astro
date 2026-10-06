@@ -5,12 +5,14 @@ import Breadcrumbs from '../components/Breadcrumbs.astro';
 import QuoteForm from '../components/QuoteForm.astro';
 import { site } from '../config/site';
 import { breadcrumbs } from '../lib/schema';
+import { hoursRows, hoursSentence } from '../lib/hours';
 import office from '../assets/site/front-office-cnm.jpeg';
 
 const crumbs = [
   { name: 'Home', path: '/' },
   { name: 'Contact', path: '/contact/' },
 ];
+const hours = hoursRows();
 const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
   `${site.legalName}, ${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}`,
 )}`;
@@ -18,7 +20,7 @@ const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURICompo
 
 <Base
   title="Contact Us"
-  description={`Call ${site.phone}, email or visit ${site.legalName} at ${site.address.street}, ${site.address.city}, CA. Open Monday to Friday, 7am to 4pm.`}
+  description={`Call ${site.phone} or visit ${site.legalName}, ${site.address.street}, ${site.address.city}, CA. ${hoursSentence()}.`}
   jsonLd={[breadcrumbs(crumbs)]}
 >
   <section class="section">
@@ -27,8 +29,8 @@ const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURICompo
       <p class="eyebrow">Contact Us</p>
       <h1>Let's talk about your <span class="mark">project</span></h1>
       <p class="lead">
-        Reach out for quotes, questions, or to discuss your custom machining needs. Our team is ready to provide you
-        with exceptional service and solutions tailored to your exact requirements.
+        Reach out for quotes, questions, or to discuss your custom machining needs. {site.replyTime}, and you can call
+        us during shop hours.
       </p>
 
       <div class="contact">
@@ -51,7 +53,13 @@ const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURICompo
             </div>
             <div>
               <dt>Business hours</dt>
-              <dd>Mon – Fri: 7:00 AM – 4:00 PM<br />Saturday &amp; Sunday: Closed</dd>
+              <dd>
+                <ul class="hours">
+                  {hours.map((r) => (
+                    <li><span>{r.label}</span><span>{r.value}</span></li>
+                  ))}
+                </ul>
+              </dd>
             </div>
           </dl>
           <a class="btn btn--outline btn--block" href={mapUrl} rel="noopener">Get directions</a>
@@ -100,7 +108,7 @@ const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURICompo
   }
 
   dt {
-    font-size: 0.8rem;
+    font-size: 0.875rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -110,6 +118,25 @@ const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURICompo
   dd {
     margin: 2px 0 0;
     font-weight: 600;
+  }
+
+  .hours {
+    display: grid;
+    gap: 4px;
+    max-width: 320px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .hours li {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .hours li span:last-child {
+    font-variant-numeric: tabular-nums;
   }
 
   .h3 {

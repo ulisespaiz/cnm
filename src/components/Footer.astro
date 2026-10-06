@@ -1,78 +1,119 @@
 ---
-import { site, nav } from '../config/site';
-import { getAreas, areaUrl } from '../lib/content';
+import { Image } from 'astro:assets';
+import logo from '../assets/site/cnm-logo.png';
+import { site } from '../config/site';
+import { hoursRows } from '../lib/hours';
+import { getSections, sectionUrl } from '../lib/parts';
 
-const areas = await getAreas();
+const sections = await getSections('hayssen-vffs');
+const hours = hoursRows();
 const year = new Date().getFullYear();
 const social = Object.entries(site.social).filter(([, url]) => url);
 const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
   `${site.legalName}, ${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}`,
 )}`;
+
+const company = [
+  { label: 'About', href: '/about/' },
+  { label: 'Services', href: '/services/' },
+  { label: 'Our Machinery', href: '/our-machinery/' },
+  { label: 'Food Processing & Ag', href: '/industries/food-processing-agriculture/' },
+  { label: 'Service Areas', href: '/service-areas/' },
+  { label: 'Contact', href: '/contact/' },
+];
 ---
 
 <footer class="site-footer">
-  <div class="container site-footer__grid">
-    <div class="site-footer__about">
-      <p class="site-footer__name">{site.name}</p>
-      <p>
-        {site.legalName} was founded in 2002 with a simple vision: to provide quality craftsmanship with integrity and
-        hard work. With over 30 years of industry experience, we remain a family-oriented business dedicated to
-        delivering precise, reliable, and honest service for every project.
-      </p>
-    </div>
+  <div class="container">
+    <section class="cta" aria-labelledby="footer-cta">
+      <div>
+        <h2 id="footer-cta">Need a part or a quote?</h2>
+        <p>{site.replyTime}. Send a part number or a drawing, or call us.</p>
+      </div>
+      <div class="cta__actions">
+        <a class="btn btn--red" href="/quote/">Request a Quote</a>
+        <a class="btn btn--light" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
+      </div>
+    </section>
 
-    <nav aria-label="Footer">
-      <p class="site-footer__heading">Links</p>
-      <ul>
-        <li><a href="/">Home</a></li>
-        {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
-        <li><a href="/quote/">Request a Quote</a></li>
-        <li><a href="/industries/food-processing-agriculture/">Food Processing &amp; Ag</a></li>
-        <li><a href="/service-areas/">Service Areas</a></li>
-        {areas.map((a) => <li><a href={areaUrl(a)}>{a.data.city}</a></li>)}
-      </ul>
-    </nav>
-
-    <div>
-      <p class="site-footer__heading">Contact info</p>
-      <address>
-        <a href={mapUrl} rel="noopener">
-          {site.address.street}<br />
-          {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}
-        </a><br />
-        <a href={`tel:${site.phoneE164}`}>{site.phone}</a><br />
-        <a href={`mailto:${site.email}`}>{site.email}</a>
-      </address>
-      {social.length > 0 && (
-        <ul class="site-footer__social">
+    <div class="cols">
+      <div class="brand-col">
+        <a class="logo-chip" href="/" aria-label={`${site.name} home`}>
+          <Image src={logo} alt={`${site.name} logo`} height={48} densities={[1, 2]} loading="lazy" />
+        </a>
+        <p class="about">
+          Family-owned machine shop in {site.address.city}, CA. Founded in {site.founded}, with 30+ years of industry
+          experience in machining, cutting, fabrication and replacement parts.
+        </p>
+        <address>
+          <a class="icon-link" href={`tel:${site.phoneE164}`}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"></path></svg>
+            {site.phone}
+          </a>
+          <a class="icon-link" href={`mailto:${site.email}`}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+            {site.email}
+          </a>
+          <a class="icon-link" href={mapUrl} rel="noopener">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <span>{site.address.street}, {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}</span>
+          </a>
           {social.map(([name, url]) => (
-            <li><a href={url} rel="noopener">{name[0].toUpperCase() + name.slice(1)}</a></li>
+            <a class="icon-link" href={url} rel="noopener">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
+              {name[0].toUpperCase() + name.slice(1)}
+            </a>
           ))}
+        </address>
+      </div>
+
+      <nav aria-labelledby="footer-shop">
+        <h2 class="heading" id="footer-shop">Shop</h2>
+        <ul>
+          <li><a href="/shop/">Parts catalog</a></li>
+          {sections.map((s) => <li><a href={sectionUrl(s)}>{s.data.title}</a></li>)}
+          <li><a href="/quote/#bulk">Paste a part list</a></li>
         </ul>
-      )}
+      </nav>
+
+      <nav aria-labelledby="footer-company">
+        <h2 class="heading" id="footer-company">Company</h2>
+        <ul>
+          {company.map((c) => <li><a href={c.href}>{c.label}</a></li>)}
+        </ul>
+      </nav>
+
+      <div class="hours-col">
+        <h2 class="heading" id="footer-hours">Hours</h2>
+        <dl class="hours" aria-labelledby="footer-hours">
+          {hours.map((r) => (
+            <div class:list={{ closed: r.closed }}>
+              <dt>{r.label}</dt>
+              <dd>{r.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
     </div>
 
-    <div>
-      <p class="site-footer__heading">Working hours</p>
-      <p>
-        Mon to Fri: 7:00am – 4:00pm<br />
-        Saturday: Closed<br />
-        Sunday: Closed
+    <div class="legal">
+      <p>© {year} {site.legalName} All rights reserved.</p>
+      <p class="legal__links">
+        <a href="/privacy/">Privacy Policy</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://ghosxt.com/" rel="noopener">Website by Ghosxt</a>
       </p>
     </div>
-  </div>
-
-  <div class="container site-footer__legal">
-    <p>© {year} {site.legalName.replace(/\.$/, '')}. All rights reserved. <a href="/privacy/">Privacy Policy</a></p>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    padding-top: 56px;
+    margin-top: 24px;
+    padding-top: 40px;
     background: var(--color-dark);
-    color: #b9bec5;
-    font-size: 0.97rem;
+    color: #c4c9d0;
+    font-size: 1rem;
   }
 
   .site-footer a {
@@ -81,62 +122,228 @@ const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURICompo
   }
 
   .site-footer a:hover {
-    color: var(--color-accent);
+    color: #ff8a9b;
+    text-decoration: underline;
   }
 
-  .site-footer__grid {
+  .site-footer h2 {
+    margin: 0;
+  }
+
+  /* CTA strip */
+  .cta {
     display: grid;
-    gap: 32px;
+    gap: 20px;
+    padding: 24px;
+    border-radius: var(--radius);
+    background: var(--color-primary);
+    color: #fff;
+  }
+
+  .cta h2 {
+    margin-bottom: 4px;
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+  }
+
+  .cta p {
+    margin: 0;
+    color: #dbe3ff;
+  }
+
+  .cta__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .site-footer .cta .btn {
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .site-footer .cta .btn--light {
+    background: #fff;
+    border-color: #fff;
+    color: var(--color-primary);
+  }
+
+  .site-footer .cta .btn--light:hover {
+    background: var(--color-tint);
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .site-footer .cta .btn--red:hover {
+    color: #fff;
+    text-decoration: none;
+  }
+
+  @media (max-width: 479px) {
+    .cta__actions .btn {
+      flex: 1 1 100%;
+    }
+  }
+
+  @media (min-width: 800px) {
+    .cta {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      padding: 28px 32px;
+    }
+  }
+
+  /* Columns */
+  .cols {
+    display: grid;
+    gap: 32px 24px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-block: 40px 32px;
+  }
+
+  .brand-col,
+  .hours-col {
+    grid-column: 1 / -1;
   }
 
   @media (min-width: 700px) {
-    .site-footer__grid {
-      grid-template-columns: 1fr 1fr;
+    .cols {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .hours-col {
+      grid-column: auto;
     }
   }
 
-  @media (min-width: 1000px) {
-    .site-footer__grid {
-      grid-template-columns: 1.6fr 1fr 1.2fr 1fr;
+  @media (min-width: 1050px) {
+    .cols {
+      grid-template-columns: 1.5fr 1fr 1fr 1fr;
+      gap: 32px 40px;
+    }
+
+    .brand-col {
+      grid-column: auto;
     }
   }
 
-  .site-footer__name {
-    font-weight: 700;
-    font-size: 1.2rem;
-    color: #fff;
+  .logo-chip {
+    display: inline-flex;
+    margin-bottom: 14px;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    background: #fff;
   }
 
-  .site-footer__heading {
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 10px;
+  .logo-chip img {
+    width: auto;
+    height: 48px;
   }
 
-  .site-footer ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .site-footer li a {
-    display: inline-block;
-    padding: 5px 0;
-  }
-
-  .site-footer__social {
-    margin-top: 10px !important;
+  .about {
+    max-width: 44ch;
+    margin: 0 0 8px;
   }
 
   address {
+    display: grid;
     font-style: normal;
-    line-height: 1.9;
   }
 
-  .site-footer__legal {
-    margin-top: 40px;
-    padding-block: 20px;
+  .icon-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    overflow-wrap: anywhere;
+  }
+
+  .icon-link svg {
+    flex: none;
+    color: #ff8a9b;
+  }
+
+  .heading {
+    margin-bottom: 8px !important;
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  .site-footer ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-footer li a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* Hours: aligned two-column list */
+  .hours {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+  }
+
+  .hours > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: center;
+    min-height: 44px;
+    border-bottom: 1px solid #2e3237;
+  }
+
+  .hours > div:last-child {
+    border-bottom: 0;
+  }
+
+  .hours dt {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .hours dd {
+    margin: 0;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hours .closed dd {
+    color: #9aa1aa;
+  }
+
+  /* Bottom bar */
+  .legal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0 24px;
+    padding-block: 12px;
     border-top: 1px solid #2e3237;
     font-size: 0.9rem;
+  }
+
+  .legal p {
+    margin: 0;
+  }
+
+  .legal__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 10px;
+  }
+
+  .legal__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 </style>

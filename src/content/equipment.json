@@ -1,9 +1,9 @@
 [
   {
-    "id": "sharp-32120b-lathe",
-    "name": "Sharp 32120B Lathe",
+    "id": "sharp-22120b-lathe",
+    "name": "Sharp 22120B Lathe",
     "text": "A versatile and indispensable metalworking machine that enables us to shape, cut, and craft custom cylindrical components with exceptional precision. As a cornerstone of precision machining, this lathe is designed to handle a wide range of tasks, making it a crucial part of our manufacturing capabilities.",
-    "image": "./../assets/equipment/Sharp-32120B-Lathe.jpg",
+    "image": "./../assets/equipment/Sharp-22120B-Lathe.jpg",
     "featuresLabel": "Applications",
     "features": [
       { "name": "Turning", "text": "Shaping materials to achieve exact diameters and contours." },

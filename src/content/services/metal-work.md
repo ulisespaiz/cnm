@@ -1,8 +1,8 @@
 ---
 title: "Metal Work"
 summary: "From MIG and TIG welding to plate rolling and precision forming, we handle every aspect of metalwork with expert skill and strict quality control — ideal for both structural frameworks and decorative assemblies."
-image: ../../assets/services/our-services-3.png
-imageAlt: "Metal Work"
+image: ../../assets/work/our-work-1.jpg
+imageAlt: "Timesavers wide-belt deburring and finishing machine in the C&M shop"
 capabilities:
   - name: "Welding"
     text: "MIG, TIG, stick, and robotic welding for all structural and decorative needs."

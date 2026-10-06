@@ -24,7 +24,6 @@ export const GET: APIRoute = ({ site }) => {
   const lines = [
     'User-agent: *',
     'Allow: /',
-    'Disallow: /quote/thanks/',
     '',
     ...aiAgents.flatMap((ua) => [`User-agent: ${ua}`, 'Allow: /', '']),
     `Sitemap: ${new URL('/sitemap-index.xml', site).href}`,
