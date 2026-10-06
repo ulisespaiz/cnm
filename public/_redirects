@@ -1,21 +1,20 @@
-# Cloudflare Pages redirects: 301s from the old WordPress site's URLs to the
-# new ones. Paths kept unchanged and so not listed: /, /about/, /services/,
-# /shop/, /our-machinery/, /contact/
-# The www host must be redirected to the apex in Cloudflare (Rules > Redirect
-# Rules), since this file only matches paths.
+# 301s from the old WordPress site's URLs to the new ones. Served by
+# Cloudflare Workers Static Assets. Exact matches first, then splats and
+# placeholders (Cloudflare evaluates static rules faster).
+# Paths kept unchanged and so not listed: /, /about/, /services/, /shop/,
+# /our-machinery/, /contact/
+# Redirect the www host to the apex in Cloudflare (Rules > Redirect Rules);
+# this file only matches paths.
 
-# Products and categories (WooCommerce)
+# Products (WooCommerce)
 /product/0-250-1-4-aluminum-clamp-collar/        /shop/aluminum/0-250-1-4-aluminum-clamp-collar/        301
 /product/1-x-1-1-4-x-1-bronze-flanged-bushing/   /shop/bushings/1-x-1-1-4-x-1-bronze-flanged-bushing/   301
 /product/1616-gear-mitter/                       /shop/mitter/1616-gear-mitter/                         301
 /product/hayssen-vertical-form-fill-seal/        /shop/hayssen/hayssen-vertical-form-fill-seal/         301
-/product-category/:category/                     /shop/:category/                                       301
-/product/*                                       /shop/                                                 301
 
 # Quote flow
 /request-a-quote/   /quote/   301
 /cart/              /quote/   301
-/my-account/*       /         301
 /my-account/        /         301
 
 # Earlier site generation
@@ -29,7 +28,12 @@
 /metal-fabrication/    /services/custom-fabrication/  301
 
 # WordPress leftovers
-/author/*                /   301
-/category/*              /   301
-/hello-world/            /   301
-/blog-post-title-5/      /   301
+/hello-world/          /   301
+/blog-post-title-5/    /   301
+
+# Wildcards last
+/product-category/:category/   /shop/:category/   301
+/product/*                     /shop/             301
+/my-account/*                  /                  301
+/author/*                      /                  301
+/category/*                    /                  301

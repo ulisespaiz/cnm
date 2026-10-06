@@ -2,7 +2,7 @@
 
 Static rebuild of the Elementor/WordPress site: a product catalog where
 visitors build a quote list and send it by email. Built with
-[Astro](https://astro.build), hosted on Cloudflare Pages from this repo, with
+[Astro](https://astro.build), hosted on Cloudflare Workers (static assets) from this repo, with
 forms delivered by [Web3Forms](https://web3forms.com).
 
 ## Status
@@ -80,14 +80,14 @@ LocalBusiness `areaServed` data.
 
 1. Create an access key at web3forms.com using the inbox that should receive
    quotes. The key is public by design: it can only send mail to that inbox.
-2. Set `PUBLIC_WEB3FORMS_KEY` in Cloudflare Pages (Settings → Variables and
-   Secrets) for Production and Preview, and in `.env` locally.
+2. Set `PUBLIC_WEB3FORMS_KEY` as a build variable in the Cloudflare Worker
+   (Settings → Builds → Variables and secrets), and in `.env` locally.
 3. Submit a test quote from the deployed site and confirm it arrives (check
    spam the first time and allow-list the sender).
 
 The email contains the selected products (name, options, quantity, link),
 the customer's details, city and preferred contact method. Spam protection is
-a honeypot field; add Web3Forms' hCaptcha or move to a Cloudflare Pages
+a honeypot field; add Web3Forms' hCaptcha or move to a Cloudflare Worker
 Function with Turnstile if spam gets through. File uploads are not supported
 on the Web3Forms free plan; see the plan in the PR if customers need them.
 
@@ -95,18 +95,26 @@ If JavaScript fails, the form still posts directly to Web3Forms and redirects
 to `/quote/thanks/`. If the request fails, the customer sees a prefilled
 `mailto:` fallback.
 
-## Deploying (Cloudflare Pages)
+## Deploying (Cloudflare Workers)
 
-1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git →
-   select this repo.
-2. Build command `npm run build`, output directory `dist`, environment variable
-   `NODE_VERSION=22` plus `PUBLIC_WEB3FORMS_KEY`.
-3. Every push to `main` deploys; every other branch gets a preview URL.
-4. Before go-live: `npm run prelaunch` passes, `public/_redirects` covers the
-   old URLs, then add the custom domain in Pages.
-5. After go-live: submit `/sitemap-index.xml` in Google Search Console and
-   Bing Webmaster Tools, and update the website link on the Google Business
-   Profile.
+The site deploys as a static-assets Worker named `cnmwebsite`, configured in
+`wrangler.jsonc` (no Worker script, no Astro adapter). Workers Builds is
+connected to this repo:
+
+- Deploy command: `npx wrangler deploy` (the default). `wrangler.jsonc`
+  runs `npm run build` first, so a separate build command is optional.
+- Variables: `PUBLIC_WEB3FORMS_KEY` must be available at **build** time
+  (Settings > Builds > Variables and secrets), since Astro inlines it.
+- Every push to `main` deploys to production; other branches get preview
+  builds and a status check on the PR.
+- `_redirects` and `_headers` in `public/` are applied by Workers Static
+  Assets; `404.html` is served for unknown paths.
+
+Before go-live: `npm run prelaunch` passes, then add the custom domain
+(Settings > Domains & Routes) and a www-to-apex redirect rule.
+
+Test locally with Cloudflare's runtime: `npx wrangler dev` (builds, then
+serves `dist` with the redirects and headers applied).
 
 ## Search and AI visibility
 
