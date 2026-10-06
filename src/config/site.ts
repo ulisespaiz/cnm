@@ -7,15 +7,15 @@
 export const site = {
   name: 'C&M Machine Shop',
   legalName: 'C&M Machine Shop Inc.',
-  tagline: 'TODO one-line value proposition',
+  tagline: 'Precision machining, fabrication and parts in Salinas',
   description:
-    'TODO 150-160 character description used on the home page and as the default meta description.',
+    'Family-owned machine shop in Salinas, CA since 2002. CNC machining, water-jet and laser cutting, welding, fabrication and a parts store.',
   url: 'https://cmmachshop.com',
 
   phone: '(831) 753-7092',
   phoneE164: '+18317537092',
-  email: 'TODO', // public contact address
-  quoteInbox: 'TODO', // where Web3Forms delivers; set when creating the key
+  email: 'cmoreno@cmmachshop.com',
+  quoteInbox: 'cmoreno@cmmachshop.com', // Web3Forms delivers here; set when creating the key
 
   address: {
     street: '772 Vertin Ave',
@@ -30,16 +30,16 @@ export const site = {
     { days: ['Mo', 'Tu', 'We', 'Th', 'Fr'], opens: '07:00', closes: '16:00' },
   ],
 
-  // schema.org LocalBusiness subtype that best fits. TODO pick once the
-  // product line is known (e.g. HomeAndConstructionBusiness, Store).
+  // schema.org has no machine-shop type; LocalBusiness plus Service entries
+  // on each service page describe it best.
   schemaType: 'LocalBusiness',
 
   social: {
-    // TODO full URLs; empty strings are skipped
+    // Full URLs; empty strings are skipped
     googleBusiness: '',
     facebook: '',
     instagram: '',
-    yelp: '',
+    yelp: 'https://www.yelp.com/biz/c-and-m-machine-shop-salinas-2',
   },
 } as const;
 
@@ -65,8 +65,11 @@ export const serviceAreas = [
 ] as const;
 
 export const nav = [
-  { label: 'Products', href: '/products/' },
-  { label: 'Service Areas', href: '/service-areas/' },
+  { label: 'Services', href: '/services/' },
+  { label: 'Parts Store', href: '/products/' },
+  { label: 'Our Machinery', href: '/our-machinery/' },
   { label: 'About', href: '/about/' },
   { label: 'Contact', href: '/contact/' },
 ] as const;
+
+export const industries = ['Food processing', 'Agriculture'] as const;

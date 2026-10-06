@@ -1,0 +1,56 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { site } from '../../config/site';
+import { getServices, serviceUrl } from '../../lib/content';
+import { breadcrumbs } from '../../lib/schema';
+
+const services = await getServices();
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Services', path: '/services/' },
+];
+---
+
+<Base
+  title="Machining & Fabrication Services"
+  description={`Precision machining, water-jet and laser cutting, welding and metal fabrication from ${site.name} in ${site.address.city}, CA.`}
+  jsonLd={[breadcrumbs(crumbs)]}
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <h1>Services</h1>
+      <p class="lead">Machining, cutting and fabrication under one roof in {site.address.city}. Send a drawing, a sample part or just an idea, and we will quote it.</p>
+      <div class="grid">
+        {services.map((s) => (
+          <a class="card" href={serviceUrl(s)}>
+            <div class="card__body">
+              <h2 class="h3">{s.data.title}</h2>
+              <p class="muted">{s.data.summary}</p>
+              <span class="card__more">Learn more →</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+  <CtaBand heading="Have a part in mind?" text="Tell us what you need and we will reply within one business day." />
+</Base>
+
+<style>
+  .lead {
+    font-size: 1.15rem;
+    max-width: 65ch;
+  }
+
+  .h3 {
+    font-size: 1.25rem;
+  }
+
+  .card__more {
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+</style>

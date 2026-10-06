@@ -24,6 +24,7 @@ const social = Object.entries(site.social).filter(([, url]) => url);
       <ul>
         {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
         <li><a href="/quote/">Request a Quote</a></li>
+        <li><a href="/service-areas/">Service Areas</a></li>
       </ul>
     </nav>
 
@@ -49,7 +50,7 @@ const social = Object.entries(site.social).filter(([, url]) => url);
   </div>
 
   <div class="container site-footer__legal">
-    <p>© {year} {site.legalName}. <a href="/privacy/">Privacy Policy</a></p>
+    <p>© {year} {site.legalName.replace(/\.$/, '')}. <a href="/privacy/">Privacy Policy</a></p>
   </div>
 </footer>
 

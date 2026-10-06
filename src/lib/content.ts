@@ -19,6 +19,23 @@ export async function getProducts(categoryId?: string) {
   return products.sort(byOrder);
 }
 
+export async function getServices() {
+  return (await getCollection('services', visible)).sort(byOrder);
+}
+
+export async function getEquipment() {
+  return (await getCollection('equipment')).sort(
+    (a, b) => a.data.order - b.data.order || a.data.name.localeCompare(b.data.name),
+  );
+}
+
+// Categories that have at least one visible product.
+export async function getActiveCategories() {
+  const categories = await getCategories();
+  const counts = await Promise.all(categories.map(async (c) => (await getProducts(c.id)).length));
+  return categories.filter((_, i) => counts[i] > 0);
+}
+
 export async function getAreas() {
   return (await getCollection('areas', visible)).sort((a, b) =>
     a.data.city.localeCompare(b.data.city),
@@ -29,5 +46,7 @@ export const productUrl = (p: CollectionEntry<'products'>) =>
   `/products/${p.data.category.id}/${p.id}/`;
 
 export const categoryUrl = (id: string) => `/products/${id}/`;
+
+export const serviceUrl = (s: CollectionEntry<'services'>) => `/services/${s.id}/`;
 
 export const areaUrl = (a: CollectionEntry<'areas'>) => `/service-areas/${a.id}/`;

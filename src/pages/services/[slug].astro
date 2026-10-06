@@ -1,0 +1,181 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import AddToQuote from '../../components/AddToQuote.astro';
+import { site } from '../../config/site';
+import { getServices, serviceUrl } from '../../lib/content';
+import { breadcrumbs } from '../../lib/schema';
+
+export const getStaticPaths = (async () => {
+  const services = await getServices();
+  return services.map((service) => ({ params: { slug: service.id }, props: { service, services } }));
+}) satisfies GetStaticPaths;
+
+const { service, services } = Astro.props;
+const { data } = service;
+const { Content } = await render(service);
+const url = serviceUrl(service);
+const others = services.filter((s) => s.id !== service.id);
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Services', path: '/services/' },
+  { name: data.title, path: url },
+];
+
+const serviceSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: data.title,
+  description: data.summary,
+  url: new URL(url, site.url).href,
+  provider: { '@id': new URL('/#business', site.url).href },
+  areaServed: { '@type': 'AdministrativeArea', name: 'Monterey County, CA' },
+};
+---
+
+<Base
+  title={data.seoTitle ?? data.title}
+  description={data.seoDescription ?? data.summary}
+  jsonLd={[breadcrumbs(crumbs), serviceSchema]}
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <div class="service">
+        <div>
+          <h1>{data.title}</h1>
+          <p class="lead">{data.summary}</p>
+
+          {data.capabilities.length > 0 && (
+            <ul class="capabilities">
+              {data.capabilities.map((c) => (
+                <li>
+                  <h2 class="h3">{c.name}</h2>
+                  <p>{c.text}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {data.materials.length > 0 && (
+            <>
+              <h2>Materials</h2>
+              <ul class="chips">
+                {data.materials.map((m) => <li>{m}</li>)}
+              </ul>
+            </>
+          )}
+
+          <div class="prose">
+            <Content />
+          </div>
+        </div>
+
+        <aside class="service__quote">
+          <h2 class="h3">Request a quote</h2>
+          <p class="muted">Add this service to your quote list, then send the details.</p>
+          <AddToQuote id={`service:${service.id}`} title={data.title} url={url} label="Add to Quote" />
+          <p class="muted service__call">Or call <a href={`tel:${site.phoneE164}`}>{site.phone}</a></p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  {others.length > 0 && (
+    <section class="section section--alt">
+      <div class="container">
+        <h2>More services</h2>
+        <div class="grid">
+          {others.map((s) => (
+            <a class="card" href={serviceUrl(s)}>
+              <div class="card__body">
+                <h3>{s.data.title}</h3>
+                <p class="muted">{s.data.summary}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+</Base>
+
+<style>
+  .service {
+    display: grid;
+    gap: 32px;
+  }
+
+  @media (min-width: 900px) {
+    .service {
+      grid-template-columns: 1.6fr 1fr;
+      align-items: start;
+    }
+
+    .service__quote {
+      position: sticky;
+      top: 88px;
+    }
+  }
+
+  .service__quote {
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  .service__call {
+    margin-top: 12px;
+  }
+
+  .lead {
+    font-size: 1.15rem;
+  }
+
+  .h3 {
+    font-size: 1.2rem;
+  }
+
+  .capabilities {
+    display: grid;
+    gap: 16px;
+    padding: 0;
+    margin: 24px 0;
+    list-style: none;
+  }
+
+  @media (min-width: 640px) {
+    .capabilities {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .capabilities li {
+    padding: 16px;
+    border-left: 4px solid var(--color-primary);
+    background: var(--color-surface);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+
+  .capabilities p {
+    margin: 0;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .chips li {
+    padding: 6px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    font-size: 0.95rem;
+  }
+</style>

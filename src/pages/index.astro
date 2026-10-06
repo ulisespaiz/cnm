@@ -2,30 +2,56 @@
 import Base from '../layouts/Base.astro';
 import ProductCard from '../components/ProductCard.astro';
 import CtaBand from '../components/CtaBand.astro';
-import { site, serviceAreas } from '../config/site';
-import { getCategories, getProducts, categoryUrl } from '../lib/content';
+import { site, serviceAreas, industries } from '../config/site';
+import { getActiveCategories, getProducts, getServices, categoryUrl, serviceUrl } from '../lib/content';
 
-const categories = await getCategories();
+const services = await getServices();
+const categories = await getActiveCategories();
 const featured = (await getProducts()).filter((p) => p.data.featured).slice(0, 6);
 ---
 
-<Base title={site.name} description={site.description}>
+<Base title={`${site.name} | Machining & Fabrication in ${site.address.city}, CA`} description={site.description}>
   <section class="hero">
     <div class="container">
-      <p class="hero__eyebrow">Serving {site.address.city} and the Monterey Bay area</p>
+      <p class="hero__eyebrow">Family-owned in {site.address.city} since 2002</p>
       <h1>{site.tagline}</h1>
-      <p class="hero__lead">{site.description}</p>
+      <p class="hero__lead">
+        Custom machining and fabrication services, and now a full parts store, from one-off industrial components
+        to ready-to-ship stock.
+      </p>
       <div class="hero__actions">
-        <a class="btn" href="/products/">Browse Products</a>
-        <a class="btn btn--outline" href="/quote/">Request a Quote</a>
+        <a class="btn" href="/quote/">Request a Quote</a>
+        <a class="btn btn--outline" href="/services/">Our Services</a>
+      </div>
+      <ul class="hero__facts">
+        <li>Over 30 years of industry experience</li>
+        <li>Serving {industries.join(' & ').toLowerCase()}</li>
+        <li>Local pickup or shipping</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2>Services</h2>
+      <div class="grid">
+        {services.map((s) => (
+          <a class="card" href={serviceUrl(s)}>
+            <div class="card__body">
+              <h3>{s.data.title}</h3>
+              <p class="muted">{s.data.summary}</p>
+            </div>
+          </a>
+        ))}
       </div>
     </div>
   </section>
 
-  {categories.length > 0 && (
-    <section class="section">
-      <div class="container">
-        <h2>Products</h2>
+  <section class="section section--alt">
+    <div class="container">
+      <h2>Parts Store</h2>
+      <p>Precision-machined components, stock materials and specialty hardware, ready for local pickup or shipped fast.</p>
+      {categories.length > 0 && (
         <div class="grid">
           {categories.map((c) => (
             <a class="card" href={categoryUrl(c.id)}>
@@ -36,35 +62,30 @@ const featured = (await getProducts()).filter((p) => p.data.featured).slice(0, 6
             </a>
           ))}
         </div>
-      </div>
-    </section>
-  )}
-
-  {featured.length > 0 && (
-    <section class="section section--alt">
-      <div class="container">
-        <h2>Popular Products</h2>
-        <div class="grid">
+      )}
+      {featured.length > 0 && (
+        <div class="grid featured">
           {featured.map((p) => <ProductCard product={p} />)}
         </div>
-      </div>
-    </section>
-  )}
+      )}
+      <p><a class="btn btn--outline" href="/products/">Browse the parts store</a></p>
+    </div>
+  </section>
 
   <section class="section">
     <div class="container steps">
       <h2>How quotes work</h2>
       <ol>
-        <li><strong>Pick products.</strong> Choose options and add them to your quote list.</li>
-        <li><strong>Send the list.</strong> Tell us about the project and where it is.</li>
-        <li><strong>Get your price.</strong> We reply within one business day.</li>
+        <li><strong>Tell us what you need.</strong> Add parts or services to your quote list, or describe a custom part.</li>
+        <li><strong>Send your details.</strong> Material, quantity, drawings and timeline help us quote accurately.</li>
+        <li><strong>Get your quote.</strong> We reply within one business day.</li>
       </ol>
     </div>
   </section>
 
   <section class="section section--alt">
     <div class="container">
-      <h2>Areas we serve</h2>
+      <h2>Serving Monterey County and beyond</h2>
       <p>{serviceAreas.join(' · ')}</p>
       <a href="/service-areas/">See all service areas</a>
     </div>
@@ -102,6 +123,25 @@ const featured = (await getProducts()).filter((p) => p.data.featured).slice(0, 6
     .hero__actions .btn {
       flex: 1 1 100%;
     }
+  }
+
+  .hero__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
+    font-weight: 600;
+  }
+
+  .hero__facts li::before {
+    content: '✓ ';
+    color: var(--color-success);
+  }
+
+  .featured {
+    margin-top: 20px;
   }
 
   .steps ol {

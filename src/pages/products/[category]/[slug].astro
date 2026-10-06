@@ -5,6 +5,7 @@ import { Image, getImage } from 'astro:assets';
 import Base from '../../../layouts/Base.astro';
 import Breadcrumbs from '../../../components/Breadcrumbs.astro';
 import ProductCard from '../../../components/ProductCard.astro';
+import AddToQuote from '../../../components/AddToQuote.astro';
 import { getProducts, productUrl, categoryUrl } from '../../../lib/content';
 import { breadcrumbs, product as productSchema } from '../../../lib/schema';
 
@@ -30,7 +31,7 @@ const schemaImages = await Promise.all(
 
 const crumbs = [
   { name: 'Home', path: '/' },
-  { name: 'Products', path: '/products/' },
+  { name: 'Parts Store', path: '/products/' },
   { name: category.data.title, path: categoryUrl(category.id) },
   { name: data.title, path: url },
 ];
@@ -71,33 +72,7 @@ const crumbs = [
           <h1>{data.title}</h1>
           <p class="product__summary">{data.summary}</p>
 
-          <form
-            class="add-form"
-            data-add-to-quote
-            data-id={product.id}
-            data-title={data.title}
-            data-url={url}
-          >
-            {data.options.map((opt, i) => (
-              <div class="field">
-                <label for={`opt-${i}`}>{opt.name}</label>
-                <select id={`opt-${i}`} name={opt.name} required>
-                  {opt.values.map((v) => <option>{v}</option>)}
-                </select>
-              </div>
-            ))}
-            <div class="field qty-field">
-              <label for="qty">Quantity</label>
-              <input id="qty" name="__qty" type="number" min="1" max="999" value="1" inputmode="numeric" />
-            </div>
-            <button class="btn btn--block" type="submit">Add to Quote</button>
-            <p class="add-form__status" role="status" aria-live="polite" hidden>
-              Added. <a href="/quote/">View your quote (<span data-quote-count>0</span>)</a>
-            </p>
-            <noscript>
-              <p><a href="/contact/">Contact us</a> to request a quote for this product.</p>
-            </noscript>
-          </form>
+          <AddToQuote id={product.id} title={data.title} url={url} options={data.options} />
 
           {data.specs.length > 0 && (
             <table class="specs">
@@ -132,28 +107,6 @@ const crumbs = [
     </section>
   )}
 </Base>
-
-<script>
-  import { addItem } from '../../../scripts/quote-store';
-
-  document.querySelectorAll<HTMLFormElement>('[data-add-to-quote]').forEach((form) => {
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const data = new FormData(form);
-      const qty = Number(data.get('__qty')) || 1;
-      data.delete('__qty');
-      const options = Object.fromEntries([...data.entries()].map(([k, v]) => [k, String(v)]));
-      addItem({
-        id: form.dataset.id!,
-        title: form.dataset.title!,
-        url: form.dataset.url!,
-        options,
-        qty: Math.max(1, Math.min(999, Math.round(qty))),
-      });
-      form.querySelector<HTMLElement>('.add-form__status')!.hidden = false;
-    });
-  });
-</script>
 
 <style>
   .product {
@@ -206,19 +159,6 @@ const crumbs = [
 
   .product__summary {
     font-size: 1.1rem;
-  }
-
-  .qty-field input {
-    max-width: 120px;
-  }
-
-  .add-form__status {
-    margin-top: 12px;
-    padding: 12px 14px;
-    border-radius: var(--radius);
-    background: #e8f5ec;
-    color: var(--color-success);
-    font-weight: 600;
   }
 
   .specs {

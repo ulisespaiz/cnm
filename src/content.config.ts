@@ -54,4 +54,34 @@ const areas = defineCollection({
   }),
 });
 
-export const collections = { categories, products, areas };
+// Shop services (machining, cutting, fabrication). Each page can be added to
+// the quote list like a product.
+const services = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/services' }),
+  schema: z.object({
+    title: z.string(),
+    summary: z.string().max(200),
+    // Sub-capabilities shown as cards on the service page.
+    capabilities: z.array(z.object({ name: z.string(), text: z.string() })).default([]),
+    materials: z.array(z.string()).default([]),
+    order: z.number().default(0),
+    seoTitle: z.string().optional(),
+    seoDescription: z.string().max(160).optional(),
+    draft: z.boolean().default(false),
+  }),
+});
+
+// Shop equipment shown on /our-machinery/.
+const equipment = defineCollection({
+  loader: file('src/content/equipment.json'),
+  schema: ({ image }) =>
+    z.object({
+      name: z.string(),
+      kind: z.string(),
+      text: z.string(),
+      image: image().optional(),
+      order: z.number().default(0),
+    }),
+});
+
+export const collections = { categories, products, areas, services, equipment };

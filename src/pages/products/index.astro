@@ -5,6 +5,7 @@ import ProductCard from '../../components/ProductCard.astro';
 import CtaBand from '../../components/CtaBand.astro';
 import { getCategories, getProducts, categoryUrl } from '../../lib/content';
 import { breadcrumbs } from '../../lib/schema';
+import { site } from '../../config/site';
 
 const categories = await getCategories();
 const sections = await Promise.all(
@@ -12,20 +13,27 @@ const sections = await Promise.all(
 );
 const crumbs = [
   { name: 'Home', path: '/' },
-  { name: 'Products', path: '/products/' },
+  { name: 'Parts Store', path: '/products/' },
 ];
 ---
 
 <Base
-  title="Products"
-  description="Browse our products, choose your options, and request a free quote."
+  title="Parts Store"
+  description="Precision-machined components, stock materials and specialty hardware. Request a quote for local pickup or shipping from Salinas, CA."
   jsonLd={[breadcrumbs(crumbs)]}
 >
   <section class="section">
     <div class="container">
       <Breadcrumbs items={crumbs} />
-      <h1>Products</h1>
-      <p class="muted">Add what you need to your quote list and send it over. Pricing comes back within one business day.</p>
+      <h1>Parts Store</h1>
+      <p class="muted">Precision-machined components, stock materials and specialty hardware. Add what you need to your quote list and send it over; we reply within one business day.</p>
+
+      {sections.every((s) => !s.products.length) && (
+        <div class="empty">
+          <p><strong>Our online catalog is being updated.</strong> Tell us the part, material and quantity you need and we will quote it, or call {site.phone}.</p>
+          <p><a class="btn" href="/quote/">Request a Part Quote</a></p>
+        </div>
+      )}
 
       {sections.filter((s) => s.products.length).map(({ category, products }) => (
         <section class="category-block">
@@ -41,6 +49,13 @@ const crumbs = [
 </Base>
 
 <style>
+  .empty {
+    margin-top: 24px;
+    padding: 20px;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
   .category-block {
     margin-top: 40px;
   }

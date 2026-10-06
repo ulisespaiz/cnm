@@ -1,0 +1,64 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { site } from '../config/site';
+import { getEquipment } from '../lib/content';
+import { breadcrumbs } from '../lib/schema';
+
+const equipment = await getEquipment();
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Our Machinery', path: '/our-machinery/' },
+];
+---
+
+<Base
+  title="Our Machinery"
+  description={`The lathes, CNC equipment and cutting machines ${site.name} uses for precision parts in ${site.address.city}, CA.`}
+  jsonLd={[breadcrumbs(crumbs)]}
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <h1>Our Machinery</h1>
+      <p class="lead">Every machine in our shop is chosen for reliability, accuracy and capability, so the parts we deliver are precise and consistent.</p>
+      <div class="grid">
+        {equipment.map((m) => (
+          <article class="card">
+            {m.data.image ? (
+              <Image class="card__media" src={m.data.image} alt={m.data.name} widths={[320, 480, 640]} sizes="(min-width: 900px) 280px, 100vw" />
+            ) : null}
+            <div class="card__body">
+              <p class="kind">{m.data.kind}</p>
+              <h2 class="h3">{m.data.name}</h2>
+              <p>{m.data.text}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+  <CtaBand heading="Need a part made?" text="Send us your drawing or sample part and we will quote it." />
+</Base>
+
+<style>
+  .lead {
+    font-size: 1.15rem;
+    max-width: 65ch;
+  }
+
+  .kind {
+    margin: 0 0 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+  }
+
+  .h3 {
+    font-size: 1.25rem;
+  }
+</style>

@@ -8,7 +8,7 @@ interface Props {
 
 const {
   heading = 'Ready for a quote?',
-  text = 'Pick your products, tell us about the project, and we will get back to you within one business day.',
+  text = 'Tell us about the part or project and we will get back to you within one business day.',
 } = Astro.props;
 ---
 
@@ -17,7 +17,7 @@ const {
     <h2>{heading}</h2>
     <p>{text}</p>
     <div class="cta-band__actions">
-      <a class="btn" href="/products/">Browse Products</a>
+      <a class="btn" href="/quote/">Request a Quote</a>
       <a class="btn btn--outline" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
     </div>
   </div>

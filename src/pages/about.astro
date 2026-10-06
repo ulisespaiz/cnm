@@ -4,13 +4,38 @@ import CtaBand from '../components/CtaBand.astro';
 import { site } from '../config/site';
 ---
 
-<Base title="About Us" description={`About ${site.name}, based in ${site.address.city}, CA.`}>
+<Base
+  title="About Us"
+  description={`${site.legalName} is a family-owned machine shop in ${site.address.city}, CA, founded in 2002 and serving Monterey County.`}
+>
   <section class="section">
     <div class="container prose">
-      <h1>About {site.name}</h1>
-      <!-- TODO replaced with the About copy extracted from the existing site -->
-      <p>TODO About content.</p>
+      <h1>About {site.legalName}</h1>
+      <p class="lead">
+        {site.legalName} was founded in 2002 with a simple vision: to provide quality craftsmanship with
+        integrity and hard work. With over 30 years of industry experience, we remain a family-oriented business
+        dedicated to delivering precise, reliable, and honest service for every project.
+      </p>
+      <p>
+        We machine, cut and fabricate parts for the food processing and agriculture companies that keep the
+        Salinas Valley running, along with customers across Monterey County. We put strong relationships with
+        our clients, our employees and our community first.
+      </p>
+      <h2>What we do</h2>
+      <ul>
+        <li><a href="/services/machining/">Precision machining</a>: CNC and manual milling and turning</li>
+        <li><a href="/services/cutting/">Water-jet and laser cutting</a>, plus shearing</li>
+        <li><a href="/services/fabrication/">Fabrication and welding</a>: MIG and TIG welding, rolling and forming</li>
+        <li><a href="/products/">Parts store</a>: machined components, stock materials and hardware</li>
+      </ul>
+      <p>See the equipment behind the work on <a href="/our-machinery/">Our Machinery</a>.</p>
     </div>
   </section>
   <CtaBand />
 </Base>
+
+<style>
+  .lead {
+    font-size: 1.15rem;
+  }
+</style>

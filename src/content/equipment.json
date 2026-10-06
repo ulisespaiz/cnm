@@ -1,0 +1,16 @@
+[
+  {
+    "id": "sharp-32120b",
+    "name": "Sharp 32120B Lathe",
+    "kind": "Lathe",
+    "text": "Shapes, cuts and crafts custom cylindrical components with exceptional precision.",
+    "order": 1
+  },
+  {
+    "id": "tb-2060v-cnc",
+    "name": "TB-2060V CNC Turning Machine",
+    "kind": "CNC lathe",
+    "text": "A robust CNC lathe for complex turning operations, with a FANUC CNC control for precise, repeatable work.",
+    "order": 2
+  }
+]

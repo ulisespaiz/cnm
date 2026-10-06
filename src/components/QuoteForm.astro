@@ -60,7 +60,7 @@ const missingKey = !forms.accessKey;
     <textarea
       id={`${kind}-message`}
       name="message"
-      placeholder={kind === 'quote' ? 'Timeline, measurements, delivery or install needs…' : ''}
+      placeholder={kind === 'quote' ? 'Material, quantity, dimensions or tolerances, timeline, pickup or shipping…' : ''}
       required={kind === 'contact'}></textarea>
   </div>
 
@@ -78,6 +78,7 @@ const missingKey = !forms.accessKey;
   </button>
   <p class="form-alert" role="status" aria-live="polite" data-form-status hidden></p>
   <p class="muted form-note">
+    Have drawings or photos? Email them to <a href={`mailto:${site.email}`}>{site.email}</a> with your name.
     We reply within one business day. Prefer to talk? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.
   </p>
 </form>
@@ -93,8 +94,9 @@ const missingKey = !forms.accessKey;
       const isQuote = form.dataset.kind === 'quote';
       const items = isQuote ? getItems() : [];
 
-      if (isQuote && !items.length) {
-        show(status, 'Add at least one product to your quote first.', true);
+      // Custom-part requests often have nothing in the list, just a description.
+      if (isQuote && !items.length && !String(new FormData(form).get('message') || '').trim()) {
+        show(status, 'Add a product or service to your quote, or describe the part you need.', true);
         return;
       }
 
