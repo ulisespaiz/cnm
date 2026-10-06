@@ -126,7 +126,8 @@ Built in:
 - JSON-LD on every page: LocalBusiness (logo, founding date, hours, contact
   point, area served, services catalog, `knowsAbout`) and WebSite; plus
   Service, Product, BreadcrumbList and FAQPage where relevant.
-- Default share image `public/og.jpg` (regenerate if the brand changes).
+- Default share image `public/og.jpg` (1200x630, built from the real CNC machining center photo `src/assets/work/our-work-2.jpg`; regenerate if the brand changes).
+- Photos: real C&M shop photos only (no stock or AI images). `our-work-1` Timesavers finishing machine, `our-work-2` CNC machining center, `our-work-6` Sharp 22120B lathe, plus `src/assets/equipment/` and the storefront shots in `src/assets/site/`.
 - Q&A sections on every service page and the industry page.
 
 Do these at launch; they matter more than anything in the code:

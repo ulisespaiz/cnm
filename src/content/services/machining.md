@@ -1,8 +1,8 @@
 ---
 title: "Machining"
 summary: "Our machining services include precision milling and turning, allowing us to create complex parts with high accuracy and consistency — ideal for both prototyping and large production runs."
-image: ../../assets/services/our-services-2.png
-imageAlt: "Machining"
+image: ../../assets/equipment/CNC-Vertical-Milling-Machine.jpg
+imageAlt: "CNC vertical machining center in the C&M shop"
 capabilities:
   - name: "Milling"
     text: "Multi-axis CNC milling for complex geometries and tight tolerances."
@@ -18,7 +18,7 @@ faqs:
   - q: "What machining services do you offer?"
     a: "Precision milling and turning, on CNC and manual machines, for prototypes, one-off replacement parts and production runs."
   - q: "What machines do you run?"
-    a: "Our shop includes a Sharp 32120B lathe, a CNC vertical milling machine and a TB-2060VS CNC turning center with a FANUC control."
+    a: "Our shop includes a Sharp 22120B lathe, a CNC vertical milling machine and a TB-2060VS CNC turning center with a FANUC control."
   - q: "Can you make a part without a drawing?"
     a: "Yes. We work directly from technical drawings, and when there is no blueprint we can help engineer the part from a sample or your description."
 ---

@@ -71,7 +71,7 @@ const faqs = [
         <li>Replacement parts machined to spec from your drawing or a worn sample</li>
         <li>Custom fabrication with or without blueprints</li>
         <li>Local pickup in {site.address.city} or fast shipping</li>
-        <li>Responses within 24 hours to quotes and custom part requests</li>
+        <li>{site.replyTime} to quotes and custom part requests</li>
       </ul>
     </div>
   </section>
@@ -104,7 +104,7 @@ const faqs = [
     </div>
   </section>
 
-  <CtaBand heading="Down a part?" text="Tell us what broke and we will get back to you within one business day." />
+  <CtaBand heading="Down a part?" text={`Tell us what broke. ${site.replyTime}.`} />
 </Base>
 
 <style>

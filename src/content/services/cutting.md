@@ -1,8 +1,8 @@
 ---
 title: "Cutting Services"
 summary: "We offer precise cutting solutions using advanced laser, water-jet, and shearing techniques for a wide variety of materials and thicknesses."
-image: ../../assets/services/our-services-1.png
-imageAlt: "Cutting Services"
+image: ../../assets/equipment/Laser-Cutting-Services.jpg
+imageAlt: "Fiber laser cutting system in the C&M shop"
 capabilities:
   - name: "Laser Cutting"
     text: "High-precision cutting for intricate designs with exceptional edge quality."
