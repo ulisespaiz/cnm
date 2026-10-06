@@ -1,0 +1,118 @@
+---
+// Trust items from site config (replyTime, store.*, hours, founded). Nothing
+// here is invented: add lead times or shipping details in src/config/site.ts.
+import { site } from '../config/site';
+import { openHours } from './store';
+import '../styles/store.css';
+
+interface Props {
+  variant?: 'strip' | 'list';
+  limit?: number;
+}
+
+const { variant = 'strip', limit = 4 } = Astro.props;
+const items = [
+  {
+    title: site.replyTime,
+    text: 'On every quote request.',
+    icon: 'M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1z',
+  },
+  {
+    title: 'Local pickup in Salinas',
+    text: openHours(),
+    icon: 'M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
+  },
+  {
+    title: site.store.shipping,
+    text: '',
+    icon: 'M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM17 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
+  },
+  {
+    title: `Machine shop since ${site.founded}`,
+    text: site.store.madeTo,
+    icon: 'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.2-.7-.7-2.2z',
+  },
+];
+---
+
+<ul class={`trust trust--${variant}`} aria-label="Why order from C&M" tabindex={variant === "strip" ? 0 : undefined}>
+  {
+    items.slice(0, limit).map((i) => (
+      <li class="trust__item">
+        <svg class="trust__icon" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d={i.icon}></path></svg>
+        <span class="trust__text">
+          <strong>{i.title}</strong>
+          {i.text && <span>{i.text}</span>}
+        </span>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .trust {
+    display: flex;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+  }
+
+  .trust__item {
+    flex: none;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    width: min(300px, 82%);
+    padding: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: #fff;
+    scroll-snap-align: start;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .trust__icon {
+    flex: none;
+    margin-top: 2px;
+    color: var(--color-primary);
+  }
+
+  .trust__text {
+    display: grid;
+    gap: 2px;
+  }
+
+  .trust__text span {
+    color: #444;
+  }
+
+  @media (min-width: 900px) {
+    .trust--strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      overflow: visible;
+    }
+
+    .trust--strip .trust__item {
+      width: auto;
+    }
+  }
+
+  /* part page: compact vertical list */
+  .trust--list {
+    display: grid;
+    gap: 0;
+    overflow: visible;
+  }
+
+  .trust--list .trust__item {
+    width: auto;
+    padding: 8px 4px;
+    border: 0;
+    background: transparent;
+  }
+</style>

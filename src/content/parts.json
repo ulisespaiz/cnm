@@ -245,7 +245,7 @@
   "sharedPhoto": false,
   "aka": [],
   "availability": "ask",
-  "featured": false,
+  "featured": true,
   "order": 10,
   "flags": []
  },
@@ -269,7 +269,7 @@
   "sharedPhoto": false,
   "aka": [],
   "availability": "ask",
-  "featured": false,
+  "featured": true,
   "order": 11,
   "flags": []
  },
@@ -1395,7 +1395,7 @@
   "sharedPhoto": false,
   "aka": [],
   "availability": "ask",
-  "featured": false,
+  "featured": true,
   "order": 55,
   "flags": []
  },
@@ -2272,7 +2272,7 @@
   "sharedPhoto": false,
   "aka": [],
   "availability": "ask",
-  "featured": false,
+  "featured": true,
   "order": 97,
   "flags": []
  },

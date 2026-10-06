@@ -1,23 +1,231 @@
 ---
-// Placeholder store home: replaced by the parts store build.
+// Parts store home: hero search, section tiles, trust strip, and the full
+// parts list (all parts are in the HTML; filters and search run in the browser).
 import Base from '../../layouts/Base.astro';
-import PartCard from '../../components/PartCard.astro';
-import { getParts, getSections, sectionUrl } from '../../lib/parts';
+import PartSearch from '../../components/PartSearch.astro';
+import SectionTiles from '../../components/SectionTiles.astro';
+import TrustStrip from '../../components/TrustStrip.astro';
+import PartTable from '../../components/PartTable.astro';
+import PartRequestForm from '../../components/PartRequestForm.astro';
+import StoreDisclaimer from '../../components/StoreDisclaimer.astro';
+import { getParts, getSections, machineUrl, sectionUrl } from '../../lib/parts';
+import { breadcrumbs, itemList } from '../../lib/schema';
+import { site } from '../../config/site';
+import '../../styles/store.css';
 
 const sections = await getSections();
 const parts = await getParts();
+const machineId = sections[0]?.data.machine.id ?? 'hayssen-vffs';
+
+const description = `Search ${parts.length} replacement parts for Hayssen VFFS machines by Hayssen part number. Add parts to a quote request. ${site.replyTime}.`;
+const jsonLd = [
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Parts Store', path: '/shop/' },
+  ]),
+  itemList(
+    sections.map((s) => ({ name: s.data.title, path: sectionUrl(s) })),
+    'Hayssen VFFS replacement parts by section',
+  ),
+];
 ---
 
-<Base title="Hayssen VFFS Replacement Parts" description="Replacement parts for Hayssen VFFS machines. Search by Hayssen part number and request a quote.">
-  <section class="section">
-    <div class="container">
-      <h1>Parts Catalog</h1>
-      <ul>
-        {sections.map((s) => <li><a href={sectionUrl(s)}>{s.data.title}</a></li>)}
-      </ul>
-      <div class="grid">
-        {parts.map((p) => <PartCard part={p} />)}
+<Base title="Hayssen VFFS Replacement Parts" description={description} jsonLd={jsonLd}>
+  <div class="container container--wide shop">
+    <section class="shop__hero" aria-labelledby="shop-title">
+      <p class="eyebrow">Parts Store</p>
+      <h1 id="shop-title">Replacement parts for <span class="mark">Hayssen VFFS</span> machines</h1>
+      <p class="shop__sub">
+        {parts.length} parts in {sections.length} sections. Search by Hayssen part number, name or C&amp;M number.
+      </p>
+      <div class="shop__search">
+        <PartSearch variant="hero" />
+        <a class="shop__paste" href="/quote/#bulk">Paste a list of part numbers</a>
       </div>
+    </section>
+
+    <section class="shop__tiles" aria-labelledby="tiles-title">
+      <h2 id="tiles-title" class="shop__h2">Shop by section</h2>
+      <SectionTiles sections={sections} parts={parts} />
+    </section>
+
+    <div class="shop__cant">
+      <a class="shop__cant-main" href="#request">Can't find it? <strong>Send us the part number</strong></a>
+      <a class="shop__cant-list" href="/quote/#bulk">Paste a list</a>
+    </div>
+
+    <div class="shop__trust">
+      <TrustStrip />
+    </div>
+
+    <section class="shop__list" id="all-parts" aria-labelledby="all-title">
+      <h2 id="all-title" class="shop__h2 shop__h2--list">All parts <span class="muted">· <a href={machineUrl(machineId)}>How to find your part number</a></span></h2>
+      <PartTable parts={parts} sections={sections} grouped />
+    </section>
+  </div>
+
+  <section class="section shop__request">
+    <div class="container">
+      <PartRequestForm />
+      <StoreDisclaimer />
     </div>
   </section>
 </Base>
+
+<style>
+  .shop {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-block: 20px 8px;
+  }
+
+  .shop__hero {
+    order: 1;
+  }
+
+  .shop__tiles {
+    order: 2;
+  }
+
+  .shop__cant {
+    order: 3;
+  }
+
+  .shop__trust {
+    order: 4;
+    margin-block: 4px 8px;
+  }
+
+  .shop__list {
+    order: 5;
+    margin-top: 12px;
+  }
+
+  .shop__hero h1 {
+    margin-bottom: 8px;
+    font-size: clamp(1.65rem, 1.2rem + 2.4vw, 3rem);
+  }
+
+  .shop__hero .eyebrow {
+    display: none;
+  }
+
+  .shop__sub {
+    margin: 0 0 14px;
+    color: #444;
+    font-size: 1rem;
+    line-height: 1.45;
+  }
+
+  .shop__search {
+    display: grid;
+    gap: 6px;
+  }
+
+  .shop__paste {
+    display: none;
+    align-items: center;
+    justify-self: start;
+    min-height: 44px;
+    font-weight: 600;
+  }
+
+  .shop__h2 {
+    margin: 0 0 10px;
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
+  }
+
+  .shop__h2--list {
+    margin-bottom: 14px;
+    font-size: 1.5rem;
+  }
+
+  .shop__h2 .muted {
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .shop__h2 a {
+    display: inline-block;
+    min-height: 44px;
+    line-height: 44px;
+  }
+
+  .shop__cant {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0 16px;
+    padding: 0 16px;
+    border: 1px dashed #b9b9b9;
+    border-radius: var(--radius);
+    background: #fff;
+  }
+
+  .shop__cant a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .shop__cant strong {
+    margin-left: 0.3em;
+    text-decoration: underline;
+  }
+
+  .shop__cant-list {
+    font-weight: 700 !important;
+    text-decoration: underline !important;
+  }
+
+  @media (min-width: 900px) {
+    .shop {
+      gap: 20px;
+      padding-block: 32px 16px;
+    }
+
+    .shop__hero {
+      display: grid;
+      gap: 0;
+      max-width: 860px;
+    }
+
+    .shop__hero .eyebrow {
+      display: inline-flex;
+      justify-self: start;
+      margin-bottom: 10px;
+      padding: 5px 12px;
+      font-size: 0.85rem;
+    }
+
+    .shop__trust {
+      order: 2;
+      margin: 0;
+    }
+
+    .shop__tiles {
+      order: 3;
+    }
+
+    .shop__cant {
+      order: 4;
+    }
+
+    .shop__search {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .shop__paste {
+      display: inline-flex;
+      white-space: nowrap;
+    }
+  }
+</style>

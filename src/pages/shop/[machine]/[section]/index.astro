@@ -1,9 +1,18 @@
 ---
-// Placeholder section page: replaced by the parts store build.
+// Section page: one section of the catalog as a dense list with search,
+// filters and quantity + Add on every row.
 import type { GetStaticPaths } from 'astro';
+import { getEntry } from 'astro:content';
 import Base from '../../../../layouts/Base.astro';
-import PartCard from '../../../../components/PartCard.astro';
-import { getParts, getSections } from '../../../../lib/parts';
+import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
+import PartSearch from '../../../../components/PartSearch.astro';
+import PartTable from '../../../../components/PartTable.astro';
+import SectionTiles from '../../../../components/SectionTiles.astro';
+import PartRequestForm from '../../../../components/PartRequestForm.astro';
+import StoreDisclaimer from '../../../../components/StoreDisclaimer.astro';
+import { getParts, getSections, machineUrl, partUrl, sectionUrl } from '../../../../lib/parts';
+import { breadcrumbs, itemList } from '../../../../lib/schema';
+import '../../../../styles/store.css';
 
 export const getStaticPaths = (async () =>
   (await getSections()).map((section) => ({
@@ -12,17 +21,87 @@ export const getStaticPaths = (async () =>
   }))) satisfies GetStaticPaths;
 
 const { section } = Astro.props;
+const machine = (await getEntry(section.data.machine))!;
 const parts = await getParts({ section: section.id });
+const allParts = await getParts();
+const sections = await getSections(machine.id);
+const others = sections.filter((s) => s.id !== section.id);
+const title = section.data.title;
+
+const description = `${title} for Hayssen VFFS machines: ${parts.length} replacement parts listed by Hayssen part number. Add parts to a quote request.`;
+const crumbs = [
+  { name: 'Parts Store', path: '/shop/' },
+  { name: machine.data.name, path: machineUrl(machine.id) },
+  { name: title, path: sectionUrl(section) },
+];
+const jsonLd = [
+  breadcrumbs(crumbs),
+  itemList(
+    parts.map((p) => ({ name: `${p.data.name} (${p.data.oem})`, path: partUrl(p) })),
+    `${title} for Hayssen VFFS machines`,
+  ),
+];
 ---
 
-<Base title={`${section.data.title} for Hayssen VFFS`} description={section.data.blurb}>
-  <section class="section">
-    <div class="container">
-      <h1>{section.data.title}</h1>
-      <p>{section.data.blurb}</p>
-      <div class="grid">
-        {parts.map((p) => <PartCard part={p} />)}
-      </div>
-    </div>
-  </section>
+<Base title={`${title} for Hayssen VFFS Machines`} description={description} jsonLd={jsonLd}>
+  <div class="storebar">
+    <div class="container container--wide"><PartSearch variant="bar" /></div>
+  </div>
+
+  <div class="container container--wide sec">
+    <div class="crumbs-desktop"><Breadcrumbs items={crumbs} /></div>
+    <a class="back-link" href={machineUrl(machine.id)}>‹ {machine.data.name}</a>
+
+    <header class="sec__head">
+      <p class="eyebrow">{machine.data.name} replacement parts</p>
+      <h1>{title} for Hayssen VFFS machines</h1>
+      <p class="lead">{section.data.blurb}</p>
+    </header>
+
+    <PartTable parts={parts} sections={[section]} lockSection eager={6} />
+
+    <section class="sec__others" aria-labelledby="others-title">
+      <h2 id="others-title">Other sections</h2>
+      <SectionTiles sections={others} parts={allParts} />
+    </section>
+
+    <PartRequestForm />
+    <StoreDisclaimer />
+  </div>
 </Base>
+
+<style>
+  .sec {
+    display: grid;
+    gap: 0;
+    padding-block: 8px 40px;
+  }
+
+  .sec__head h1 {
+    margin-bottom: 10px;
+    font-size: clamp(1.6rem, 1.1rem + 2.2vw, 2.75rem);
+  }
+
+  .sec__head .eyebrow {
+    margin-bottom: 10px;
+    padding: 5px 12px;
+    font-size: 0.85rem;
+  }
+
+  .sec__head .lead {
+    margin-bottom: 20px;
+    font-size: 1rem;
+  }
+
+  .sec__others {
+    margin-block: 36px 28px;
+  }
+
+  .sec__others h2 {
+    font-size: 1.35rem;
+  }
+
+  .sec :global(.part-request) {
+    margin-bottom: 20px;
+  }
+</style>

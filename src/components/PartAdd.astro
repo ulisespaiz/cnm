@@ -1,0 +1,40 @@
+---
+// Quantity stepper + "Add to Quote". One component for rows, the part page and
+// the sticky bar: behaviour is a single delegated listener in part-add.ts.
+// The wrapper carries the part's data-* attributes (see store.ts addData).
+import '../styles/store.css';
+
+interface Props {
+  data: Record<string, string>;
+  variant?: 'row' | 'page' | 'bar';
+  label?: string;
+}
+
+const { data, variant = 'row', label = 'Add to Quote' } = Astro.props;
+const uid = `${variant}-${data['data-id']}`;
+const oem = data['data-oem'];
+---
+
+<div class={`padd padd--${variant}`} data-part {...data}>
+  <div class="qty" data-qtybox>
+    <button type="button" class="qty__btn" data-step="-1" aria-label={`Decrease quantity of ${oem}`}>−</button>
+    <input
+      class="qty__input"
+      id={`qty-${uid}`}
+      data-qty
+      type="text"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      maxlength="3"
+      value="1"
+      autocomplete="off"
+      aria-label={`Quantity of ${oem}`}
+    />
+    <button type="button" class="qty__btn" data-step="1" aria-label={`Increase quantity of ${oem}`}>+</button>
+  </div>
+  <button type="button" class="btn padd__add" data-add aria-label={`${label}: ${oem}`}><span data-add-label>{label}</span></button>
+</div>
+
+<script>
+  import '../scripts/part-add';
+</script>

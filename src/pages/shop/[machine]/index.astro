@@ -1,24 +1,149 @@
 ---
-// Placeholder machine hub: replaced by the parts store build.
+// Machine hub: how to find your part number, the sections, and search.
 import type { GetStaticPaths } from 'astro';
 import Base from '../../../layouts/Base.astro';
-import { getMachines, getSections, sectionUrl } from '../../../lib/parts';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import PartSearch from '../../../components/PartSearch.astro';
+import SectionTiles from '../../../components/SectionTiles.astro';
+import PartRequestForm from '../../../components/PartRequestForm.astro';
+import StoreDisclaimer from '../../../components/StoreDisclaimer.astro';
+import { getMachines, getParts, getSections, machineUrl, sectionUrl } from '../../../lib/parts';
+import { breadcrumbs, itemList } from '../../../lib/schema';
+import { site } from '../../../config/site';
+import '../../../styles/store.css';
 
 export const getStaticPaths = (async () =>
   (await getMachines()).map((machine) => ({ params: { machine: machine.id }, props: { machine } }))) satisfies GetStaticPaths;
 
 const { machine } = Astro.props;
 const sections = await getSections(machine.id);
+const parts = await getParts({ machine: machine.id });
+const crumbs = [
+  { name: 'Parts Store', path: '/shop/' },
+  { name: machine.data.name, path: machineUrl(machine.id) },
+];
+const jsonLd = [
+  breadcrumbs(crumbs),
+  itemList(
+    sections.map((s) => ({ name: s.data.title, path: sectionUrl(s) })),
+    `${machine.data.name} replacement parts by section`,
+  ),
+];
 ---
 
-<Base title={`${machine.data.name} Replacement Parts`} description={machine.data.summary}>
-  <section class="section">
-    <div class="container">
-      <h1>{machine.data.name} replacement parts</h1>
-      <p>{machine.data.summary}</p>
-      <ul>
-        {sections.map((s) => <li><a href={sectionUrl(s)}>{s.data.title}</a></li>)}
-      </ul>
-    </div>
-  </section>
+<Base
+  title={`${machine.data.name} Parts: Find Your Part Number`}
+  description={`Replacement parts for ${machine.data.name} machines in ${sections.length} sections. Find your part by Hayssen part number. ${site.replyTime}.`}
+  jsonLd={jsonLd}
+>
+  <div class="storebar">
+    <div class="container container--wide"><PartSearch variant="bar" /></div>
+  </div>
+
+  <div class="container container--wide hub">
+    <div class="crumbs-desktop"><Breadcrumbs items={crumbs} /></div>
+    <a class="back-link" href="/shop/">‹ Parts Store</a>
+
+    <header class="hub__head">
+      <p class="eyebrow">Parts Store</p>
+      <h1>Replacement parts for <span class="mark">{machine.data.name}</span> machines</h1>
+      <p class="lead">{machine.data.summary}</p>
+      {
+        machine.data.models.length > 0 && (
+          <p class="hub__models">
+            <strong>Models:</strong> {machine.data.models.join(', ')}
+          </p>
+        )
+      }
+    </header>
+
+    <section class="hub__find" aria-labelledby="find-title">
+      <h2 id="find-title">How to find your part number</h2>
+      <ol class="hub__steps">
+        <li><strong>Read the number off the old part.</strong> Start with the part you are replacing.</li>
+        <li><strong>Check the machine manual.</strong> Find the part there and read its number.</li>
+        <li><strong>Check your parts list.</strong> If you already have a list of part numbers, paste it in and we will match the parts for you.</li>
+      </ol>
+      <p>
+        Most numbers in this catalog look like <span class="oem">03187A0897</span>: five digits, a letter, four digits. You can
+        type them with or without spaces, dashes or the leading zero.
+      </p>
+      <p class="hub__links">
+        <a class="btn btn--outline" href="/quote/#bulk">Paste a list of part numbers</a>
+        <a class="btn btn--outline" href="#request">Not sure? Send us what you have</a>
+      </p>
+    </section>
+
+    <section class="hub__sections" aria-labelledby="sections-title">
+      <h2 id="sections-title">Shop by section</h2>
+      <SectionTiles sections={sections} parts={parts} variant="cards" />
+      <p class="hub__all"><a href="/shop/#all-parts">See all {parts.length} parts in one list</a></p>
+    </section>
+
+    <PartRequestForm />
+    <StoreDisclaimer />
+  </div>
 </Base>
+
+<style>
+  .hub {
+    padding-block: 8px 40px;
+  }
+
+  .hub__head h1 {
+    margin-bottom: 10px;
+    font-size: clamp(1.75rem, 1.2rem + 2.4vw, 3rem);
+  }
+
+  .hub__head .eyebrow {
+    margin-bottom: 10px;
+    padding: 5px 12px;
+    font-size: 0.85rem;
+  }
+
+  .hub__head .lead {
+    font-size: 1.05rem;
+  }
+
+  .hub__find {
+    margin-block: 20px 32px;
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: #fff;
+  }
+
+  .hub__find h2,
+  .hub__sections h2 {
+    font-size: 1.4rem;
+  }
+
+  .hub__steps {
+    display: grid;
+    gap: 10px;
+    margin: 0 0 14px;
+    padding-left: 22px;
+  }
+
+  .hub__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+  }
+
+  .hub__sections {
+    margin-bottom: 32px;
+  }
+
+  .hub__all a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-weight: 600;
+  }
+
+  .hub :global(.part-request) {
+    margin-bottom: 20px;
+  }
+</style>

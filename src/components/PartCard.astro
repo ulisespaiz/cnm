@@ -1,7 +1,9 @@
 ---
-// Compact part card (photo, name, part numbers). Used by FeaturedParts and
-// wherever a small grid of parts is shown. The store agent may restyle it.
+// Part card (photo, name, Hayssen part # and C&M #) for small grids such as
+// the home page's featured parts. The photo sits in a 3:4 white box and is
+// never cropped. Links to the part page, where quantity and Add live.
 import { Image } from 'astro:assets';
+import { getEntry } from 'astro:content';
 import { partUrl, type Part } from '../lib/parts';
 
 interface Props {
@@ -12,20 +14,33 @@ interface Props {
 const { part, eager = false } = Astro.props;
 const { data } = part;
 const photo = data.images[0];
+const section = await getEntry(data.section);
 ---
 
 <a class="part-card" href={partUrl(part)}>
   <span class="part-card__media">
-    {photo ? (
-      <Image src={photo} alt={data.imageAlt} widths={[160, 250]} sizes="(min-width: 900px) 200px, 45vw" loading={eager ? 'eager' : 'lazy'} />
-    ) : (
-      <span class="part-card__nophoto">Photo coming soon</span>
-    )}
+    {
+      photo ? (
+        <Image
+          src={photo}
+          alt={data.imageAlt}
+          widths={[160, 250]}
+          sizes="(min-width: 900px) 250px, 45vw"
+          loading={eager ? 'eager' : 'lazy'}
+        />
+      ) : (
+        <span class="part-card__nophoto">Photo coming soon</span>
+      )
+    }
   </span>
   <span class="part-card__body">
+    {section && <span class="part-card__section">{section.data.title}</span>}
     <span class="part-card__name">{data.name}</span>
-    <span class="part-card__oem">Hayssen # {data.oem}</span>
-    <span class="part-card__cm">{data.cm}</span>
+    <span class="part-card__nums">
+      <span class="part-card__label">Hayssen part #</span>
+      <span class="part-card__oem">{data.oem}</span>
+    </span>
+    <span class="part-card__cta">View part <span aria-hidden="true">→</span></span>
   </span>
 </a>
 
@@ -33,16 +48,20 @@ const photo = data.images[0];
   .part-card {
     display: flex;
     flex-direction: column;
+    height: 100%;
     overflow: hidden;
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     background: var(--color-surface);
     color: inherit;
     text-decoration: none;
+    transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
   }
 
   .part-card:hover {
+    border-color: var(--color-primary);
     box-shadow: var(--shadow);
+    transform: translateY(-2px);
   }
 
   .part-card__media {
@@ -53,9 +72,12 @@ const photo = data.images[0];
     border-bottom: 1px solid var(--color-border);
   }
 
-  .part-card__media img {
-    width: 100%;
-    height: 100%;
+  /* contained and capped at the file's own size: never cropped or stretched */
+  .part-card__media :global(img) {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
   }
 
@@ -66,23 +88,55 @@ const photo = data.images[0];
 
   .part-card__body {
     display: grid;
-    gap: 2px;
-    padding: 12px 14px 14px;
+    flex: 1;
+    align-content: start;
+    gap: 6px;
+    padding: 14px 14px 16px;
+  }
+
+  .part-card__section {
+    justify-self: start;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--color-tint);
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.4;
   }
 
   .part-card__name {
     font-weight: 700;
+    font-size: 1.05rem;
     line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  .part-card__nums {
+    display: grid;
+    gap: 0;
+  }
+
+  .part-card__label {
+    color: var(--color-muted);
+    font-size: 0.78rem;
   }
 
   .part-card__oem {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.95rem;
-    color: var(--color-primary);
+    font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111;
   }
 
-  .part-card__cm {
-    font-size: 0.875rem;
-    color: var(--color-muted);
+  .part-card__cta {
+    margin-top: 4px;
+    color: var(--color-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .part-card:hover .part-card__cta {
+    text-decoration: underline;
   }
 </style>

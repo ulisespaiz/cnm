@@ -1,0 +1,99 @@
+---
+// Part page, phones: replaces the global call/quote bar with Call, quantity
+// and "Add to Quote". After adding it offers "View quote (N)" / "+ Add another".
+// Pair it with <Base hideMobileBar>.
+import PartAdd from './PartAdd.astro';
+import { site } from '../config/site';
+import '../styles/store.css';
+
+interface Props {
+  data: Record<string, string>;
+}
+
+const { data } = Astro.props;
+---
+
+<div class="addbar" data-addbar>
+  <a class="addbar__call" href={`tel:${site.phoneE164}`} aria-label={`Call ${site.phone}`}>
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"></path></svg>
+  </a>
+  <div class="addbar__add">
+    <PartAdd data={data} variant="bar" />
+  </div>
+  <div class="addbar__done">
+    <a class="btn btn--red addbar__view" href="/quote/">View quote (<span data-quote-count>0</span>) →</a>
+    <button type="button" class="btn btn--outline addbar__again" data-add-another>+ Add another</button>
+  </div>
+</div>
+
+<style>
+  .addbar {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px var(--gutter) calc(8px + env(safe-area-inset-bottom));
+    background: var(--color-bg);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -2px 12px rgb(0 0 0 / 0.08);
+  }
+
+  .addbar__call {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--color-primary);
+    border-radius: var(--radius);
+    color: var(--color-primary);
+  }
+
+  .addbar__add,
+  .addbar__done {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .addbar__done {
+    display: none;
+    gap: 8px;
+  }
+
+  .addbar[data-state='added'] .addbar__add {
+    display: none;
+  }
+
+  .addbar[data-state='added'] .addbar__done {
+    display: flex;
+  }
+
+  .addbar__view {
+    flex: 1;
+    padding-inline: 12px;
+    white-space: nowrap;
+  }
+
+  .addbar__again {
+    flex: none;
+    padding-inline: 12px;
+    background: #fff;
+    white-space: nowrap;
+  }
+
+  .addbar__again:hover {
+    color: #fff;
+  }
+
+  .addbar :global(.padd__add) {
+    min-width: 0;
+  }
+
+  @media (min-width: 768px) {
+    .addbar {
+      display: none;
+    }
+  }
+</style>
