@@ -87,8 +87,8 @@ LocalBusiness `areaServed` data.
 
 The email contains the selected products (name, options, quantity, link),
 the customer's details, city and preferred contact method. Spam protection is
-a honeypot field; add Web3Forms' hCaptcha or move to a Cloudflare Worker
-Function with Turnstile if spam gets through. File uploads are not supported
+a honeypot field; add Web3Forms' hCaptcha or move the form to a Cloudflare Worker
+with Turnstile if spam gets through. File uploads are not supported
 on the Web3Forms free plan; see the plan in the PR if customers need them.
 
 If JavaScript fails, the form still posts directly to Web3Forms and redirects

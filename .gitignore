@@ -434,3 +434,4 @@ dist/
 .env
 .env.*
 !.env.example
+.wrangler/
