@@ -1,0 +1,86 @@
+---
+// Count line, TOTAL and the three reassurances under the items list.
+// Filled in by src/scripts/quote-page.ts ([data-count-line]).
+import { site } from '../config/site';
+
+const checks = ['No payment required: quote only', "We'll email you a detailed quote", site.replyTime];
+---
+
+<div class="qs">
+  <div class="qs__totals" data-quote-filled hidden>
+    <p class="qs__count" data-count-line aria-live="polite"></p>
+    <p class="qs__total"><span>TOTAL</span> <em>Quoted upon request</em></p>
+  </div>
+  <ul class="qs__checks">
+    {
+      checks.map((text) => (
+        <li>
+          <span class="qs__tick" aria-hidden="true">
+            <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5l2.2 2.2 4.8-5" /></svg>
+          </span>
+          {text}
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .qs__totals {
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 2px solid #000;
+  }
+
+  .qs__count {
+    margin: 0 0 4px;
+    color: var(--color-muted);
+    font-size: 0.95rem;
+  }
+
+  .qs__total {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.9rem;
+  }
+
+  .qs__total span {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .qs__total em {
+    color: var(--color-muted);
+  }
+
+  .qs__checks {
+    display: grid;
+    gap: 10px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+    color: #333;
+    font-size: 0.95rem;
+  }
+
+  .qs__checks li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .qs__tick {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: var(--color-primary);
+    color: #fff;
+  }
+</style>

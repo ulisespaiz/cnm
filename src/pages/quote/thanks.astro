@@ -3,12 +3,140 @@ import Base from '../../layouts/Base.astro';
 import { site } from '../../config/site';
 ---
 
-<Base title="Request Received" noindex>
-  <section class="section">
-    <div class="container prose">
+<Base title="Request Received" noindex hideMobileBar>
+  <section class="section thanks">
+    <div class="container">
+      <p class="eyebrow">C&amp;M MACHINE SHOP</p>
       <h1>Thanks, we got your request.</h1>
-      <p>We will reply within one business day. If it is urgent, call us at <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.</p>
-      <p><a class="btn" href="/shop/">Keep browsing</a></p>
+      <p class="lead">{site.replyTime}. Keep your reference handy if you contact us about this request.</p>
+
+      <div class="thanks__grid">
+        <section class="tcard" aria-labelledby="next-title">
+          <h2 id="next-title" class="tcard__title">What happens next</h2>
+          <ol class="steps">
+            <li>We review your list and any notes you sent.</li>
+            <li>We email you a detailed quote. {site.replyTime}.</li>
+            <li>
+              Questions in the meantime? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a> or email
+              <a href={`mailto:${site.email}`}>{site.email}</a>.
+            </li>
+          </ol>
+          <p class="thanks__ref" data-ref-box hidden>
+            Your reference: <strong data-ref></strong>
+            <span class="muted">Put it in the subject if you email a drawing or photo.</span>
+          </p>
+        </section>
+
+        <section class="tcard" aria-labelledby="more-title">
+          <h2 id="more-title" class="tcard__title">Need anything else?</h2>
+          <div class="thanks__links">
+            <a class="btn" href="/shop/">Browse the catalog</a>
+            <a class="btn btn--outline" href="/shop/">Search by part number</a>
+            <a class="btn btn--outline" href="/">Back to home</a>
+          </div>
+        </section>
+      </div>
     </div>
   </section>
 </Base>
+
+<script>
+  let ref = '';
+  try {
+    ref = sessionStorage.getItem('last-quote-ref') ?? '';
+  } catch {
+    // no reference to show
+  }
+  if (ref) {
+    document.querySelector<HTMLElement>('[data-ref]')!.textContent = ref;
+    document.querySelector<HTMLElement>('[data-ref-box]')!.hidden = false;
+  }
+</script>
+
+<style>
+  .thanks h1 {
+    font-size: clamp(2rem, 5vw + 0.5rem, 3.25rem);
+  }
+
+  .thanks .eyebrow {
+    margin-bottom: 14px;
+    padding-inline: 0;
+    background: transparent;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+  }
+
+  .thanks__grid {
+    display: grid;
+    gap: 20px;
+    margin-top: 24px;
+  }
+
+  @media (min-width: 800px) {
+    .thanks__grid {
+      grid-template-columns: 1.3fr 1fr;
+      align-items: start;
+    }
+  }
+
+  .tcard {
+    padding: 22px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: var(--shadow);
+  }
+
+  .tcard__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    font-size: 1.1rem;
+    letter-spacing: -0.01em;
+  }
+
+  .tcard__title::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: var(--color-accent);
+  }
+
+  .steps {
+    display: grid;
+    gap: 10px;
+    margin: 0 0 16px;
+    padding-left: 22px;
+  }
+
+  .thanks__ref {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding: 14px;
+    border: 2px dashed #c8c8c8;
+    border-radius: var(--radius);
+    background: #fafafa;
+  }
+
+  .thanks__ref[hidden] {
+    display: none;
+  }
+
+  .thanks__ref strong {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 1.15rem;
+    letter-spacing: 0.03em;
+  }
+
+  .thanks__ref .muted {
+    font-size: 0.9rem;
+  }
+
+  .thanks__links {
+    display: grid;
+    gap: 10px;
+  }
+</style>
