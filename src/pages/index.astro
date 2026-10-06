@@ -23,7 +23,8 @@ const sections = (await getSections('hayssen-vffs')).map((s) => ({
   href: sectionUrl(s),
   count: parts.filter((p) => p.data.section.id === s.id).length,
 }));
-const yearsInBusiness = new Date().getFullYear() - site.founded;
+// Owner's headline: "25 years of precision" (fixed, not computed).
+const yearsInBusiness = 25;
 
 // Real C&M shop photos only, each captioned for the machine it shows.
 const work = [
