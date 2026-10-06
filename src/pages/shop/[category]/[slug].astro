@@ -43,7 +43,14 @@ const crumbs = [
   image={schemaImages[0]}
   jsonLd={[
     breadcrumbs(crumbs),
-    productSchema({ name: data.title, description: data.summary, path: url, images: schemaImages }),
+    productSchema({
+      name: data.title,
+      description: data.summary,
+      path: url,
+      images: schemaImages,
+      category: category.data.title,
+      specs: data.specs,
+    }),
   ]}
 >
   <section class="section">
@@ -72,6 +79,7 @@ const crumbs = [
           <h1>{data.title}</h1>
           <p class="product__summary">{data.summary}</p>
 
+          <p class="price-note">Pricing by quote · Local pickup in Salinas or shipping</p>
           <AddToQuote id={product.id} title={data.title} url={url} options={data.options} />
 
           {data.specs.length > 0 && (
@@ -155,6 +163,11 @@ const crumbs = [
       margin: 0;
       padding: 0;
     }
+  }
+
+  .price-note {
+    font-weight: 600;
+    color: var(--color-primary);
   }
 
   .product__summary {

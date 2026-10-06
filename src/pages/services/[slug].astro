@@ -7,7 +7,7 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import AddToQuote from '../../components/AddToQuote.astro';
 import { site } from '../../config/site';
 import { getServices, serviceUrl } from '../../lib/content';
-import { breadcrumbs } from '../../lib/schema';
+import { breadcrumbs, faqPage } from '../../lib/schema';
 
 export const getStaticPaths = (async () => {
   const services = await getServices();
@@ -32,14 +32,27 @@ const serviceSchema = {
   description: data.summary,
   url: new URL(url, site.url).href,
   provider: { '@id': new URL('/#business', site.url).href },
+  serviceType: data.title,
   areaServed: { '@type': 'AdministrativeArea', name: 'Monterey County, CA' },
+  ...(data.capabilities.length
+    ? {
+        hasOfferCatalog: {
+          '@type': 'OfferCatalog',
+          name: data.title,
+          itemListElement: data.capabilities.map((c) => ({
+            '@type': 'Offer',
+            itemOffered: { '@type': 'Service', name: c.name, description: c.text },
+          })),
+        },
+      }
+    : {}),
 };
 ---
 
 <Base
   title={data.seoTitle ?? data.title}
   description={data.seoDescription ?? data.summary}
-  jsonLd={[breadcrumbs(crumbs), serviceSchema]}
+  jsonLd={[breadcrumbs(crumbs), serviceSchema, ...(data.faqs.length ? [faqPage(data.faqs)] : [])]}
 >
   <section class="section">
     <div class="container">
@@ -87,6 +100,20 @@ const serviceSchema = {
     </div>
   </section>
 
+  {data.faqs.length > 0 && (
+    <section class="section">
+      <div class="container faq-wrap">
+        <h2>{data.title}: common questions</h2>
+        {data.faqs.map((f, i) => (
+          <details class="faq" open={i === 0}>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
   {others.length > 0 && (
     <section class="section section--alt">
       <div class="container">
@@ -107,6 +134,29 @@ const serviceSchema = {
 </Base>
 
 <style>
+  .faq-wrap {
+    max-width: 820px;
+  }
+
+  .faq {
+    margin-bottom: 12px;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  .faq summary {
+    min-height: 56px;
+    padding: 14px 20px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .faq p {
+    margin: 0;
+    padding: 0 20px 18px;
+    color: var(--color-muted);
+  }
+
   .service {
     display: grid;
     gap: 32px;

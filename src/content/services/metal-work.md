@@ -16,6 +16,13 @@ order: 3
 seoTitle: "Welding & Metal Work in Salinas, CA"
 seoDescription: "MIG, TIG, stick and robotic welding, plate and tube rolling, and CNC press brake forming in Salinas, CA. Request a quote."
 draft: false
+faqs:
+  - q: "What types of welding do you do?"
+    a: "MIG, TIG and stick welding for structural and decorative work, from repairs to complete assemblies."
+  - q: "Can you roll plate, tube and pipe?"
+    a: "Yes. We roll plate, tube and pipe to precise radii and curvatures."
+  - q: "Do you do bending and forming?"
+    a: "Yes. We form, bend and fold metal to your exact specifications."
 ---
 From MIG and TIG welding to plate rolling and precision forming, we handle every aspect of metalwork with expert skill and strict quality control — ideal for both structural frameworks and decorative assemblies. Our capabilities include CNC press braking, tube & pipe rolling, and robotic welding cells.
 

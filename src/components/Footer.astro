@@ -27,6 +27,7 @@ const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURICompo
         <li><a href="/">Home</a></li>
         {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
         <li><a href="/quote/">Request a Quote</a></li>
+        <li><a href="/industries/food-processing-agriculture/">Food Processing &amp; Ag</a></li>
         <li><a href="/service-areas/">Service Areas</a></li>
         {areas.map((a) => <li><a href={areaUrl(a)}>{a.data.city}</a></li>)}
       </ul>

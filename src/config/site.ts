@@ -11,6 +11,7 @@ export const site = {
   description:
     'Family-owned machine shop in Salinas, CA since 2002. CNC machining, water-jet and laser cutting, welding, fabrication and a parts store.',
   url: 'https://cmmachshop.com',
+  founded: 2002,
 
   phone: '(831) 753-7092',
   phoneE164: '+18317537092',
@@ -28,6 +29,22 @@ export const site = {
 
   hours: [
     { days: ['Mo', 'Tu', 'We', 'Th', 'Fr'], opens: '07:00', closes: '16:00' },
+  ],
+
+  // Topics the shop is known for; feeds schema.org knowsAbout and llms.txt.
+  expertise: [
+    'CNC machining',
+    'CNC milling',
+    'CNC turning',
+    'Water-jet cutting',
+    'Fiber laser cutting',
+    'Sheet metal shearing',
+    'MIG welding',
+    'TIG welding',
+    'Plate, tube and pipe rolling',
+    'Metal forming and bending',
+    'Custom metal fabrication',
+    'Replacement parts for food processing and packaging equipment',
   ],
 
   // schema.org has no machine-shop type; LocalBusiness plus Service entries

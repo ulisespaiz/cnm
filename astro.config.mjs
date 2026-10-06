@@ -10,6 +10,7 @@ export default defineConfig({
   integrations: [
     sitemap({
       filter: (page) => !page.includes('/quote/thanks/'),
+      lastmod: new Date(),
     }),
   ],
 });

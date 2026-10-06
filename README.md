@@ -108,6 +108,37 @@ to `/quote/thanks/`. If the request fails, the customer sees a prefilled
    Bing Webmaster Tools, and update the website link on the Google Business
    Profile.
 
+## Search and AI visibility
+
+Built in:
+
+- `robots.txt` allows everything and names AI crawlers explicitly (OpenAI,
+  Anthropic, Perplexity, Google-Extended, Apple, Bing, DuckDuckGo, Meta).
+- `llms.txt` is generated from the content collections, so it never drifts.
+- JSON-LD on every page: LocalBusiness (logo, founding date, hours, contact
+  point, area served, services catalog, `knowsAbout`) and WebSite; plus
+  Service, Product, BreadcrumbList and FAQPage where relevant.
+- Default share image `public/og.jpg` (regenerate if the brand changes).
+- Q&A sections on every service page and the industry page.
+
+Do these at launch; they matter more than anything in the code:
+
+1. **Cloudflare: allow AI crawlers.** Cloudflare can block AI bots at the
+   edge regardless of robots.txt. Check Security > Bots and AI Crawl Control
+   and make sure search/assistant crawlers are allowed.
+2. **Cloudflare: turn on Crawler Hints** (Caching > Configuration). It
+   pings IndexNow, which Bing, and through it Copilot and ChatGPT search,
+   use to pick up changes fast.
+3. **Google Business Profile**: claim or verify it, category "Machine
+   shop", the same name/address/phone as the site, hours, photos, and the
+   website link. Then put its URL in `site.social.googleBusiness` and the
+   map pin in `site.geo`.
+4. **Bing Places** and **Apple Business Connect**: same details. Bing data
+   feeds ChatGPT search and Copilot; Apple feeds Siri and Maps.
+5. **Search Console and Bing Webmaster Tools**: submit `/sitemap-index.xml`.
+6. **Reviews**: ask happy customers for Google reviews. Ratings were
+   removed from the site until real reviews exist.
+
 ## Content source
 
 Rebuilt from the Simply Static export (`_export/simply-static-1-1791239758.zip`

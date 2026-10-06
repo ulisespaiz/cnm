@@ -5,7 +5,8 @@ import Seo from '../components/Seo.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import MobileBar from '../components/MobileBar.astro';
-import { localBusiness } from '../lib/schema';
+import { localBusiness, website } from '../lib/schema';
+import { getServices, serviceUrl } from '../lib/content';
 
 interface Props {
   title: string;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 const { jsonLd = [], ...seo } = Astro.props;
+const services = (await getServices()).map((s) => ({ name: s.data.title, url: serviceUrl(s) }));
 ---
 
 <!doctype html>
@@ -28,7 +30,7 @@ const { jsonLd = [], ...seo } = Astro.props;
     <link rel="icon" href="/favicon-192.png" sizes="192x192" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    <Seo {...seo} jsonLd={[localBusiness(), ...jsonLd]} />
+    <Seo {...seo} jsonLd={[localBusiness(services), website(), ...jsonLd]} />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>

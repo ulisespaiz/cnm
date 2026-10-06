@@ -68,6 +68,8 @@ const services = defineCollection({
       capabilities: z.array(z.object({ name: z.string(), text: z.string() })).default([]),
       materialsLabel: z.string().default('Materials'),
       materials: z.array(z.string()).default([]),
+      // Short Q&A shown on the page and marked up as FAQPage. Facts only.
+      faqs: z.array(z.object({ q: z.string(), a: z.string() })).default([]),
       order: z.number().default(0),
       seoTitle: z.string().optional(),
       seoDescription: z.string().max(160).optional(),
