@@ -14,9 +14,9 @@ const { kind } = Astro.props;
 const isQuote = kind === 'quote';
 const thanks = new URL('/quote/thanks/', Astro.site ?? site.url).href;
 // Only developers see this notice. Customers must never see a config error, so
-// production builds stay silent here (set PUBLIC_WEB3FORMS_KEY at build time).
+// production builds stay silent here (WEB3FORMS_KEY in src/config/forms.ts).
 const missingKey = import.meta.env.DEV && !forms.accessKey;
-if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] PUBLIC_WEB3FORMS_KEY is not set: form posts will be rejected.');
+if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms access key: form posts will be rejected.');
 ---
 
 <form
@@ -30,7 +30,7 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] PUBLIC_WEB3F
 >
   {missingKey && (
     <p class="form-alert form-alert--error" role="alert">
-      Form not configured: set PUBLIC_WEB3FORMS_KEY (see README).
+      Form not configured: set WEB3FORMS_KEY in src/config/forms.ts (see README).
     </p>
   )}
 

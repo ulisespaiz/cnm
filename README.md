@@ -16,7 +16,7 @@ can point here.
 
 ```bash
 npm install
-cp .env.example .env    # add PUBLIC_WEB3FORMS_KEY
+cp .env.example .env    # optional: override the Web3Forms key
 npm run dev             # http://localhost:4321, drafts visible
 npm run build           # production build in dist/, drafts excluded
 SHOW_DRAFTS=1 npm run build   # production build including drafts, for review
@@ -78,10 +78,12 @@ LocalBusiness `areaServed` data.
 
 ## Quote form (Web3Forms)
 
-1. Create an access key at web3forms.com using the inbox that should receive
-   quotes. The key is public by design: it can only send mail to that inbox.
-2. Set `PUBLIC_WEB3FORMS_KEY` as a build variable in the Cloudflare Worker
-   (Settings → Builds → Variables and secrets), and in `.env` locally.
+1. The access key for cmoreno@cmmachshop.com (Web3Forms form "C&M Shop") is
+   committed in `src/config/forms.ts`. The key is public by design: it is in
+   every form's HTML and can only send mail to that inbox. To send quotes to a
+   different inbox, create a new key at web3forms.com and replace it there.
+2. Optional: `PUBLIC_WEB3FORMS_KEY` (in `.env` or as a Cloudflare build
+   variable) overrides the committed key, e.g. to test against your own inbox.
 3. Submit a test quote from the deployed site and confirm it arrives (check
    spam the first time and allow-list the sender).
 
@@ -103,8 +105,9 @@ connected to this repo:
 
 - Deploy command: `npx wrangler deploy` (the default). `wrangler.jsonc`
   runs `npm run build` first, so a separate build command is optional.
-- Variables: `PUBLIC_WEB3FORMS_KEY` must be available at **build** time
-  (Settings > Builds > Variables and secrets), since Astro inlines it.
+- Variables: none required. `PUBLIC_WEB3FORMS_KEY` is an optional override
+  and, if used, must be a **build** variable (Settings > Builds > Variables
+  and secrets), since Astro inlines it.
 - Every push to `main` deploys to production; other branches get preview
   builds and a status check on the PR.
 - `_redirects` and `_headers` in `public/` are applied by Workers Static
