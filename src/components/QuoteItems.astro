@@ -1,0 +1,335 @@
+---
+// "Items in Your Request" card: the live quote list (rendered by
+// src/scripts/quote-page.ts), the reference, summary, drawing box and the
+// bulk paste panel.
+import { site } from '../config/site';
+import QuoteSummary from './QuoteSummary.astro';
+import BulkPaste from './BulkPaste.astro';
+---
+
+<section class="qcard qcard--items" aria-labelledby="items-title">
+  <header class="qcard__head">
+    <h2 id="items-title" class="qcard__title qcard__title--red">Items in Your Request</h2>
+    <p class="qref">Reference <strong data-quote-ref>Q-</strong></p>
+  </header>
+
+  <div class="qcard__body">
+    <div class="qempty" data-quote-empty>
+      <h3>Your quote list is empty</h3>
+      <p class="muted">
+        Add replacement parts for Hayssen VFFS machines from the catalog, or describe what you need in the form and we'll quote it. For
+        machining, cutting or fabrication, see our <a href="/services/">services</a>.
+      </p>
+      <div class="qempty__actions">
+        <a class="btn" href="/shop/">Browse the catalog</a>
+        <a class="btn btn--outline" href="/shop/">Search by part number</a>
+        <a class="btn btn--outline" href="#bulk">Paste a list</a>
+      </div>
+    </div>
+
+    <div data-quote-filled hidden>
+      <ul class="qi-list" data-quote-items></ul>
+      <button type="button" class="qclear" data-clear-all>Clear all items</button>
+    </div>
+
+    <QuoteSummary />
+
+    <div class="qdrop">
+      <h3>Have a drawing or photo of the part?</h3>
+      <p>
+        Email it to <a href={`mailto:${site.email}`} data-ref-mailto={site.email}>{site.email}</a> and put your quote reference
+        <strong data-quote-ref>above</strong> in the subject. We'll attach it to your quote.
+      </p>
+    </div>
+
+    <BulkPaste />
+  </div>
+</section>
+
+<style>
+  .qcard {
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: var(--shadow);
+  }
+
+  .qcard__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .qcard__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 1.1rem;
+    letter-spacing: -0.01em;
+  }
+
+  .qcard__title::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: var(--color-accent);
+  }
+
+  .qref {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.85rem;
+  }
+
+  .qref strong {
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+  }
+
+  .qcard__body {
+    padding: 8px 20px 20px;
+  }
+
+  .qempty {
+    padding: 16px 0 12px;
+  }
+
+  .qempty[hidden],
+  [data-quote-filled][hidden] {
+    display: none;
+  }
+
+  .qempty h3 {
+    margin-bottom: 8px;
+  }
+
+  .qempty__actions {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  @media (min-width: 480px) {
+    .qempty__actions {
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+  }
+
+  .qi-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Rows are created by quote-page.ts, hence :global under the list. */
+  .qi-list :global(.qi) {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    grid-template-areas: 'thumb main' 'controls controls';
+    gap: 10px 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .qi-list :global(.qi__thumb) {
+    grid-area: thumb;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 75px;
+    outline: 1px solid var(--color-border);
+    outline-offset: -1px;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+    color: var(--color-muted);
+  }
+
+  .qi-list :global(.qi__thumb img) {
+    width: 56px;
+    height: 75px;
+    object-fit: contain;
+  }
+
+  .qi-list :global(.qi__ph) {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    background: var(--color-bg);
+  }
+
+  .qi-list :global(.qi__main) {
+    grid-area: main;
+    min-width: 0;
+  }
+
+  .qi-list :global(.qi__name) {
+    display: block;
+    color: var(--color-text);
+    font-weight: 700;
+    line-height: 1.3;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .qi-list :global(a.qi__name:hover) {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+
+  .qi-list :global(.qi__meta) {
+    margin: 2px 0 0;
+    color: var(--color-muted);
+    font-size: 0.88rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .qi-list :global(.qi__meta[hidden]) {
+    display: none;
+  }
+
+  .qi-list :global(.qi__link) {
+    min-height: 44px;
+    padding: 0 2px;
+    border: 0;
+    background: none;
+    color: var(--color-primary);
+    font: 600 0.9rem/1 var(--font-body);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .qi-list :global(.qi__link[hidden]) {
+    display: none;
+  }
+
+  .qi-list :global(.qi__remove) {
+    color: var(--color-danger);
+    padding: 0 8px;
+  }
+
+  .qi-list :global(.qi__note) {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    margin-top: 4px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: #fff;
+    font: 400 1rem/1.4 var(--font-body);
+  }
+
+  .qi-list :global(.qi__note[hidden]) {
+    display: none;
+  }
+
+  .qi-list :global(.qi__controls) {
+    grid-area: controls;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .qi-list :global(.qi__stepper) {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .qi-list :global(.qi__step) {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: 600 1.25rem/1 var(--font-body);
+    cursor: pointer;
+  }
+
+  .qi-list :global(.qi__step:hover) {
+    background: #e9e9e9;
+  }
+
+  .qi-list :global(.qi__qty) {
+    width: 56px;
+    height: 44px;
+    border: 0;
+    border-inline: 1px solid var(--color-border);
+    background: #fff;
+    font: 600 1rem/1 var(--font-body);
+    text-align: center;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .qi-list :global(.qi__qty::-webkit-outer-spin-button),
+  .qi-list :global(.qi__qty::-webkit-inner-spin-button) {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  @media (min-width: 480px) {
+    .qi-list :global(.qi) {
+      grid-template-columns: 56px 1fr auto;
+      grid-template-areas: 'thumb main controls';
+      align-items: start;
+    }
+
+    .qi-list :global(.qi__controls) {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+  }
+
+  .qclear {
+    min-height: 44px;
+    margin-top: 4px;
+    padding: 0 2px;
+    border: 0;
+    background: none;
+    color: var(--color-muted);
+    font: 600 0.9rem/1 var(--font-body);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .qdrop {
+    margin-top: 20px;
+    padding: 16px;
+    border: 2px dashed #c8c8c8;
+    border-radius: var(--radius);
+    background: #fafafa;
+  }
+
+  .qdrop h3 {
+    margin-bottom: 6px;
+    font-size: 1rem;
+  }
+
+  .qdrop p {
+    margin: 0;
+    font-size: 0.95rem;
+    overflow-wrap: anywhere;
+  }
+</style>
