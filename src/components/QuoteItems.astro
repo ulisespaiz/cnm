@@ -37,8 +37,7 @@ import BulkPaste from './BulkPaste.astro';
     <div class="qdrop">
       <h3>Have a drawing or photo of the part?</h3>
       <p>
-        Email it to <a href={`mailto:${site.email}`} data-ref-mailto={site.email}>{site.email}</a> and put your quote reference
-        <strong data-quote-ref>above</strong> in the subject. We'll attach it to your quote.
+        Email it to <a href={`mailto:${site.email}`} data-ref-mailto={site.email}>{site.email}</a> and put your quote reference{' '}<strong data-quote-ref>above</strong> in the subject. We'll attach it to your quote.
       </p>
     </div>
 
@@ -84,7 +83,7 @@ import BulkPaste from './BulkPaste.astro';
   .qref {
     margin: 0;
     color: var(--color-muted);
-    font-size: 0.85rem;
+    font-size: 0.875rem;
   }
 
   .qref strong {
@@ -93,7 +92,7 @@ import BulkPaste from './BulkPaste.astro';
     background: var(--color-bg);
     color: var(--color-text);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     letter-spacing: 0.02em;
   }
 

@@ -2,6 +2,7 @@
 // the inline success message. Sending is the shared Web3Forms handler.
 
 import { bindWeb3Form } from './web3forms-submit';
+import { scrollToEl } from './scroll-to';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -29,7 +30,7 @@ function prefill(query: string, focus = true) {
   const first = forms()[0];
   if (!first) return;
   const box = first.closest<HTMLElement>('[data-part-request-box]') ?? first;
-  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  scrollToEl(box);
   if (focus) {
     // The part number is already filled in, so move to the first empty field.
     const next = field(first, 'name');

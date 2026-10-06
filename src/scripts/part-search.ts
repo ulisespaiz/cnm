@@ -5,6 +5,7 @@
 // part type with a one-edit tolerance for typos ("pully").
 import { cmKey, oemKey, queryVariants } from '../lib/partkey';
 import { addPart } from './part-add';
+import { scrollToEl } from './scroll-to';
 
 export interface Rec {
   i: string;
@@ -151,7 +152,7 @@ export function requestPart(query: string) {
   document.dispatchEvent(new CustomEvent('part-request:prefill', { detail: { query } }));
   const target = document.getElementById('request');
   target?.closest('details')?.setAttribute('open', '');
-  target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  scrollToEl(target);
 }
 
 document.addEventListener('click', (event) => {
@@ -186,7 +187,7 @@ function initBox(root: HTMLElement) {
 
   function setActive(n: number) {
     const opts = options();
-    active = opts.length ? (n + opts.length) % opts.length : -1;
+    active = n >= 0 && n < opts.length ? n : -1;
     opts.forEach((o, i) => o.setAttribute('aria-selected', String(i === active)));
     if (active >= 0) {
       input.setAttribute('aria-activedescendant', opts[active].id);
@@ -310,7 +311,9 @@ function initBox(root: HTMLElement) {
       if (panel.hidden && input.value.trim()) render();
       if (!options().length) return;
       e.preventDefault();
-      setActive(active < 0 ? (e.key === 'ArrowDown' ? 0 : -1) : active + (e.key === 'ArrowDown' ? 1 : -1));
+      const len = options().length;
+      const down = e.key === 'ArrowDown';
+      setActive(active < 0 ? (down ? 0 : len - 1) : (active + (down ? 1 : -1) + len) % len);
     } else if (e.key === 'Escape') {
       if (!panel.hidden) {
         e.preventDefault();

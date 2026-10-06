@@ -32,7 +32,7 @@
 .part-thumb__none {
   padding: 4px;
   color: var(--color-muted);
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   line-height: 1.2;
   text-align: center;
 }
@@ -53,7 +53,7 @@
   border-radius: 6px;
   background: var(--color-tint);
   color: var(--color-primary);
-  font-size: 0.78rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.4;
 }
@@ -64,7 +64,7 @@
   border-radius: 6px;
   background: #f0f0f0;
   color: #333;
-  font-size: 0.78rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.4;
 }
@@ -328,7 +328,8 @@
   padding: 12px 14px;
   border-top: 1px solid var(--color-border);
   content-visibility: auto;
-  contain-intrinsic-size: auto 172px;
+  /* content-box height: the real row is 159px with 12px padding top and bottom and a 1px border */
+  contain-intrinsic-size: auto 134px;
 }
 
 .phead + .prow,
@@ -417,7 +418,7 @@
     border-radius: var(--radius) var(--radius) 0 0;
     background: #fafafa;
     color: #444;
-    font-size: 0.8rem;
+    font-size: 0.875rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -437,7 +438,8 @@
     gap: 0 14px;
     padding: 8px 16px;
     min-height: 92px;
-    contain-intrinsic-size: auto 92px;
+    /* content-box height: the real row is 92px with 8px padding top and bottom and a 1px border */
+    contain-intrinsic-size: auto 75px;
   }
 
   .prow:hover {
@@ -801,7 +803,7 @@ body:has(dialog[open]) {
 
 .ps-hit__sec {
   color: var(--color-muted);
-  font-size: 0.8rem;
+  font-size: 0.875rem;
 }
 
 .ps-hit__add {

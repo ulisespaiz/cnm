@@ -54,7 +54,18 @@ const specs: { label: string; value: string; mono?: boolean }[] = [
 ];
 
 const title = `${d.name} ${d.oem} | Hayssen VFFS Replacement Part`;
-const description = `${d.name}, Hayssen part # ${d.oem}, C&M # ${d.cm}. Replacement part for Hayssen VFFS machines, from C&M Machine Shop in Salinas, CA. Request a quote.`;
+// Meta descriptions stay within 160 characters (search results cut them off): use the
+// fullest wording that fits, then shorter ones.
+const descriptionOptions = [
+  `${d.name}, Hayssen part # ${d.oem}, C&M # ${d.cm}. Replacement part for Hayssen VFFS machines, from C&M Machine Shop in Salinas, CA. Request a quote.`,
+  `${d.name}, Hayssen part # ${d.oem}. Replacement part for Hayssen VFFS machines, from C&M Machine Shop in Salinas, CA. Request a quote.`,
+  `${d.name}, Hayssen part # ${d.oem}. Replacement part for Hayssen VFFS machines from C&M Machine Shop. Request a quote.`,
+  `${d.name}, Hayssen part # ${d.oem}. Replacement part for Hayssen VFFS machines. Request a quote.`,
+];
+// Measure the HTML-escaped length too, so the limit holds in the page source as well.
+const escapedLength = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').length;
+const description =
+  descriptionOptions.find((text) => escapedLength(text) <= 160) ?? `${d.name}, Hayssen part # ${d.oem}. Request a quote.`.slice(0, 120);
 const jsonLd = [
   product({
     name: d.name,
@@ -256,7 +267,7 @@ const jsonLd = [
   .part__eyebrow a {
     display: inline-flex;
     align-items: center;
-    min-height: 32px;
+    min-height: 44px;
   }
 
   .part h1 {
@@ -276,7 +287,7 @@ const jsonLd = [
   .ident__label {
     margin: 0;
     color: #444;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     font-weight: 600;
   }
 
@@ -404,7 +415,7 @@ const jsonLd = [
 
   .pn__dir {
     color: var(--color-primary);
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     font-weight: 700;
   }
 

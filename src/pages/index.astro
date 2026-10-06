@@ -250,7 +250,7 @@ const faqs = [
         <h2>Every cut, every part, every deadline — machined to your <span class="text-blue">exact specifications</span></h2>
         <p class="lead">At {site.legalName} we are committed to being your trusted partner, offering craftsmanship, innovation and reliability in every project.</p>
       </div>
-      <ul class="gallery">
+      <ul class="gallery" tabindex="0" aria-label="Recent work samples">
         {work.map((w) => (
           <li>
             <Image src={w.src} alt={`${w.title}: ${w.text}`} widths={[360, 560]} sizes="(min-width: 900px) 360px, 80vw" />

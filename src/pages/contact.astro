@@ -120,6 +120,13 @@ const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURICompo
     font-weight: 600;
   }
 
+  /* Phone, email and address are tap targets: 44px minimum */
+  dd > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
   .hours {
     display: grid;
     gap: 4px;

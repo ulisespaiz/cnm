@@ -55,7 +55,7 @@ const label = (item: QuoteItem) => item.oem ?? item.title;
 function metaText(item: QuoteItem) {
   if (item.kind === 'service') return 'Service';
   if (item.kind === 'custom') return 'Not in catalog';
-  return [item.oem && `Hayssen # ${item.oem}`, item.cm].filter(Boolean).join(' · ');
+  return [item.oem && `Hayssen # ${item.oem}`, item.cm && `C&M # ${item.cm}`].filter(Boolean).join(' · ');
 }
 
 // ---------- Items list ----------
