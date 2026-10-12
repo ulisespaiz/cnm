@@ -3,15 +3,19 @@ import { getImage } from 'astro:assets';
 import { getEntry } from 'astro:content';
 import { getParts, partUrl } from '../../lib/parts';
 import { noLead0 } from '../../lib/partkey';
+import { site } from '../../config/site';
 
 // Static search index for the parts store, bulk paste and ?part= links.
 // One compact record per part (shared contract, do not rename fields):
 //   i  part id            o  OEM display      k  OEM key (A-Z0-9)
 //   z  key without leading zeros               a  extra keys (typos as written in the source)
+//   (a part with no Hayssen number has o, k and z as "" and a as []; it is found by C&M number or name)
 //   c  C&M number         n  name             w  other names (aka)
 //   s  section id         st section title    y  part type
 //   u  page URL           p  thumbnail URL (120x160 webp) or ""
 export const GET: APIRoute = async () => {
+  // Parts shop off (site.store.enabled): an empty index, without loading any part.
+  if (!site.store.enabled) return new Response('[]', { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
   const parts = await getParts();
   const titles = new Map<string, string>();
   const records = await Promise.all(
@@ -22,9 +26,9 @@ export const GET: APIRoute = async () => {
       const thumb = img ? (await getImage({ src: img, width: 120, height: 160, fit: 'contain', format: 'webp', quality: 72 })).src : '';
       return {
         i: part.id,
-        o: d.oem,
-        k: d.oemKey,
-        z: noLead0(d.oemKey),
+        o: d.oem ?? '',
+        k: d.oemKey ?? '',
+        z: d.oemKey ? noLead0(d.oemKey) : '',
         a: d.oemAlt,
         c: d.cm,
         n: d.name,

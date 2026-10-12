@@ -10,15 +10,19 @@ import PartTable from '../../../../components/PartTable.astro';
 import SectionTiles from '../../../../components/SectionTiles.astro';
 import PartRequestForm from '../../../../components/PartRequestForm.astro';
 import StoreDisclaimer from '../../../../components/StoreDisclaimer.astro';
-import { getParts, getSections, machineUrl, partUrl, sectionUrl } from '../../../../lib/parts';
+import { getParts, getSections, machineUrl, mainNumber, partUrl, sectionUrl } from '../../../../lib/parts';
 import { breadcrumbs, itemList } from '../../../../lib/schema';
+import { site } from '../../../../config/site';
 import '../../../../styles/store.css';
 
+// Parts shop off (site.store.enabled): no pages.
 export const getStaticPaths = (async () =>
-  (await getSections()).map((section) => ({
-    params: { machine: section.data.machine.id, section: section.id },
-    props: { section },
-  }))) satisfies GetStaticPaths;
+  site.store.enabled
+    ? (await getSections()).map((section) => ({
+        params: { machine: section.data.machine.id, section: section.id },
+        props: { section },
+      }))
+    : []) satisfies GetStaticPaths;
 
 const { section } = Astro.props;
 const machine = (await getEntry(section.data.machine))!;
@@ -28,7 +32,7 @@ const sections = await getSections(machine.id);
 const others = sections.filter((s) => s.id !== section.id);
 const title = section.data.title;
 
-const description = `${title} for Hayssen VFFS machines: ${parts.length} replacement parts listed by Hayssen part number. Add parts to a quote request.`;
+const description = `${title} for Hayssen VFFS machines: ${parts.length} replacement parts listed by Hayssen or C&M part number. Add parts to a quote request.`;
 const crumbs = [
   { name: 'Parts Store', path: '/shop/' },
   { name: machine.data.name, path: machineUrl(machine.id) },
@@ -37,7 +41,7 @@ const crumbs = [
 const jsonLd = [
   breadcrumbs(crumbs),
   itemList(
-    parts.map((p) => ({ name: `${p.data.name} (${p.data.oem})`, path: partUrl(p) })),
+    parts.map((p) => ({ name: `${p.data.name} (${mainNumber(p.data)})`, path: partUrl(p) })),
     `${title} for Hayssen VFFS machines`,
   ),
 ];

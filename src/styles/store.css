@@ -47,6 +47,13 @@
   white-space: nowrap;
 }
 
+/* A part with no Hayssen number: muted placeholder in the Hayssen column; the C&M # is its main number */
+.oem-none {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
 .chip-sec {
   display: inline-block;
   padding: 2px 8px;
@@ -388,6 +395,13 @@
   font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.prow__cm--main {
+  color: #111;
+  font-family: var(--oem-font);
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .prow .padd {

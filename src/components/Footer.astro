@@ -5,7 +5,8 @@ import { site } from '../config/site';
 import { hoursRows } from '../lib/hours';
 import { getSections, sectionUrl } from '../lib/parts';
 
-const sections = await getSections('hayssen-vffs');
+const shopOn = site.store.enabled;
+const sections = shopOn ? await getSections('hayssen-vffs') : [];
 const hours = hoursRows();
 const year = new Date().getFullYear();
 const social = Object.entries(site.social).filter(([, url]) => url);
@@ -36,7 +37,7 @@ const company = [
       </div>
     </section>
 
-    <div class="cols">
+    <div class:list={['cols', { 'cols--no-shop': !shopOn }]}>
       <div class="brand-col">
         <a class="logo-chip" href="/" aria-label={`${site.name} home`}>
           <Image src={logo} alt={`${site.name} logo`} height={48} densities={[1, 2]} loading="lazy" />
@@ -67,14 +68,16 @@ const company = [
         </address>
       </div>
 
-      <nav aria-labelledby="footer-shop">
-        <h2 class="heading" id="footer-shop">Shop</h2>
-        <ul>
-          <li><a href="/shop/">Parts catalog</a></li>
-          {sections.map((s) => <li><a href={sectionUrl(s)}>{s.data.title}</a></li>)}
-          <li><a href="/quote/#bulk">Paste a part list</a></li>
-        </ul>
-      </nav>
+      {shopOn && (
+        <nav aria-labelledby="footer-shop">
+          <h2 class="heading" id="footer-shop">Shop</h2>
+          <ul>
+            <li><a href="/shop/">Parts catalog</a></li>
+            {sections.map((s) => <li><a href={sectionUrl(s)}>{s.data.title}</a></li>)}
+            <li><a href="/quote/#bulk">Paste a part list</a></li>
+          </ul>
+        </nav>
+      )}
 
       <nav aria-labelledby="footer-company">
         <h2 class="heading" id="footer-company">Company</h2>
@@ -223,6 +226,39 @@ const company = [
 
     .brand-col {
       grid-column: auto;
+    }
+  }
+
+  /* Parts shop off: three columns (brand, Company, Hours). Company takes the full row
+     on phones. From 700px the brand sits beside Company and Hours, which stack, so no
+     cell is left empty; the desktop row puts all three side by side. */
+  .cols--no-shop > nav {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 700px) {
+    .cols--no-shop {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cols--no-shop > .brand-col {
+      grid-column: 1;
+      grid-row: span 2;
+    }
+
+    .cols--no-shop > nav {
+      grid-column: auto;
+    }
+  }
+
+  @media (min-width: 1050px) {
+    .cols--no-shop {
+      grid-template-columns: 1.5fr 1fr 1fr;
+    }
+
+    .cols--no-shop > .brand-col {
+      grid-column: auto;
+      grid-row: auto;
     }
   }
 

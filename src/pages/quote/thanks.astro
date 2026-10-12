@@ -14,7 +14,7 @@ import { site } from '../../config/site';
         <section class="tcard" aria-labelledby="next-title">
           <h2 id="next-title" class="tcard__title">What happens next</h2>
           <ol class="steps">
-            <li>We review your list and any notes you sent.</li>
+            <li>We review your {site.store.enabled ? 'list' : 'request'} and any notes you sent.</li>
             <li>We email you a detailed quote. {site.replyTime}.</li>
             <li>
               Questions in the meantime? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a> or email{' '}
@@ -30,9 +30,18 @@ import { site } from '../../config/site';
         <section class="tcard" aria-labelledby="more-title">
           <h2 id="more-title" class="tcard__title">Need anything else?</h2>
           <div class="thanks__links">
-            <a class="btn" href="/shop/">Browse the catalog</a>
-            <a class="btn btn--outline" href="/shop/">Search by part number</a>
-            <a class="btn btn--outline" href="/">Back to home</a>
+            {site.store.enabled ? (
+              <>
+                <a class="btn" href="/shop/">Browse the catalog</a>
+                <a class="btn btn--outline" href="/shop/">Search by part number</a>
+                <a class="btn btn--outline" href="/">Back to home</a>
+              </>
+            ) : (
+              <>
+                <a class="btn" href="/">Back to home</a>
+                <a class="btn btn--outline" href="/services/">Our services</a>
+              </>
+            )}
           </div>
         </section>
       </div>

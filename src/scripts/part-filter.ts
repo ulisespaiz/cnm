@@ -10,7 +10,7 @@ interface Row {
   el: HTMLElement;
   id: string;
   idx: number;
-  oem: string;
+  pn: string; // sort key: the Hayssen number, or "ZZ-<C&M number>" so parts without one sort last
   name: string;
   section: string;
   type: string;
@@ -27,7 +27,7 @@ function init(root: HTMLElement) {
       el,
       idx,
       id: el.dataset.id!,
-      oem: el.dataset.oem ?? '',
+      pn: el.dataset.pn ?? el.dataset.oem ?? '',
       name: el.dataset.name ?? '',
       section: el.dataset.section ?? '',
       type: el.dataset.type ?? '',
@@ -98,7 +98,7 @@ function init(root: HTMLElement) {
     if (bestOpt) bestOpt.hidden = !state.q;
     let ordered = visible;
     if (sort === 'best' && ranks) ordered = [...visible].sort((a, b) => ranks!.get(a.id)! - ranks!.get(b.id)!);
-    else if (sort === 'pn') ordered = [...visible].sort((a, b) => a.oem.localeCompare(b.oem));
+    else if (sort === 'pn') ordered = [...visible].sort((a, b) => a.pn.localeCompare(b.pn));
     else if (sort === 'name') ordered = [...visible].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
     const flat = sort !== 'catalog' && !(sort === 'best' && !ranks);
     if (flat) {

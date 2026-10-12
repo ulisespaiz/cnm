@@ -8,7 +8,7 @@ import './copy';
 export interface PartData {
   id: string;
   title: string;
-  oem: string;
+  oem?: string; // Hayssen number; absent for parts that have none
   cm: string;
   section: string;
   url: string;
@@ -30,14 +30,14 @@ export function addPart(d: PartData, qty: number) {
     url: d.url,
     qty: q,
   });
-  showToast(`Added ${q} × ${d.oem} ${d.title}`, { actionLabel: `View quote (${lineCount()})`, href: '/quote/' });
+  showToast(`Added ${q} × ${d.oem || d.cm} ${d.title}`, { actionLabel: `View quote (${lineCount()})`, href: '/quote/' });
   return line;
 }
 
 const dataOf = (el: HTMLElement): PartData => ({
   id: el.dataset.id!,
   title: el.dataset.title!,
-  oem: el.dataset.oem!,
+  oem: el.dataset.oem || undefined,
   cm: el.dataset.cm!,
   section: el.dataset.section!,
   url: el.dataset.url!,

@@ -9,7 +9,7 @@ import { scrollToEl } from './scroll-to';
 
 export interface Rec {
   i: string;
-  o: string;
+  o: string; // Hayssen number; "" for a part that has none (k and z are then "" too)
   k: string;
   z: string;
   a: string[];
@@ -68,7 +68,7 @@ export function loadIndex(): Promise<Entry[]> {
       entries = recs.map((rec, idx) => ({
         rec,
         idx,
-        keys: [rec.k, rec.z, ...rec.a.map(oemKey)],
+        keys: rec.k ? [rec.k, rec.z, ...rec.a.map(oemKey)] : [], // a part with no Hayssen number has no number keys; its C&M number is matched separately
         words: words(`${rec.n} ${rec.w.join(' ')} ${rec.st} ${types[rec.y] ?? rec.y}`),
         nameWords: words(`${rec.n} ${rec.w.join(' ')}`),
       }));
@@ -225,7 +225,7 @@ function initBox(root: HTMLElement) {
   }
 
   function oemHtml(h: Hit) {
-    const o = h.rec.o;
+    const o = h.rec.o || h.rec.c; // a part with no Hayssen number shows its C&M number
     if (h.at < 0 || o !== h.rec.k) return esc(o);
     return `${esc(o.slice(0, h.at))}<mark>${esc(o.slice(h.at, h.at + h.len))}</mark>${esc(o.slice(h.at + h.len))}`;
   }
@@ -262,7 +262,7 @@ function initBox(root: HTMLElement) {
           <span class="ps-hit__thumb">${h.rec.p ? `<img src="${esc(h.rec.p)}" width="36" height="48" alt="" loading="lazy" decoding="async">` : ''}</span>
           <span class="ps-hit__text"><span class="ps-hit__oem">${oemHtml(h)}</span><span class="ps-hit__name">${esc(h.rec.n)}</span><span class="ps-hit__sec">${esc(h.rec.st)}</span></span>
         </a>
-        <button type="button" class="ps-hit__add" data-ps-add="${n}" aria-label="Add ${esc(h.rec.o)} ${esc(h.rec.n)} to quote">Add</button></li>`,
+        <button type="button" class="ps-hit__add" data-ps-add="${n}" aria-label="Add ${esc(h.rec.o || h.rec.c)} ${esc(h.rec.n)} to quote">Add</button></li>`,
       )
       .join('');
     extra.innerHTML =
@@ -355,7 +355,7 @@ function initBox(root: HTMLElement) {
     const add = t.closest<HTMLElement>('[data-ps-add]');
     if (add) {
       const rec = hits[Number(add.dataset.psAdd)].rec;
-      addPart({ id: rec.i, title: rec.n, oem: rec.o, cm: rec.c, section: rec.st, url: rec.u, thumb: rec.p }, 1);
+      addPart({ id: rec.i, title: rec.n, oem: rec.o || undefined, cm: rec.c, section: rec.st, url: rec.u, thumb: rec.p }, 1);
       add.textContent = '✓ Added';
       window.setTimeout(() => (add.textContent = 'Add'), 1500);
       return;

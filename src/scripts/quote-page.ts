@@ -1,5 +1,9 @@
 // /quote/ page behaviour: the items list, summary, reference, the bulk paste
 // panel and the /quote/?part=<number> link the store uses.
+//
+// Parts shop switch (site.store.enabled): the page root carries data-shop="off"
+// while the shop is off. Then there is no catalog index to fetch (it would 302
+// to this page), so a typed part number is added as a plain "look it up" line.
 
 import {
   addCustom,
@@ -50,11 +54,15 @@ function placeholderIcon() {
   return svg;
 }
 
-const label = (item: QuoteItem) => item.oem ?? item.title;
+const shopOff = document.querySelector<HTMLElement>('.quote-page')?.dataset.shop === 'off';
 
+// A catalog part with no Hayssen number is labelled by its C&M number.
+const label = (item: QuoteItem) => item.oem ?? (item.kind === 'part' ? item.cm : undefined) ?? item.title;
+
+// updateRow() flatMaps this, so it is always a list.
 function metaText(item: QuoteItem) {
-  if (item.kind === 'service') return 'Service';
-  if (item.kind === 'custom') return 'Not in catalog';
+  if (item.kind === 'service') return ['Service'];
+  if (item.kind === 'custom') return [item.noCatalog ? "We'll look it up" : 'Not in catalog'];
   return [item.oem && `Hayssen # ${item.oem}`, item.cm && `C&M # ${item.cm}`].filter(Boolean) as string[];
 }
 
@@ -227,6 +235,15 @@ document.querySelector('[data-clear-all]')?.addEventListener('click', () => {
   });
 });
 
+// A list saved while the shop was on can hold catalog lines. Their /shop/ pages now
+// redirect here, so turn each into a plain part-number line (no link, no thumbnail).
+if (shopOff) {
+  for (const item of getItems().filter((i) => i.kind === 'part')) {
+    removeItem(item.key);
+    addCustom({ oem: item.oem ?? item.cm ?? item.title, qty: item.qty, note: item.note, catalog: false });
+  }
+}
+
 document.addEventListener('quote:change', render);
 render();
 
@@ -250,7 +267,7 @@ function loadIndex() {
 const lineFromRecord = (rec: IndexRecord, qty: number, note?: string) => ({
   id: rec.i,
   title: rec.n,
-  oem: rec.o,
+  oem: rec.o || undefined, // a part with no Hayssen number is quoted by its C&M number
   cm: rec.c || undefined,
   section: rec.st,
   thumb: rec.p || undefined,
@@ -268,11 +285,16 @@ async function addFromUrl() {
   const qty = Math.max(1, Math.min(999, Math.round(Number(params.get('qty'))) || 1));
   // Drop the parameters first so a reload does not add the part again.
   history.replaceState(null, '', location.pathname + location.hash);
+  if (shopOff) {
+    addCustom({ oem: part, qty, catalog: false });
+    showToast(`Added ${qty} × ${part.toUpperCase()} (we'll look it up)`);
+    return;
+  }
   try {
     const rec = (await loadIndex()).find(part);
     if (rec) {
       addItem(lineFromRecord(rec, qty));
-      showToast(`Added ${qty} × ${rec.o} · ${rec.n}`);
+      showToast(`Added ${qty} × ${rec.o || rec.c} · ${rec.n}`);
     } else {
       addCustom({ oem: part, qty });
       showToast(`Added ${qty} × ${part.toUpperCase()} (not in catalog, we'll look it up)`);
@@ -343,7 +365,7 @@ if (bulk) {
           qtys[i] = row.qty;
           included[i] = true;
           const qty = h('input', { class: 'bk__qty', type: 'number', min: 1, max: 999, inputmode: 'numeric', value: row.qty });
-          qty.setAttribute('aria-label', `Quantity of ${row.kind === 'match' ? row.rec.o : row.text}`);
+          qty.setAttribute('aria-label', `Quantity of ${row.kind === 'match' ? row.rec.o || row.rec.c : row.text}`);
           qty.addEventListener('change', () => {
             qtys[i] = Math.max(1, Math.min(999, Math.round(Number(qty.value)) || 1));
             qty.value = String(qtys[i]);
@@ -355,7 +377,7 @@ if (bulk) {
               'li',
               { class: 'bk__row bk__row--ok' },
               rec.p ? h('img', { src: rec.p, alt: '', width: 36, height: 48, loading: 'lazy' }) : h('span', { class: 'bk__ph' }),
-              h('div', { class: 'bk__what' }, h('strong', { text: rec.o }), h('span', { text: rec.n }), dup),
+              h('div', { class: 'bk__what' }, h('strong', { text: rec.o || rec.c || '' }), h('span', { text: rec.n }), dup),
               h('span', { class: 'bk__state', text: 'Matched' }),
               qty,
             );

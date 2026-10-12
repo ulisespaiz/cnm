@@ -86,7 +86,8 @@ const tiles = await Promise.all(
 
   .stile__title {
     font-weight: 700;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    hyphens: none;
   }
 
   .stile__n {
@@ -105,15 +106,20 @@ const tiles = await Promise.all(
     color: var(--color-primary);
   }
 
-  @media (min-width: 640px) {
-    .stiles {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Phones: stack the thumb above the text so a long title like "Registration Parts" keeps whole words. */
+  @media (max-width: 479px) {
+    .stiles--tiles .stile {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 8px;
     }
   }
 
-  @media (min-width: 1100px) {
+  /* Tiles are 2 columns up to 899px and 4 from 900px, so the 8 sections make a clean 2x4 / 4x2 grid. */
+  @media (min-width: 900px) {
     .stiles--tiles {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
     }
 

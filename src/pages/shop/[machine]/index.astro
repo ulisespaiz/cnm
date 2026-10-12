@@ -12,8 +12,11 @@ import { breadcrumbs, itemList } from '../../../lib/schema';
 import { site } from '../../../config/site';
 import '../../../styles/store.css';
 
+// Parts shop off (site.store.enabled): no pages.
 export const getStaticPaths = (async () =>
-  (await getMachines()).map((machine) => ({ params: { machine: machine.id }, props: { machine } }))) satisfies GetStaticPaths;
+  site.store.enabled
+    ? (await getMachines()).map((machine) => ({ params: { machine: machine.id }, props: { machine } }))
+    : []) satisfies GetStaticPaths;
 
 const { machine } = Astro.props;
 const sections = await getSections(machine.id);
@@ -33,7 +36,7 @@ const jsonLd = [
 
 <Base
   title={`${machine.data.name} Parts: Find Your Part Number`}
-  description={`Replacement parts for ${machine.data.name} machines in ${sections.length} sections. Find your part by Hayssen part number. ${site.replyTime}.`}
+  description={`Replacement parts for ${machine.data.name} machines in ${sections.length} sections. Find your part by Hayssen or C&M part number. ${site.replyTime}.`}
   jsonLd={jsonLd}
 >
   <div class="storebar">

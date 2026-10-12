@@ -12,7 +12,7 @@ interface Props {
 
 const { data, variant = 'row', label = 'Add to Quote' } = Astro.props;
 const uid = `${variant}-${data['data-id']}`;
-const oem = data['data-oem'];
+const oem = data['data-oem'] || data['data-cm']; // the part's main number, for screen-reader labels
 ---
 
 <div class={`padd padd--${variant}`} data-part {...data}>
