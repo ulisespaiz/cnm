@@ -12,7 +12,7 @@ export interface QuoteItem {
   kind: QuoteKind;
   id: string;
   title: string;
-  oem?: string; // Hayssen part number, display form
+  oem?: string; // Hayssen part number, display form; absent for a catalog part that has none (use cm)
   cm?: string; // C&M catalog number
   section?: string; // "Stagger Parts"
   thumb?: string; // small image URL for the list
@@ -200,7 +200,7 @@ export function summarize(items = getItems()) {
           ? `${n + 1}. [${i.noCatalog ? 'PART # TO LOOK UP' : 'NOT IN CATALOG'}] ${i.oem ?? i.title} | qty ${i.qty}`
           : i.kind === 'service'
             ? `${n + 1}. SERVICE | ${i.title} | qty ${i.qty}`
-            : `${n + 1}. ${i.oem ?? ''} | ${i.cm ?? ''} | ${i.title} | qty ${i.qty}`;
+            : `${n + 1}. ${i.oem || '(no Hayssen #)'} | ${i.cm ?? ''} | ${i.title} | qty ${i.qty}`;
       const opts = Object.entries(i.options)
         .map(([k, v]) => `${k}: ${v}`)
         .join(', ');

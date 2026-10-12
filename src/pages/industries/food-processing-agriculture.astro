@@ -28,7 +28,7 @@ const faqs = [
     ? [
         {
           q: 'Do you carry parts for Hayssen packaging machines?',
-          a: `Yes. Our parts catalog lists ${partCount} replacement parts for Hayssen vertical form fill seal (VFFS) machines, searchable by Hayssen part number. If yours is not listed, send us the number and we will quote it.`,
+          a: `Yes. Our parts catalog lists ${partCount} replacement parts for Hayssen vertical form fill seal (VFFS) machines, searchable by Hayssen part number or C&M number. If yours is not listed, send us the number and we will quote it.`,
         },
       ]
     : []),
@@ -78,7 +78,7 @@ const faqs = [
       <ul class="ticks points">
         <li>Replacement parts machined to spec from your drawing or a worn sample</li>
         <li>Custom fabrication with or without blueprints</li>
-        <li>{shopOn ? <>Local pickup in {site.address.city} or fast shipping</> : <>Pickup in {site.address.city}, or ask about shipping</>}</li>
+        <li>{shopOn ? <>Local pickup in {site.address.city}, or ask about shipping</> : <>Pickup in {site.address.city}, or ask about shipping</>}</li>
         <li>{site.replyTime} to quotes and custom part requests</li>
       </ul>
     </div>
@@ -90,7 +90,7 @@ const faqs = [
         <h2>Replacement parts for Hayssen VFFS machines</h2>
         <p>
           Our <a href={machineUrl('hayssen-vffs')}>parts catalog</a> lists {partCount} replacement parts for Hayssen vertical form
-          fill seal packaging machines, searchable by Hayssen part number:
+          fill seal packaging machines, searchable by Hayssen part number or C&amp;M number:
           {sections.map((sec, i) => (
             <>
               <a href={sectionUrl(sec)}>{sec.data.title}</a>{i < sections.length - 1 ? ', ' : '.'}

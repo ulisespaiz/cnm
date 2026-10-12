@@ -50,7 +50,7 @@ export const site = {
   // astro.config.mjs imports this file. Do not invent lead times or stock:
   // leave leadTime null until the owner supplies one.
   store: {
-    enabled: false, // Parts shop switch (see README "Parts shop on/off")
+    enabled: true, // Parts shop switch (see README "Parts shop on/off")
     pickup: 'Local pickup at 772 Vertin Ave, Salinas',
     shipping: 'Shipping available: ask on your quote', // CONFIRM carrier/policy with owner
     leadTime: null as string | null,

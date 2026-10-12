@@ -40,5 +40,19 @@
   "title": "Seal Faces & Parts",
   "blurb": "Seal face and jaw replacement parts for Hayssen VFFS machines in 14\" and 16\" sizes: front and rear seal faces, knife holders and links, back-up plates, phenolic insulators, rear grippers, drive links and bushings.",
   "order": 6
+ },
+ {
+  "id": "brake",
+  "machine": "hayssen-vffs",
+  "title": "Brake Assembly Parts",
+  "blurb": "Brake assembly replacement parts for Hayssen VFFS machines: stainless steel hex eccentric spacer, retainer dancer, support block, red brake pad, aluminum brake arm and complete brake shaft.",
+  "order": 7
+ },
+ {
+  "id": "registration",
+  "machine": "hayssen-vffs",
+  "title": "Registration Parts",
+  "blurb": "Registration replacement parts for Hayssen VFFS machines: spur gears and gear racks, upper pivot arms, feed and aluminum rollers, shafts, bearings and housings, a driven pulley, taper lock bushing, brackets, plates, spring, hardware and acme nut.",
+  "order": 8
  }
 ]

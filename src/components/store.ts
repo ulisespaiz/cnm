@@ -28,13 +28,14 @@ export async function photoOf(img: Img): Promise<Thumb> {
   return { src: t.src, width, height };
 }
 
-// Everything the add-to-quote button needs, as data attributes.
+// Everything the add-to-quote button needs, as data attributes. A part with no
+// Hayssen number carries an empty data-oem; the C&M number identifies it.
 export async function addData(part: Part, sectionTitle: string) {
   const thumb = await thumbOf(part.data.images[0]);
   return {
     'data-id': part.id,
     'data-title': part.data.name,
-    'data-oem': part.data.oem,
+    'data-oem': part.data.oem ?? '',
     'data-cm': part.data.cm,
     'data-section': sectionTitle,
     'data-url': partUrl(part),

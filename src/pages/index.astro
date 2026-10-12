@@ -49,7 +49,7 @@ const faqs = [
     ? [
         {
           q: 'Do you sell replacement parts for Hayssen machines?',
-          a: `Yes. Our parts catalog lists ${parts.length} replacement parts for Hayssen VFFS machines, searchable by Hayssen part number. If your part is not listed, send us the number and we will quote it.`,
+          a: `Yes. Our parts catalog lists ${parts.length} replacement parts for Hayssen VFFS machines, searchable by Hayssen part number or C&M number. If your part is not listed, send us the number and we will quote it.`,
         },
       ]
     : []),
@@ -92,7 +92,7 @@ const faqs = [
 
       {shopOn && (
         <form class="part-search" action="/shop/" method="get" role="search">
-          <label for="hero-q">Search by Hayssen part #</label>
+          <label for="hero-q">Search by Hayssen or C&amp;M part number</label>
           <div class="part-search__row">
             <input
               id="hero-q"
@@ -152,7 +152,7 @@ const faqs = [
           </div>
           <p class="lead">
             Replacement parts for Hayssen VFFS machines, made to match your part number, sample or print. Search by
-            Hayssen part number, add what you need to your quote list, and send it. Nothing to pay online.
+            Hayssen or C&amp;M part number, add what you need to your quote list, and send it. Nothing to pay online.
           </p>
         </div>
 
@@ -195,7 +195,7 @@ const faqs = [
           <article class="bento__card">
             <h3>3 steps to your part</h3>
             <ol class="steps">
-              <li>Search by Hayssen part #</li>
+              <li>Search by Hayssen or C&amp;M part number</li>
               <li>Send your quote request</li>
               <li>Pick up in {site.address.city}, or ask about shipping</li>
             </ol>
@@ -463,7 +463,7 @@ const faqs = [
     }
   }
 
-  /* Parts store block: catalog size + the six sections */
+  /* Parts store block: catalog size + the catalog sections */
   .store {
     display: grid;
     gap: 16px;

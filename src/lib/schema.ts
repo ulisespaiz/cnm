@@ -110,8 +110,8 @@ export function breadcrumbs(items: { name: string; path: string }[]) {
 }
 
 // A replacement part. No `offers` (prices are quote-only) and deliberately no
-// `brand`, `mpn` or `seller`: the Hayssen number is listed as a plain
-// "Hayssen part number" property and the part is tied to the machine it
+// `brand`, `mpn` or `seller`: the Hayssen number, when the part has one, is listed
+// as a plain "Hayssen part number" property and the part is tied to the machine it
 // replaces through isAccessoryOrSparePartFor, so nothing claims the part is
 // made by, or sold on behalf of, the machine's manufacturer.
 export function product(p: {
@@ -121,7 +121,7 @@ export function product(p: {
   images: string[];
   category: string;
   sku: string; // C&M number
-  oem: string; // Hayssen part number
+  oem?: string; // Hayssen part number; leave out when the part has none
 }) {
   return {
     '@context': 'https://schema.org',
@@ -132,7 +132,7 @@ export function product(p: {
     sku: p.sku,
     category: p.category,
     ...(p.images.length ? { image: p.images.map(abs) } : {}),
-    additionalProperty: [{ '@type': 'PropertyValue', name: 'Hayssen part number', value: p.oem }],
+    ...(p.oem ? { additionalProperty: [{ '@type': 'PropertyValue', name: 'Hayssen part number', value: p.oem }] } : {}),
     isAccessoryOrSparePartFor: { '@type': 'Product', name: 'Hayssen VFFS packaging machine' },
   };
 }

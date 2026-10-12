@@ -13,8 +13,8 @@ export const MAX_LINES = 200;
 /** One record of /shop/search-index.json (see src/pages/shop/search-index.json.ts). */
 export interface IndexRecord {
   i: string;
-  o: string;
-  k: string;
+  o: string; // Hayssen number; "" for a part that has none
+  k: string; // "" for a part that has none: it is matched by its C&M number or its name
   z: string;
   a: string[];
   c?: string;
@@ -47,10 +47,13 @@ export function buildMatcher(index: IndexRecord[]): Matcher {
   const put = (key: string, rec: IndexRecord) => {
     if (key && !byKey.has(key)) byKey.set(key, rec);
   };
-  // Part numbers first so a name can never shadow a number.
+  // Part numbers first so a name can never shadow a number. A part with no Hayssen
+  // number (empty k) is reached through its C&M number, then its name.
   for (const r of index) {
-    put(r.k, r);
-    put(r.z || noLead0(r.k), r);
+    if (r.k) {
+      put(r.k, r);
+      put(r.z || noLead0(r.k), r);
+    }
     for (const a of r.a ?? []) {
       const k = oemKey(a);
       put(k, r);

@@ -9,7 +9,7 @@ import PartTable from '../../components/PartTable.astro';
 import PartRequestForm from '../../components/PartRequestForm.astro';
 import StoreDisclaimer from '../../components/StoreDisclaimer.astro';
 import { getParts, getSections, machineUrl, sectionUrl } from '../../lib/parts';
-import { breadcrumbs, itemList } from '../../lib/schema';
+import { itemList } from '../../lib/schema';
 import { site } from '../../config/site';
 import '../../styles/store.css';
 
@@ -20,12 +20,8 @@ const sections = await getSections();
 const parts = await getParts();
 const machineId = sections[0]?.data.machine.id ?? 'hayssen-vffs';
 
-const description = `Search ${parts.length} replacement parts for Hayssen VFFS machines by Hayssen part number. Add parts to a quote request. ${site.replyTime}.`;
+const description = `Search ${parts.length} replacement parts for Hayssen VFFS machines by Hayssen or C&M part number. Add parts to a quote request. ${site.replyTime}.`;
 const jsonLd = [
-  breadcrumbs([
-    { name: 'Home', path: '/' },
-    { name: 'Parts Store', path: '/shop/' },
-  ]),
   itemList(
     sections.map((s) => ({ name: s.data.title, path: sectionUrl(s) })),
     'Hayssen VFFS replacement parts by section',

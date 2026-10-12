@@ -1,6 +1,7 @@
 ---
-// Part card (photo, name, Hayssen part # and C&M #) for small grids such as
-// the home page's featured parts. The photo sits in a 3:4 white box and is
+// Part card (photo, name and part number) for small grids such as the home
+// page's featured parts. The number shown is the Hayssen part #, or the C&M #
+// for a part that has no Hayssen number. The photo sits in a 3:4 white box and is
 // never cropped. Links to the part page, where quantity and Add live.
 import { Image } from 'astro:assets';
 import { getEntry } from 'astro:content';
@@ -37,8 +38,8 @@ const section = await getEntry(data.section);
     {section && <span class="part-card__section">{section.data.title}</span>}
     <span class="part-card__name">{data.name}</span>
     <span class="part-card__nums">
-      <span class="part-card__label">Hayssen part #</span>
-      <span class="part-card__oem">{data.oem}</span>
+      <span class="part-card__label">{data.oem ? 'Hayssen part #' : 'C&M part #'}</span>
+      <span class="part-card__oem">{data.oem ?? data.cm}</span>
     </span>
     <span class="part-card__cta">View part <span aria-hidden="true">→</span></span>
   </span>

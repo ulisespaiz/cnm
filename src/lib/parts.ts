@@ -24,6 +24,7 @@ export const TYPE_LABELS: Record<Part['data']['type'], string> = {
   insulator: 'Insulators',
   'knife-gripper': 'Knife holders & grippers',
   'roller-hub': 'Rollers & hubs',
+  gear: 'Gears & racks',
   'insert-spacer': 'Inserts, spacers & sleeves',
   bar: 'Bars',
   'guide-support': 'Guides & supports',
@@ -44,6 +45,21 @@ function validate(parts: Part[], sections: Section[]) {
     if (!/^CM-\d{4}$/.test(d.cm)) problems.push(`${p.id}: bad CM number ${d.cm}`);
     if (cms.has(d.cm)) problems.push(`${p.id}: CM number ${d.cm} also used by ${cms.get(d.cm)}`);
     cms.set(d.cm, p.id);
+    // The description quotes the part numbers as prose (and feeds the meta description and JSON-LD),
+    // so it must be edited together with them: fail the build instead of publishing a mismatch.
+    if (d.description && !d.description.includes(d.cm)) problems.push(`${p.id}: description does not mention ${d.cm}`);
+    if (d.description && d.oem && !d.description.includes(d.oem))
+      problems.push(`${p.id}: description does not mention Hayssen part number ${d.oem} (edit it when the number changes)`);
+    // A part may have no Hayssen number: it is then found and quoted by its C&M number
+    // (checked above), and carries neither oem nor oemKey nor oemAlt.
+    if (d.oem === undefined && d.oemKey === undefined) {
+      if (d.oemAlt.length) problems.push(`${p.id}: oemAlt is set but the part has no oem`);
+      continue;
+    }
+    if (!d.oem || !d.oemKey) {
+      problems.push(`${p.id}: oem and oemKey must be set together (or both left out for a part with no Hayssen number)`);
+      continue;
+    }
     if (oemKey(d.oem) !== d.oemKey) problems.push(`${p.id}: oemKey ${d.oemKey} does not match oem ${d.oem}`);
     if (!OEM_PATTERN.test(d.oemKey) && !d.oemVerify)
       problems.push(`${p.id}: OEM ${d.oem} is not in the 12345A6789 format (set oemVerify if intentional)`);
@@ -77,6 +93,9 @@ export async function getParts(filter: { machine?: string; section?: string } = 
     .filter((p) => (!filter.machine || p.data.machine.id === filter.machine) && (!filter.section || p.data.section.id === filter.section))
     .sort((a, b) => (sectionOrder.get(a.data.section.id)! - sectionOrder.get(b.data.section.id)!) || a.data.order - b.data.order);
 }
+
+// The part's main identifier: its Hayssen number, or its C&M number when it has none.
+export const mainNumber = (d: Part['data']) => d.oem || d.cm;
 
 export const machineUrl = (machineId: string) => `/shop/${machineId}/`;
 export const sectionUrl = (s: Section) => `/shop/${s.data.machine.id}/${s.id}/`;

@@ -79,15 +79,17 @@ LocalBusiness `areaServed` data.
 
 ## Parts shop on/off
 
-The Hayssen parts catalog under `/shop/` is hidden from the public until the
-owner is ready. One line in `src/config/site.ts` controls it:
+The Hayssen parts catalog under `/shop/` is live. One line in
+`src/config/site.ts` controls it: `true` shows the shop, `false` hides it from
+the public.
 
 ```ts
 store: {
-  enabled: false, // Parts shop switch (see README "Parts shop on/off")
+  enabled: true, // Parts shop switch (see README "Parts shop on/off")
 ```
 
-All the shop code stays in the repo; flip it to `true` to launch.
+All the shop code stays in the repo; flip it to `false` to hide the shop again
+and back to `true` to show it.
 
 **While it is `false`** (the build output, not just the links):
 
@@ -110,7 +112,7 @@ All the shop code stays in the repo; flip it to `true` to launch.
 - Quotes, the part-number request form, services and everything else work as
   before.
 
-**Preview the shop** without launching it: set `enabled: true` locally and run
+**Preview the shop while it is off:** set `enabled: true` locally and run
 `npm run dev`, or push a branch with it set to `true` and use the Cloudflare
 preview build for that branch. Do not merge that to `main` until you want the
 shop public.
