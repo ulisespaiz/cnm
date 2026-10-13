@@ -37,18 +37,15 @@ export const site = {
     postalCode: '93901',
     country: 'US',
   },
-  // Google Maps short link, relayed as the owner's listing (Oct 2026). Used for the footer and contact
-  // address links and schema.org hasMap (not sameAs until it is confirmed). CONFIRM: open it once in a
-  // browser and check it is the C&M Machine Shop listing (it could not be opened from the build sandbox),
-  // then delete this note and add site.maps to the sameAs list in src/lib/schema.ts.
+  // The owner's Google Business Profile listing on Google Maps (sent by the owner, Oct 2026). Used for
+  // the footer and contact address links, schema.org hasMap and, via social.googleBusiness, sameAs.
   // Exact pin coordinates are not known, so no `geo` is published:
   // add `geo: { lat, lng }` here and to the LocalBusiness in src/lib/schema.ts only from a real pin.
   maps: 'https://maps.app.goo.gl/EKDM2Z9xNLYdjyB39',
 
   // Every visible hours line (footer, contact, store, llms.txt) and the
   // JSON-LD render from this list via src/lib/hours.ts.
-  // Saturday 10 to 2 was relayed as the owner's answer (Oct 2026); nothing in the repo records it.
-  // CONFIRM with the owner in writing before launch, then delete this note.
+  // Confirmed by the owner (Oct 2026): Monday to Friday 7 to 4, Saturday 10 to 2.
   hours: [
     { days: ['Mo', 'Tu', 'We', 'Th', 'Fr'], opens: '07:00', closes: '16:00' },
     { days: ['Sa'], opens: '10:00', closes: '14:00' },
@@ -65,7 +62,7 @@ export const site = {
   store: {
     enabled: true, // Parts shop switch (see README "Parts shop on/off")
     pickup: 'Local pickup at 772 Vertin Ave, Salinas',
-    shipping: 'Shipping available: ask on your quote', // CONFIRM carrier/policy wording with the owner (relayed Oct 2026, not recorded)
+    shipping: 'Shipping available: ask on your quote', // wording confirmed by the owner (Oct 2026)
     leadTime: null as string | null,
     leadTimeFallback: 'Lead time confirmed on your quote',
     madeTo: 'Made to match your part number, sample or print',

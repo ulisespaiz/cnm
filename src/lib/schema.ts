@@ -15,9 +15,8 @@ export const areaServed = () => [
 // The business entity. Every page carries it; AI and search engines use it as
 // the canonical description of the company.
 export function localBusiness(services: { name: string; url: string }[] = []) {
-  // Identity profiles only. site.maps is an unconfirmed short link (see site.ts), so it is in hasMap but not
-  // here: add it to this list once the owner has opened it and confirmed it is the C&M listing.
-  const sameAs = Object.values(site.social).filter(Boolean);
+  // Identity profiles: the owner's Google Business Profile listing (site.maps) and the social links.
+  const sameAs = [site.maps, ...Object.values(site.social)].filter(Boolean);
   return {
     '@context': 'https://schema.org',
     '@type': site.schemaType,
