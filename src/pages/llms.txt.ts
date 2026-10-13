@@ -71,7 +71,7 @@ ${partsBySection}
 - Email: ${site.email}
 - Hours (Pacific Time): ${hoursSentence()}
 - Request a quote: ${abs('/quote/')}
-- How to order (quote-only, what to send, pickup and shipping): ${abs('/how-to-order/')}
+- How to Order (quote-only, what to send, pickup and shipping): ${abs('/how-to-order/')}
 - Reply time: ${site.replyTime}
 - Service area: ${serviceAreas.join(', ')}
 
@@ -82,7 +82,7 @@ ${services.map((s) => `- [${s.data.title}](${abs(serviceUrl(s))}): ${s.data.summ
 
 ${catalogSection}## Equipment
 
-${machines.map((m) => `- ${m.data.name}`).join('\n')}
+${machines.map((m) => `- ${m.data.name}${m.data.blurb ? `: ${m.data.blurb}` : ''}`).join('\n')}
 
 ## About
 

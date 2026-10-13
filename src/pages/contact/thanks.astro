@@ -1,0 +1,32 @@
+---
+// /contact/thanks/: where Web3Forms sends a visitor whose browser posted the contact form directly (no
+// JavaScript). With JavaScript the contact form shows its success message in place and never comes here.
+// Same layout as /quote/thanks/, with neutral copy: a message is answered, it is not a quote request.
+// noindex, and left out of the sitemap (astro.config.mjs).
+import ThanksPage from '../../components/ThanksPage.astro';
+import { site } from '../../config/site';
+---
+
+<ThanksPage
+  title="Message Received"
+  description={`Your message reached ${site.name}. ${site.replyTime}.`}
+  heading="Thanks, we got your message."
+>
+  <Fragment slot="lead">{site.replyTime}.</Fragment>
+
+  <Fragment slot="next">
+    <ol class="steps">
+      <li>We read your message and get back to you at the email address or phone number you gave us.</li>
+      <li>
+        Need to reach us sooner? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a> or email{' '}
+        <a href={`mailto:${site.email}`}>{site.email}</a>.
+      </li>
+    </ol>
+  </Fragment>
+
+  <Fragment slot="more">
+    <a class="btn" href="/quote/">Request a quote</a>
+    <a class="btn btn--outline" href="/services/">Our services</a>
+    <a class="btn btn--outline" href="/">Back to home</a>
+  </Fragment>
+</ThanksPage>

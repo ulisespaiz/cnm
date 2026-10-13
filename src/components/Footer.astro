@@ -9,7 +9,7 @@ import { getServices, serviceUrl } from '../lib/content';
 const shopOn = site.store.enabled;
 // The blue "Need a quote?" band repeats what the page already is on the quote and contact pages.
 const path = Astro.url.pathname.replace(/\/?$/, '/');
-const showCta = !['/quote/', '/quote/thanks/', '/contact/'].includes(path);
+const showCta = !['/quote/', '/quote/thanks/', '/contact/', '/contact/thanks/'].includes(path);
 const services = await getServices();
 const sections = shopOn ? await getSections(MAIN_MACHINE) : [];
 const hours = hoursRows();
@@ -20,7 +20,7 @@ const company = [
   { label: 'About', href: '/about/' },
   { label: 'Services', href: '/services/' },
   { label: 'Our Machinery', href: '/our-machinery/' },
-  { label: 'Food Processing & Ag', href: '/industries/food-processing-agriculture/' },
+  { label: 'Food Processing & Agriculture', href: '/industries/food-processing-agriculture/' },
   { label: 'Service Areas', href: '/service-areas/' },
   { label: 'How to Order', href: '/how-to-order/' },
   { label: 'Contact', href: '/contact/' },
@@ -80,7 +80,7 @@ const company = [
             <li><a href="/shop/">Parts catalog</a></li>
             {sections.map((s) => <li><a href={sectionUrl(s)}>{s.data.title}</a></li>)}
             <li><a href="/shop/part-numbers/">OEM part number index</a></li>
-            <li><a href="/quote/#bulk">Paste a part list</a></li>
+            <li><a href="/quote/#bulk">Paste a list of part numbers</a></li>
           </ul>
         </nav>
       )}

@@ -16,17 +16,19 @@ interface Props {
   urlPrefill?: boolean;
   /** Visible heading; the id stays "request" so #request links work. */
   heading?: string;
+  /** Say the reply time in the lead. The quote page turns this off: it already says it twice. */
+  replyTime?: boolean;
 }
 
 const shopOn = site.store.enabled;
-const { compact = false, urlPrefill = true, heading = shopOn ? "Can't find your part?" : 'Replacement part request' } = Astro.props;
+const { compact = false, urlPrefill = true, heading = shopOn ? "Can't find your part?" : 'Replacement part request', replyTime = true } = Astro.props;
 const thanks = new URL('/quote/thanks/', Astro.site ?? site.url).href;
 const Heading = compact ? 'h3' : 'h2';
 ---
 
 <section class:list={['part-request', { 'part-request--compact': compact }]} id="request" data-part-request-box>
   <Heading class="part-request__title">{heading}</Heading>
-  <p class="pr__lead">{shopOn ? <>Send us the OEM part number and we'll check it.</> : <>Send us the part number and we'll check it and quote it.</>} {site.replyTime}.</p>
+  <p class="pr__lead">{shopOn ? <>Send us the OEM part number and we'll check it.</> : <>Send us the part number and we'll check it and quote it.</>}{replyTime && <> {site.replyTime}.</>}</p>
 
   <form
     class="pr__form"
@@ -85,7 +87,7 @@ const Heading = compact ? 'h3' : 'h2';
 
     <div class="field">
       <label for="pr-name">Name <span class="req" aria-hidden="true">*</span></label>
-      <input id="pr-name" name="name" autocomplete="name" required />
+      <input id="pr-name" name="name" autocomplete="name" required data-required-message="Enter your name" />
     </div>
 
     <fieldset class="field reach" id="pr-reach" data-reach>

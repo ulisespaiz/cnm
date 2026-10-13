@@ -1,8 +1,10 @@
 ---
 // Sends to Web3Forms. With JavaScript the quote list is added to the email
-// and the visitor goes to /quote/thanks/; without it the form still posts and
-// Web3Forms redirects to the thank-you page. Submit logic is shared with the
-// other forms in src/scripts/web3forms-submit.ts.
+// and the visitor goes to /quote/thanks/ (the contact form shows its success message in place); without it
+// the form still posts and Web3Forms redirects to the thank-you page: /quote/thanks/ for a quote,
+// /contact/thanks/ for a message. Submit logic is shared with the other forms in
+// src/scripts/web3forms-submit.ts. A required field says what is missing in its own words
+// (data-required-message) instead of the browser's "Please fill out this field."
 // A reply needs an email or a phone number, at least one. Neither input is `required` (the form must
 // still post without JavaScript); the <fieldset data-reach> is checked by the shared script, which
 // shows one error tied to both fields.
@@ -15,7 +17,8 @@ interface Props {
 
 const { kind } = Astro.props;
 const isQuote = kind === 'quote';
-const thanks = new URL('/quote/thanks/', Astro.site ?? site.url).href;
+// Where Web3Forms sends a visitor whose browser posts the form directly (no JavaScript).
+const thanks = new URL(isQuote ? '/quote/thanks/' : '/contact/thanks/', Astro.site ?? site.url).href;
 // Only developers see this notice. Customers must never see a config error, so
 // production builds stay silent here (WEB3FORMS_KEY in src/config/forms.ts).
 const missingKey = import.meta.env.DEV && !forms.accessKey;
@@ -50,7 +53,7 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
   <div class="field-row">
     <div class="field">
       <label for={`${kind}-name`}>{isQuote ? 'Full Name' : 'Name'} <span class="req" aria-hidden="true">*</span></label>
-      <input id={`${kind}-name`} name="name" autocomplete="name" required />
+      <input id={`${kind}-name`} name="name" autocomplete="name" required data-required-message="Enter your name" />
     </div>
     <div class="field">
       <label for={`${kind}-company`}>Company / Organization <span class="opt">(optional)</span></label>
@@ -128,7 +131,8 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
       placeholder={isQuote
         ? 'Describe specifications, tolerances, materials, quantities, deadlines, machine model/serial, or any other details that will help us prepare your quote…'
         : 'How can we help?'}
-      required={!isQuote}></textarea>
+      required={!isQuote}
+      data-required-message={isQuote ? undefined : 'Enter your message'}></textarea>
   </div>
 
   <button class="btn btn--block quote-form__submit" type="submit" data-submit>

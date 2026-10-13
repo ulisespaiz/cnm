@@ -506,7 +506,6 @@ textarea[aria-invalid='true'] {
    the matching negative margin keeps the text exactly where it was */
 .form-note a,
 .qdrop a,
-.qp__call a,
 .service__call a,
 .service__areas a {
   display: inline-block;

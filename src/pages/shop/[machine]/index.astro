@@ -36,8 +36,8 @@ const jsonLd = [
 ---
 
 <Base
-  title={`${machine.data.name}: Find Your Part Number`}
-  description={`Replacement parts for VFFS packaging machines in ${sections.length} sections. Find your part by OEM or C&M part number. ${site.replyTime}.`}
+  title="VFFS Packaging Machine Parts"
+  description={`How to find the part number on your VFFS packaging machine, then browse its replacement parts in ${sections.length} sections. ${site.replyTime}.`}
   jsonLd={jsonLd}
 >
   <div class="storebar">
@@ -49,8 +49,7 @@ const jsonLd = [
     <a class="back-link" href="/shop/">‹ Parts Store</a>
 
     <header class="hub__head">
-      <p class="eyebrow">Parts Store</p>
-      <h1>Find your part number for <span class="mark">{machine.data.name}</span></h1>
+      <h1>Find your part number for <span class="mark">VFFS packaging machines</span></h1>
       <p class="lead">{machine.data.summary}</p>
       {
         machine.data.models.length > 0 && (

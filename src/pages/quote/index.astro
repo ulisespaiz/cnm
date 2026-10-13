@@ -22,8 +22,8 @@ import { site } from '../../config/site';
     <div class="container">
       <p class="eyebrow">C&amp;M MACHINE SHOP</p>
       <h1>Request a Quote</h1>
-      <p class="lead">Tell us how to reach you and what you need. {site.replyTime}.</p>
-      <p class="qp__how"><a href="/how-to-order/">How ordering works</a></p>
+      <p class="lead">Tell us how to reach you and what you need.</p>
+      <p class="qp__how"><a href="/how-to-order/">How to Order</a></p>
 
       <div class="qp">
         <div class="qp__items">
@@ -45,10 +45,9 @@ import { site } from '../../config/site';
           <span>{site.store.enabled ? "Can't find your part? Send us the part number" : 'Need a replacement part? Send us the part number'}</span>
           <svg class="qp__chev" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5l4 4 4-4" /></svg>
         </summary>
-        <PartRequestForm compact urlPrefill={false} />
+        <PartRequestForm compact urlPrefill={false} replyTime={false} />
       </details>
       {site.store.enabled && <p class="muted qp__legal">{site.store.disclaimer}</p>}
-      <p class="muted qp__call">Questions? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.</p>
     </div>
   </section>
 </Base>
@@ -197,11 +196,6 @@ import { site } from '../../config/site';
     margin: 16px 0 0;
     font-size: 0.875rem;
     line-height: 1.5;
-  }
-
-  .qp__call {
-    margin-top: 16px;
-    text-align: center;
   }
 </style>
 

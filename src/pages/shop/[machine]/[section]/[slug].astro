@@ -17,7 +17,8 @@ import TrustStrip from '../../../../components/TrustStrip.astro';
 import PartRequestForm from '../../../../components/PartRequestForm.astro';
 import StoreDisclaimer from '../../../../components/StoreDisclaimer.astro';
 import { addData, leadTime, photoOf } from '../../../../components/store';
-import { getParts, machineUrl, mainNumber, neighbours, partUrl, relatedParts, sectionUrl, TYPE_LABELS } from '../../../../lib/parts';
+import { getParts, machineUrl, mainNumber, neighbours, partUrl, relatedParts, sectionUrl, sharedOemParts, TYPE_LABELS } from '../../../../lib/parts';
+import { displayName, partJsonLdDescription, partMetaDescription, partTitles } from '../../../../lib/partmeta';
 import { breadcrumbs, product } from '../../../../lib/schema';
 import { site } from '../../../../config/site';
 import '../../../../styles/store.css';
@@ -63,72 +64,23 @@ const specs: { label: string; value: string; mono?: boolean }[] = [
   { label: 'Lead time', value: availability },
 ];
 
-// Titles stay within 65 characters once decoded (search results cut them off). The part number and
-// "VFFS Part" always stay: first the whole title with the shop name, then without it, then with the
-// part name clipped at a word boundary.
-const TITLE_LIMIT = 65;
-const partTitle = (name: string) => `${mainNo} ${name} | VFFS Part`;
-function clippedTitleName() {
-  const words = d.name.split(' ');
-  while (words.length > 1) {
-    words.pop();
-    let text = words.join(' ');
-    // Do not stop inside an open parenthesis, or on a trailing comma or a dangling "x" / "with".
-    if ((text.match(/\(/g) ?? []).length > (text.match(/\)/g) ?? []).length) continue;
-    text = text.replace(/[\s,;:/&-]+$/, '').replace(/\s+(?:x|with|for|and|of)$/i, '');
-    if (partTitle(`${text}…`).length <= TITLE_LIMIT) return `${text}…`;
-  }
-  return `${words[0]}…`;
-}
-const withBrand = `${partTitle(d.name)} | ${site.name}`;
-const withoutBrand = partTitle(d.name);
-const title =
-  withBrand.length <= TITLE_LIMIT ? withBrand : withoutBrand.length <= TITLE_LIMIT ? withoutBrand : partTitle(clippedTitleName());
+// The <title> and the meta description come from src/lib/partmeta.ts (the same template for every part, checked
+// at build time): the part name is never cut, and a part whose OEM number is still being confirmed says so.
+const title = partTitles(all).get(part.id)!;
 // Link previews have room for the whole name and the brand.
 const ogTitle = `${d.name} ${mainNo} | VFFS Replacement Part | ${site.name}`;
-// Meta descriptions stay within 160 characters (search results cut them off): use the
-// fullest wording that fits, then shorter ones. A part with no OEM number is named
-// by its C&M number. Fit is always tied to a number, never to the machine type alone.
-const idShort = d.oem ? `OEM # ${d.oem}` : `C&M part # ${d.cm}`;
-const idLong = d.oem ? `${idShort}, C&M # ${d.cm}` : idShort;
-const matchedBy = d.oem ? 'matched by OEM part number' : 'ordered by C&M number';
-const descriptionOptions = [
-  `${d.name}, ${idLong}. Replacement part for VFFS packaging machines, ${matchedBy}. From C&M Machine Shop in Salinas, CA. Request a quote.`,
-  `${d.name}, ${idShort}. Replacement part for VFFS packaging machines, ${matchedBy}. From C&M Machine Shop. Request a quote.`,
-  `${d.name}, ${idShort}. Replacement part for VFFS packaging machines, ${matchedBy}. Request a quote.`,
-  `${d.name}, ${idShort}. Replacement part for VFFS packaging machines, ${matchedBy}.`,
-  `${d.name}, ${idShort}. Replacement part for VFFS packaging machines. Request a quote.`,
-];
-// Measure the HTML-escaped length too, so the limit holds in the page source as well.
-const escapedLength = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').length;
-// When the part has a written description, its first sentence is the meta description if it fits
-// and is worth showing alone: long enough to say something and carrying the part's main number
-// (OEM number, or C&M number when it has none). A short opener or a question like
-// "Looking for OEM part number X?" falls back to the standard wording below.
-const firstSentence = (text: string) => /^.+?[.!?](?=\s|$)/s.exec(text.trim())?.[0] ?? text.trim();
+const description = partMetaDescription(d);
+// Other parts with the same OEM number (two pairs share one): the page says so and links the other part.
+const sharedWith = sharedOemParts(part, all);
+const countWord = (n: number) => ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six'][n] ?? String(n);
 const lead = d.description?.trim() || '';
 // The opening "Replacement part for VFFS packaging machines..." sentence of the fit line is dropped when the
-// description already says so; "Confirm fitment by part number..." always stays.
+// description already says so. The closing line names the way to confirm the part: its OEM number, or, for a part
+// with no OEM number, a sample, print or photo (the buyer has no number to give).
 const leadSaysFit = /\bVFFS\b/.test(lead);
-const leadSentence = lead ? firstSentence(lead) : '';
-const leadWorksAlone = leadSentence.length >= 70 && !leadSentence.endsWith('?') && leadSentence.includes(mainNo);
-// A very long part name: cut the name, never the part number that follows it.
-function clippedName() {
-  const tail = `, ${idShort}. Request a quote.`;
-  let name = d.name;
-  while (name.length > 20 && escapedLength(`${name}…${tail}`) > 160) name = name.slice(0, -1);
-  return name === d.name ? `${name}${tail}` : `${name.trimEnd()}…${tail}`;
-}
-const baseDescription =
-  leadWorksAlone && escapedLength(leadSentence) <= 160
-    ? leadSentence
-    : (descriptionOptions.find((text) => escapedLength(text) <= 160) ?? clippedName());
-// Say where the shop is when the wording has not already and there is room for it.
-const localTail = ` Quote from ${site.name} in ${site.address.city}, CA.`;
-const description =
-  !baseDescription.includes(site.address.city) && escapedLength(`${baseDescription}${localTail}`) <= 160
-    ? `${baseDescription}${localTail}`
-    : baseDescription;
+const confirmLine = d.oem
+  ? 'Confirm fitment by part number, or call us and describe your machine.'
+  : 'Send a sample, print or photo of the part with your quote, or call us and describe your machine.';
 // Link preview: the first photo as a JPEG at its native size (never scaled up), which is what
 // Facebook and X read. A part with no photo falls back to the shop's og.jpg.
 const shot = d.images[0];
@@ -143,9 +95,7 @@ const crumbs = [
 const jsonLd = [
   product({
     name: d.name,
-    description:
-      lead ||
-      `${d.name}. Replacement part for VFFS packaging machines, ${d.oem ? `OEM part number ${d.oem}, ` : ''}C&M number ${d.cm}.`,
+    description: partJsonLdDescription(d),
     path: url,
     images: photos.map((p) => p.src),
     category: sectionTitle,
@@ -208,6 +158,20 @@ const jsonLd = [
             )
           }
         </div>
+        {
+          sharedWith.length > 0 && (
+            <p class="part__shared" role="note" data-shared-oem>
+              {countWord(sharedWith.length + 1)} parts in our catalog use <span class="nowrap">OEM # {d.oem}</span>:{' '}
+              {sharedWith.map((other, i) => (
+                <>
+                  <a href={partUrl(other)}>{other.data.name}</a>
+                  {i < sharedWith.length - 1 ? ', ' : ''}
+                </>
+              ))}{' '}
+              and this one. Check the name and photo, or send a photo of your part with your quote.
+            </p>
+          )
+        }
       </header>
 
       <div class="part__photo">
@@ -218,7 +182,7 @@ const jsonLd = [
       <div class="part__rest">
         {lead && <p class="part__lead">{lead}</p>}
         <p class="part__fit">
-          {!leadSaysFit && <>Replacement part for VFFS packaging machines{d.oem ? ', matched by OEM part number' : ''}. </>}Confirm fitment by part number, or call us and describe your machine.
+          {!leadSaysFit && <>Replacement part for VFFS packaging machines{d.oem ? ', matched by OEM part number' : ''}. </>}{confirmLine}
         </p>
 
         <div class="part__add">
@@ -276,7 +240,7 @@ const jsonLd = [
         prev ? (
           <a class="pn__link" href={partUrl(prev)} rel="prev">
             <span class="pn__dir">‹ Previous</span>
-            <span class="pn__name">{prev.data.name}</span>
+            <span class="pn__name">{displayName(prev.data)}</span>
           </a>
         ) : (
           <span></span>
@@ -286,7 +250,7 @@ const jsonLd = [
         next && (
           <a class="pn__link pn__link--next" href={partUrl(next)} rel="next">
             <span class="pn__dir">Next ›</span>
-            <span class="pn__name">{next.data.name}</span>
+            <span class="pn__name">{displayName(next.data)}</span>
           </a>
         )
       }
@@ -428,6 +392,23 @@ const jsonLd = [
     min-width: 64px;
     padding: 0 10px;
     font-size: 0.9rem;
+  }
+
+  /* Two parts share this OEM number: a short note under the number, with a link to the other part. */
+  .part__shared {
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    border-left: 4px solid var(--color-primary);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: var(--color-tint);
+    color: #222;
+    font-size: 0.975rem;
+    line-height: 1.5;
+  }
+
+  .part__shared a {
+    font-weight: 700;
+    text-decoration: underline;
   }
 
   .part__lead {

@@ -2,7 +2,6 @@
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import FeaturedParts from '../../components/FeaturedParts.astro';
-import CtaBand from '../../components/CtaBand.astro';
 import { site } from '../../config/site';
 import { getServices, serviceUrl } from '../../lib/content';
 import { getParts, getSections, MAIN_MACHINE, sectionUrl, machineUrl } from '../../lib/parts';
@@ -22,7 +21,7 @@ const crumbs = [
 const faqs = [
   {
     q: 'Do you make replacement parts for food processing equipment?',
-    a: `Yes. ${site.legalName} specializes in precision-engineered solutions for the food processing and agriculture industries, machining replacement and custom parts from your drawing, a worn sample or a description.`,
+    a: `Yes. We machine replacement and custom parts from your drawing, a worn sample or a description. Send the details on the quote page, or call us at ${site.phone}.`,
   },
   ...(shopOn
     ? [
@@ -40,10 +39,10 @@ const faqs = [
 ---
 
 <Base
-  title={`Food Processing & Ag Machine Shop, ${site.address.city} CA`}
+  title="Food Processing & Agriculture Parts"
   description={shopOn
-    ? `Replacement parts, machining, cutting, welding and fabrication for food processing, packaging and agriculture equipment. ${site.legalName}, ${site.address.city}, CA.`
-    : `Replacement parts made to your drawing or sample, plus machining, cutting, welding and fabrication for food processing and ag equipment in ${site.address.city}, CA.`}
+    ? `Replacement parts, machining, cutting, welding and fabrication for food processing, packaging and agriculture equipment in ${site.address.city}, CA.`
+    : `Replacement parts made to your drawing or sample, plus machining, cutting, welding and fabrication for food processing and agriculture in ${site.address.city}, CA.`}
   jsonLd={[breadcrumbs(crumbs), faqPage(faqs)]}
 >
   <section class="section">
@@ -70,7 +69,7 @@ const faqs = [
           <a class="card" href={serviceUrl(s)}>
             <div class="card__body">
               <h3>{s.data.title}</h3>
-              <p class="muted">{s.data.summary}</p>
+              <p class="muted">{s.data.teaser ?? s.data.summary}</p>
             </div>
           </a>
         ))}
@@ -78,7 +77,7 @@ const faqs = [
       <ul class="ticks points">
         <li>Replacement parts machined to spec from your drawing or a worn sample</li>
         <li>Custom fabrication with or without blueprints</li>
-        <li>{shopOn ? <>Local pickup in {site.address.city}, or ask about shipping</> : <>Pickup in {site.address.city}, or ask about shipping</>}</li>
+        <li>Local pickup in {site.address.city}. {site.store.shipping}</li>
         <li>{site.replyTime} to quotes and custom part requests</li>
       </ul>
     </div>
@@ -113,8 +112,6 @@ const faqs = [
       ))}
     </div>
   </section>
-
-  <CtaBand heading="Down a part?" text={`Tell us what broke. ${site.replyTime}.`} />
 </Base>
 
 <style>

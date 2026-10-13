@@ -86,11 +86,11 @@ export default defineConfig({
   vite: { build: { assetsInlineLimit: 0 } },
   integrations: [
     sitemap({
-      // The quote page and its thank-you page are noindex, so keep them out of the sitemap.
-      // While the parts shop is off, so is everything under /shop/.
+      // The quote page and the two thank-you pages (/quote/thanks/, /contact/thanks/) are noindex, so keep them
+      // out of the sitemap. While the parts shop is off, so is everything under /shop/.
       filter: (page) => {
         const { pathname } = new URL(page);
-        return !/\/quote\/(thanks\/)?$/.test(pathname) && (site.store.enabled || !pathname.startsWith('/shop/'));
+        return !/\/(quote\/(thanks\/)?|contact\/thanks\/)$/.test(pathname) && (site.store.enabled || !pathname.startsWith('/shop/'));
       },
     }),
     shopSwitch,

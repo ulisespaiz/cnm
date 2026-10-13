@@ -9,12 +9,6 @@ import { leadTime } from '../components/store';
 import { faqPage } from '../lib/schema';
 import banner from '../assets/work/our-work-2.jpg';
 import shopPhoto from '../assets/site/front-office-cnm.jpeg';
-import finishing from '../assets/work/our-work-1.jpg';
-import machiningCenter from '../assets/work/our-work-2.jpg';
-import lathe from '../assets/work/our-work-6.jpg';
-import waterjet from '../assets/equipment/Flow-Mach-500-Waterjet-Cutting-Machine.jpg';
-import laser from '../assets/equipment/Laser-Cutting-Services.jpg';
-import verticalMill from '../assets/equipment/CNC-Vertical-Milling-Machine.jpg';
 
 // Parts shop switch (site.store.enabled): off hides every shop block on this page.
 const shopOn = site.store.enabled;
@@ -29,21 +23,14 @@ const sections = shopOn
     }))
   : [];
 
-// Real C&M shop photos only, each captioned for the machine it shows. `alt` says what the
-// photo looks like; the caption beside it already names the machine, so the alt must not repeat it.
-const work = [
-  { src: finishing, alt: 'White machine with a dark safety door and a control panel, abrasive belts hanging beside it', title: 'Wide-Belt Finishing', text: 'Timesavers 32 RB Series wide-belt machine for deburring and finishing metal parts.' },
-  { src: machiningCenter, alt: 'Open machine door with three blue vises on the table below the spindle', title: 'CNC Machining Center', text: 'Vertical machining center with Kurt vises holding the workpieces.' },
-  { src: lathe, alt: 'Long lathe bed with a chuck, a tailstock and a digital readout, bar stock racked behind', title: 'Engine Lathe', text: 'Sharp 22120B engine lathe with digital readout for turning cylindrical components.' },
-  { src: waterjet, alt: 'Large cutting table with a gantry carrying the C&M shop sign, in a corrugated-steel shop', title: 'Waterjet Cutting', text: 'Flow waterjet cutting table in our Salinas shop.' },
-  { src: laser, alt: 'Black enclosure with a long slatted cutting table and a dust collector with six round filters', title: 'Fiber Laser Cutting', text: 'Fiber laser cutting system for stainless steel, aluminum, brass and mild steel.' },
-  { src: verticalMill, alt: 'White and gray machine with a control panel and a window onto the work area', title: 'CNC Vertical Mill', text: 'CNC vertical milling machine for precision milling in our shop.' },
-];
+// The machine cards and the "Key machines" count both come from the equipment list (src/content/equipment.json),
+// the same list as /our-machinery/, so they cannot disagree. Real C&M shop photos only. The hero banner
+// (our-work-2) is a different photo from the machining center's card, so no picture appears twice.
 
 const faqs = [
   {
     q: 'What services do you offer?',
-    a: 'We offer a range of machining services including CNC milling, turning, fabrication, and custom part manufacturing. Our team is skilled in precision engineering for various industries.',
+    a: 'We offer four services: cutting (laser, water-jet and shearing), machining (milling and turning), metal work (welding, rolling and forming) and custom fabrication, with or without blueprints.',
   },
   ...(shopOn
     ? [
@@ -71,14 +58,14 @@ const faqs = [
 ---
 
 <Base
-  title={`${site.name} | CNC Machining & Fabrication in ${site.address.city}, CA`}
+  title={shopOn ? `${site.name} | CNC Machining & Parts in ${site.address.city}, CA` : `${site.name} | CNC Machining & Fabrication in ${site.address.city}`}
   description={site.description}
   jsonLd={[faqPage(faqs)]}
 >
   <section class="hero">
     <div class="container">
-      <p class="eyebrow">Founded in {site.founded} · {site.address.city}, {site.address.region}</p>
-      <h1>Precision machining since <span class="mark">{site.founded}.</span><br /> Still your machine shop.</h1>
+      <p class="eyebrow">Since {site.founded} · {site.address.city}, {site.address.region}</p>
+      <h1><span class="hero__line">Precision machining since <span class="mark">{site.founded}.</span></span> <span class="hero__line">Still your machine shop.</span></h1>
       <p class="lead">
         {shopOn ? (
           <>
@@ -118,7 +105,7 @@ const faqs = [
         )}
       </div>
       <dl class:list={['stats', { 'stats--3': !shopOn }]}>
-        <div><dt>Founded</dt><dd>{site.founded}</dd></div>
+        <div><dt>Since</dt><dd>{site.founded}</dd></div>
         <div><dt>Key machines</dt><dd>{machines.length}</dd></div>
         <div><dt>Core services</dt><dd>{services.length}</dd></div>
         {shopOn && <div class="stats__live"><dt>Parts in the store</dt><dd>{parts.length}</dd></div>}
@@ -129,7 +116,7 @@ const faqs = [
   <section class="banner">
     <Image
       src={banner}
-      alt="CNC vertical machining center with Kurt vises and the C&M logo on the door, inside the C&M shop"
+      alt="Akira-Seiki Performa CNC vertical machining center with Kurt vises and the C&M logo on the door, inside the C&M shop"
       widths={[640, 768, 1024, 1280]}
       sizes="100vw"
       loading="eager"
@@ -162,7 +149,7 @@ const faqs = [
             <p class="store__label">replacement parts for VFFS packaging machines, in {sections.length} sections</p>
             <div class="store__actions">
               <a class="btn btn--red" href="/shop/">Browse all parts</a>
-              <a class="btn btn--light" href="/quote/#bulk">Paste a part list</a>
+              <a class="btn btn--light" href="/quote/#bulk">Paste a list of part numbers</a>
             </div>
           </div>
           <ul class="store__sections" aria-label="Parts sections">
@@ -182,14 +169,14 @@ const faqs = [
           <FeaturedParts />
         </div>
         <div class="featured__actions">
-          <a class="btn btn--dark" href="/quote/#bulk">Paste a part list</a>
+          <a class="btn btn--dark" href="/quote/#bulk">Paste a list of part numbers</a>
           <a class="btn btn--outline" href="/shop/">Browse all parts</a>
         </div>
 
         <div class="bento">
           <article class="bento__card">
             <h3>Save time without sacrificing quality</h3>
-            <p class="muted">Skip the middleman. Request a quote directly from a machine shop founded in {site.founded}. {site.store.madeTo}.</p>
+            <p class="muted">Skip the middleman. Request a quote directly from a machine shop in {site.address.city} since {site.founded}. {site.store.madeTo}.</p>
           </article>
           <article class="bento__card">
             <h3>3 steps to your part</h3>
@@ -221,12 +208,10 @@ const faqs = [
     <div class="container about-split">
       <div>
         <p class="eyebrow">Who we are</p>
-        <h2>Precision-driven expertise, in business since {site.founded}, focused on <span class="text-blue">manufacturing excellence</span></h2>
+        <h2>A family-owned machine shop, in business since {site.founded}, focused on <span class="text-blue">machining and fabrication</span></h2>
         <p class="lead">
-          {site.legalName} delivers tailored, high-quality solutions that exceed expectations. From water-jet cutting
-          and laser cutting to custom fabrication and blueprint-based projects, we handle work of any scale and
-          complexity. Our skilled team combines advanced machinery with craftsmanship to turn your concepts into
-          reality.
+          {site.legalName} cuts, machines, welds and fabricates parts in our {site.address.city} shop: water-jet and
+          laser cutting, CNC machining, metal work and custom fabrication, from your drawing, sample or idea.
         </p>
         <p>
           Based in {site.address.city}, we serve customers across the Monterey Bay area and beyond.
@@ -234,13 +219,13 @@ const faqs = [
         </p>
         <div class="hero__actions">
           <a class="btn btn--dark" href="/about/">Learn more about us</a>
-          <a class="btn btn--outline" href="/industries/food-processing-agriculture/">Food processing &amp; ag</a>
+          <a class="btn btn--outline" href="/industries/food-processing-agriculture/">Food processing &amp; agriculture</a>
         </div>
       </div>
       <div class="about-split__media">
         <Image src={shopPhoto} alt={`The ${site.name} shop at ${site.address.street}, ${site.address.city}`} widths={[480, 800]} sizes="(min-width: 900px) 520px, 100vw" />
         <div class="since">
-          <span>Founded in</span>
+          <span>Since</span>
           <strong>{site.founded}</strong>
           <span>Family-owned in {site.address.city}</span>
         </div>
@@ -275,15 +260,17 @@ const faqs = [
     <div class="container">
       <div class="center-head">
         <p class="eyebrow">Proof of our quality</p>
-        <h2>Every cut, every part, every deadline — machined to your <span class="text-blue">exact specifications</span></h2>
-        <p class="lead">At {site.legalName} we are committed to being your trusted partner, offering craftsmanship, innovation and reliability in every project.</p>
+        <h2>Every cut, every part — machined to your <span class="text-blue">exact specifications</span></h2>
+        <p class="lead">Some of the machines we run in our {site.address.city} shop. <a href="/our-machinery/">See what each one does</a>.</p>
       </div>
       <ul class="gallery" tabindex="0" aria-label="Machines in our shop">
-        {work.map((w) => (
+        {machines.map((m) => (
           <li>
-            <Image src={w.src} alt={w.alt} widths={[360, 560]} sizes="(min-width: 900px) 360px, 80vw" />
-            <h3>{w.title}</h3>
-            <p class="muted">{w.text}</p>
+            {m.data.image && (
+              <Image src={m.data.image} alt={m.data.imageAlt ?? m.data.name} widths={[360, 560]} sizes="(min-width: 900px) 360px, 80vw" />
+            )}
+            <h3>{m.data.name}</h3>
+            <p class="muted">{m.data.blurb ?? m.data.text}</p>
           </li>
         ))}
       </ul>
@@ -315,6 +302,12 @@ const faqs = [
   .hero h1 {
     /* em, not ch: ch follows the font, so the fallback and Geist gave different widths and rewrapped the headline */
     max-width: 11.25em;
+  }
+
+  /* One block per sentence, each balanced: no lone word ("shop.") on the last line on a phone */
+  .hero__line {
+    display: block;
+    text-wrap: balance;
   }
 
   .hero__actions {
@@ -757,6 +750,8 @@ const faqs = [
     scroll-snap-type: x mandatory;
     margin: 0 calc(var(--gutter) * -1);
     padding: 0 var(--gutter) 8px;
+    /* Snapping aligns a card with the scrollport edge, not the padding: keep the first card on the 16px gutter */
+    scroll-padding-inline: var(--gutter);
     list-style: none;
   }
 
@@ -777,13 +772,20 @@ const faqs = [
     margin-bottom: 4px;
   }
 
+  /* Three across; the second row (two machines) is centered */
   @media (min-width: 900px) {
     .gallery {
-      grid-auto-flow: row;
-      grid-template-columns: repeat(3, 1fr);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 24px 16px;
       overflow: visible;
       margin: 0;
       padding: 0;
+    }
+
+    .gallery li {
+      flex: 0 1 calc((100% - 32px) / 3);
     }
   }
 

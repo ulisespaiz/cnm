@@ -1,13 +1,16 @@
 ---
 // OEM part number index: every part in one plain table (OEM # | C&M # | Part name | Section), sorted by OEM
-// number, with the parts that have none at the end. Static HTML, no script: it works with Ctrl-F, in a
-// text browser and on a slow phone. On phones each row stacks into a small card instead of scrolling sideways.
+// number, with the parts that have none at the end. Static HTML: it works with Ctrl-F, in a text browser and on
+// a slow phone, and with no JavaScript the whole table is there. With JavaScript a filter field above the table
+// hides the rows that do not match what you type (src/scripts/part-numbers-filter.ts). A number that two parts
+// share is marked on both rows. On phones each row stacks into a small card instead of scrolling sideways.
 // The same rows are the CSV at /shop/catalog.csv (src/lib/catalog.ts builds both).
 import Base from '../../../layouts/Base.astro';
 import Breadcrumbs from '../../../components/Breadcrumbs.astro';
 import PartRequestForm from '../../../components/PartRequestForm.astro';
 import StoreDisclaimer from '../../../components/StoreDisclaimer.astro';
 import { getCatalogRows } from '../../../lib/catalog';
+import { sharedOemGroups } from '../../../lib/parts';
 import { breadcrumbs } from '../../../lib/schema';
 import { site } from '../../../config/site';
 import '../../../styles/store.css';
@@ -16,6 +19,8 @@ import '../../../styles/store.css';
 if (!site.store.enabled) return Astro.redirect('/quote/', 302);
 
 const rows = await getCatalogRows();
+// OEM numbers that two or more parts carry (computed from the catalog): those rows say "Shared OEM #".
+const shared = sharedOemGroups(rows.map((r) => r.part));
 const withOem = rows.filter((r) => r.oem).length;
 const noOem = rows.length - withOem;
 
@@ -38,16 +43,14 @@ const crumbs = [
     <a class="back-link" href="/shop/">‹ Parts Store</a>
 
     <header class="pn__head">
-      <p class="eyebrow">Parts Store</p>
       <h1>OEM part number <span class="mark">index</span></h1>
       <p class="lead">
         Find your part by the number on the worn part. All {rows.length} replacement parts for VFFS packaging machines are
         listed here by OEM part number. Open a part name to see the part and add it to your quote.
       </p>
       <p>
-        Have a list of numbers? <a href="/quote/#bulk">Paste it on the quote page</a> (bulk paste).
+        Have a list of numbers? <a href="/quote/#bulk">Paste a list of part numbers</a> on the quote page.
         Don't see your number? <a href="#request">Send us the part number</a> and we'll check it. {site.replyTime}.
-        To look up one number, use the <a href="/shop/">search on the parts store</a> or your browser's Find in page.
       </p>
       <p class="pn__tools">
         <a class="btn btn--outline" href="/shop/catalog.csv" download="cm-machine-shop-parts-catalog.csv">Download the catalog (CSV)</a>
@@ -57,9 +60,29 @@ const crumbs = [
 
     <section class="pn__list" aria-labelledby="pn-title">
       <h2 id="pn-title" class="visually-hidden">All {rows.length} parts by OEM part number</h2>
+      {/* The filter needs JavaScript, so it stays hidden until part-numbers-filter.ts shows it: with no script the full table is all there is. */}
+      <div class="pn__filter" data-pn-filter hidden>
+        <label class="pn__filter-label" for="pn-filter">Filter by OEM #, C&amp;M # or name</label>
+        <input
+          class="pn__filter-input"
+          id="pn-filter"
+          type="search"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          enterkeyhint="search"
+          placeholder="For example 03187A0897, CM-0002 or pulley"
+          aria-controls="pn-table"
+        />
+        <p class="pn__filter-status" role="status" aria-live="polite" data-pn-status></p>
+        <p class="pn__filter-empty" data-pn-empty hidden>
+          No part in the list matches that. <a href="#request">Send us the part number</a> and we'll check it.
+        </p>
+      </div>
       {/* The ARIA roles repeat what the elements already are. They stay on purpose: on phones the rows are
           laid out as cards (display: grid), and some browsers drop the table meaning when that happens. */}
-      <table class="pn__table" role="table">
+      <table class="pn__table" role="table" id="pn-table" data-pn-table>
         <caption>
           {rows.length} parts, sorted by OEM #. {noOem} with no OEM # {noOem === 1 ? 'is' : 'are'} last, by C&amp;M #.
         </caption>
@@ -74,7 +97,14 @@ const crumbs = [
         <tbody role="rowgroup">
           {
             rows.map((r) => (
-              <tr role="row">
+              <tr
+                role="row"
+                data-k={r.part.data.oemKey ?? ''}
+                data-a={r.part.data.oemAlt.join(' ')}
+                data-c={r.cm}
+                data-w={[r.name, ...r.part.data.aka].join(' ')}
+                data-shared={shared.has(r.part.data.oemKey ?? '') ? '' : undefined}
+              >
                 <td role="cell" class="pn__oem" data-label="OEM #">
                   {r.oem ? (
                     <span class="oem">{r.oem}</span>
@@ -83,6 +113,9 @@ const crumbs = [
                       <span aria-hidden="true">&ndash;</span>
                       <span class="visually-hidden">No OEM #</span>
                     </span>
+                  )}
+                  {shared.has(r.part.data.oemKey ?? '') && (
+                    <span class="pn__shared">Shared OEM #, see {shared.get(r.part.data.oemKey!)!.length > 2 ? 'all' : 'both'}</span>
                   )}
                 </td>
                 <td role="cell" class="pn__cm" data-label="C&amp;M #">{r.cm}</td>
@@ -104,6 +137,10 @@ const crumbs = [
     <StoreDisclaimer />
   </div>
 </Base>
+
+<script>
+  import '../../../scripts/part-numbers-filter';
+</script>
 
 <style>
   .pn {
@@ -153,6 +190,65 @@ const crumbs = [
 
   .pn__list {
     margin-bottom: 32px;
+  }
+
+  /* ---------- the filter (shown by part-numbers-filter.ts; hidden without JavaScript) ---------- */
+  .pn__filter {
+    max-width: 760px;
+    margin: 0 0 16px;
+  }
+
+  .pn__filter[hidden],
+  .pn__filter-empty[hidden] {
+    display: none;
+  }
+
+  .pn__filter-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+
+  .pn__filter-input {
+    width: 100%;
+    min-height: 52px;
+    padding: 0 16px;
+    border: 2px solid var(--color-field-border);
+    border-radius: var(--radius);
+    background: #fff;
+    color: #111;
+    font: 500 1rem/1.2 var(--font-body);
+    appearance: none;
+  }
+
+  .pn__filter-input:focus-visible {
+    border-color: var(--color-primary);
+    outline: 3px solid rgb(25 60 184 / 0.25);
+    outline-offset: 0;
+  }
+
+  .pn__filter-status,
+  .pn__filter-empty {
+    margin: 8px 0 0;
+    color: #333;
+    font-size: 0.9rem;
+  }
+
+  .pn__filter-status:empty {
+    display: none;
+  }
+
+  .pn__filter-empty {
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: #fff;
+    font-size: 1rem;
+  }
+
+  /* a row the filter hides: the phone card layout below sets display: grid, which would win over [hidden] */
+  .pn__table tbody tr[hidden] {
+    display: none;
   }
 
   /* ---------- the table ---------- */
@@ -211,6 +307,16 @@ const crumbs = [
 
   .pn__sec {
     color: #333;
+  }
+
+  /* Two parts carry this OEM number: both rows say so, under the number. */
+  .pn__shared {
+    display: block;
+    margin-top: 2px;
+    color: var(--color-primary);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.3;
   }
 
   /* At least a 44px tap target; the same space above and below whether the name takes one line or two. */
@@ -297,9 +403,27 @@ const crumbs = [
     .pn__oem,
     .pn__cm {
       display: flex;
+      flex-wrap: wrap;
       align-items: baseline;
-      gap: 6px;
+      gap: 0 6px;
       min-height: 26px;
+    }
+
+    /* Buyers match a part on the OEM #, so it is the larger number; the C&M # is smaller and quieter. */
+    .pn__oem .oem {
+      font-size: 1.1875rem;
+      font-weight: 800;
+    }
+
+    .pn__cm {
+      color: #333;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .pn__shared {
+      flex: 1 0 100%;
+      margin-top: 0;
     }
 
     .pn__cm {

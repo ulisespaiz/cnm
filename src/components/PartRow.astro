@@ -4,6 +4,7 @@
 import PartAdd from './PartAdd.astro';
 import { addData, thumbOf } from './store';
 import { partUrl, type Part } from '../lib/parts';
+import { displayName } from '../lib/partmeta';
 import '../styles/store.css';
 
 interface Props {
@@ -49,7 +50,7 @@ const add = await addData(part, sectionTitle);
     }
   </a>
   <div class="prow__main">
-    <a class="prow__name" href={url}>{d.name}<span class="visually-hidden"> ({d.oem ?? d.cm})</span></a>
+    <a class="prow__name" href={url}>{displayName(d)}<span class="visually-hidden"> ({d.oem ?? d.cm})</span></a>
     <div class="prow__meta">
       <span class="chip-sec">{sectionTitle}</span>
       {d.attrs.width && <span class="chip-attr">{d.attrs.width}″</span>}

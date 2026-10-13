@@ -25,6 +25,12 @@
 //     linking to its part page; /shop/catalog.csv (UTF-8 with a BOM, RFC 4180, a header and one record
 //     per part, absolute URLs that resolve, no owner-only text, no cell a spreadsheet would run as a
 //     formula) and its _headers rule
+//   - shop ON: a part page whose <title> is cut ("..."), over 65 characters, shared with another part, without the
+//     whole part name, or not "<number> <name> | <shop name>"; a part meta description that lacks the part name, the C&M number or the OEM number, is not
+//     a sentence, or says "made to replace", "is replaced by", "in place of", "on VFFS packaging machines" or a
+//     database label; a part whose description says its OEM number is being confirmed but whose meta description
+//     or Product JSON-LD description does not say so or states a match; two parts that share an OEM number
+//     without the note on both pages (or on both index rows); the filter field missing from /shop/part-numbers/
 //   - shop OFF: anything left of /shop/, a link that still points there, or a /shop rule in
 //     _redirects that is not a 302 to /quote/
 //   - two pages with the same meta description; a title over 65 characters on the pages added for
@@ -145,6 +151,7 @@ const configText = existsSync('src/config/site.ts') ? readFileSync('src/config/s
 const configShop = /store:\s*\{[^}]*?\benabled:\s*(true|false)/s.exec(configText)?.[1];
 // Facts the pages must keep in step with the config (checked per page below).
 const configMaps = /^\s*maps:\s*'([^']*)'/m.exec(configText)?.[1];
+const configName = /^\s*name:\s*'([^']*)'/m.exec(configText)?.[1]; // the shop name (site.name)
 const configHasGeo = /^\s*geo:\s*\{/m.test(configText); // a real pin was added to site.ts: JSON-LD may then carry it
 const MAPS_LINK = /^(?:https?:)?\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps|(?:www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)/i;
 const YEARS = /\b\d+\+?\s?years\b/i; // "20 years", "20+ years": goes stale, nothing in the config backs it
@@ -636,6 +643,85 @@ if (shopOn) {
   if (missing.length) error('/shop/', `${missing.length} catalog part(s) have no page in dist, e.g. ${missing.slice(0, 2).join(' ')}`);
   if (!partPages) error('/shop/', 'the shop is ON but dist has no part pages');
 
+  // Titles, meta descriptions and JSON-LD wording of the part pages (src/lib/partmeta.ts writes them; this checks the
+  // built pages, so a change anywhere that breaks one is caught even when the build passed).
+  const confirming = (part) => !!part.oem && part.oemVerify === true && /confirm/i.test(part.description ?? '');
+  // A fit or replacement claim: what a meta description or JSON-LD description of a part with an unconfirmed OEM number must not say.
+  const CLAIMS_MATCH = /\breplac\w*|\bmatched by\b|\bmade to match\b|\bfits\b/i;
+  const BANNED_WORDING = [
+    [/\bmade to replace\b/i, '"made to replace"'],
+    [/\b(?:is|are) replaced by\b/i, '"is replaced by"'],
+    [/\bin place of\b/i, '"in place of"'],
+    [/\bis the pattern\b/i, '"is the pattern"'],
+    [/\bon (?:a )?VFFS packaging machines?\b/i, '"on VFFS packaging machines" as a fit claim'],
+    [/\bfiled under\b|\blisted (?:under|in) (?!OEM\b)|\b(?:from|in) the [^.,;]{3,50}? section\b/i, 'a database label ("filed under", "listed under", "from the ... section")'],
+  ];
+  const titleSeen = new Map();
+  const confirmingParts = [];
+  for (const p of partPageList) {
+    const part = expected.get(p.url);
+    if (!part) continue;
+    const names = [part.name, part.shortName].filter(Boolean);
+    if (p.title) {
+      if (chars(p.title) > 65) error(p.url, `the <title> is ${chars(p.title)} characters (max 65): ${p.title}`);
+      if (/…|\.\.\./.test(p.title)) error(p.url, `the <title> is cut with an ellipsis: ${p.title}`);
+      else if (!names.some((n) => p.title.includes(n))) error(p.url, `the <title> does not hold the whole part name (a long name needs a shortName in parts.json): ${p.title}`);
+      // One template for every part: "<OEM # or C&M #> <name> | <shop name>", so a search by number lands on the part.
+      if (!p.title.startsWith(`${part.oem || part.cm} `)) error(p.url, `the <title> does not start with the part's ${part.oem ? 'OEM' : 'C&M'} number ${part.oem || part.cm}: ${p.title}`);
+      if (configName && !p.title.endsWith(` | ${configName}`)) error(p.url, `the <title> does not end with " | ${configName}": ${p.title}`);
+      note(titleSeen, p.title, p.url);
+    }
+    const meta = p.description ?? '';
+    if (meta) {
+      if (!meta.includes(part.cm)) error(p.url, `the meta description lacks the C&M number ${part.cm}: "${meta}"`);
+      if (part.oem && !meta.includes(part.oem)) error(p.url, `the meta description lacks the OEM number ${part.oem}: "${meta}"`);
+      if (chars(meta) > 155) error(p.url, `the meta description is ${chars(meta)} characters (max 155 for a part page): "${meta}"`);
+      // A part is never called a replacement for the machine type alone: the OEM number says what it replaces.
+      if (part.oem && !confirming(part) && !/replacement for OEM part number/.test(meta)) error(p.url, `the meta description does not say "replacement for OEM part number ...": "${meta}"`);
+      if (!names.some((n) => meta.includes(n))) error(p.url, `the meta description lacks the part name: "${meta}"`);
+      if (!/[.!?]$/.test(meta)) error(p.url, `the meta description does not end as a sentence: "${meta}"`);
+      for (const [pattern, label] of BANNED_WORDING) if (pattern.test(meta)) error(p.url, `the meta description uses ${label}: "${meta}"`);
+    }
+    const product = p.jsonld.flatMap((d) => (Array.isArray(d?.['@graph']) ? d['@graph'] : [d])).find((d) => d?.['@type'] === 'Product');
+    const productText = typeof product?.description === 'string' ? product.description : '';
+    for (const [pattern, label] of BANNED_WORDING) if (pattern.test(productText)) error(p.url, `the Product JSON-LD description uses ${label}`);
+    // A part whose description says its OEM number is being confirmed must never be described as a match for that number.
+    if (confirming(part)) {
+      confirmingParts.push(part.cm);
+      if (!/being confirmed/i.test(meta)) error(p.url, `the OEM number is being confirmed (the description says so), so the meta description must say "being confirmed": "${meta}"`);
+      if (CLAIMS_MATCH.test(meta)) error(p.url, `the OEM number is being confirmed, but the meta description states a match or replacement: "${meta}"`);
+      if (!/confirm/i.test(productText)) error(p.url, 'the OEM number is being confirmed, but the Product JSON-LD description does not say so');
+      if (/\breplac\w*|\bmatched by\b|\bfits\b/i.test(productText)) error(p.url, 'the OEM number is being confirmed, but the Product JSON-LD description states a match or replacement');
+    }
+  }
+  for (const [title, urls] of titleSeen) if (urls.size > 1) error([...urls][0], `the same <title> is on ${urls.size} part pages: ${title}`);
+
+  // Two parts that share an OEM number: both pages say so and link the other part; every other page has no such note.
+  const byOemKey = new Map();
+  for (const part of parts ?? []) if (part.oemKey) byOemKey.set(part.oemKey, [...(byOemKey.get(part.oemKey) ?? []), part]);
+  const sharedKeys = new Set([...byOemKey].filter(([, list]) => list.length > 1).map(([key]) => key));
+  for (const part of parts ?? []) {
+    const page = pageByUrl.get(`/shop/${part.machine}/${part.section}/${part.id}/`);
+    if (!page) continue;
+    const html = read(page.rel);
+    const noteHtml = /<p\b[^>]*\bdata-shared-oem\b[^>]*>([\s\S]*?)<\/p>/i.exec(html)?.[1];
+    if (!part.oemKey || !sharedKeys.has(part.oemKey)) {
+      if (noteHtml !== undefined) error(page.url, 'has a shared-OEM-number note, but no other part uses this OEM number');
+      continue;
+    }
+    if (noteHtml === undefined) {
+      error(page.url, `another part uses OEM # ${part.oem}, but the page has no shared-number note (a <p data-shared-oem>)`);
+      continue;
+    }
+    const text = decode(noteHtml.replace(TAG, ' ')).replace(/\s+/g, ' ').trim();
+    if (!text.includes(`OEM # ${part.oem}`)) error(page.url, `the shared-number note does not name OEM # ${part.oem}: "${text}"`);
+    if (!/send a photo of your part with your quote/i.test(text) || !/check the name and photo/i.test(text)) error(page.url, `the shared-number note must tell the buyer to check the name and photo, or send a photo of the part: "${text}"`);
+    for (const other of byOemKey.get(part.oemKey).filter((o) => o.cm !== part.cm)) {
+      if (!noteHtml.includes(`href="/shop/${other.machine}/${other.section}/${other.id}/"`)) error(page.url, `the shared-number note does not link ${other.cm} (${other.name})`);
+      if (!text.includes(other.name)) error(page.url, `the shared-number note does not name ${other.cm} (${other.name})`);
+    }
+  }
+
   // The search index drives shop search, bulk paste and ?part= links
   if (!files.has('shop/search-index.json')) error('/shop/search-index.json', 'missing');
   else {
@@ -688,6 +774,20 @@ if (shopOn) {
       if (rows.length === parts.length && wrong >= 0) error('/shop/part-numbers/', `row ${wrong + 1} links ${hrefs[wrong]}, expected ${partPath(ordered[wrong])} (rows must be sorted by OEM number, then parts without one by C&M number, each linking its part page)`);
     }
     if (!/href="\/shop\/catalog\.csv"/.test(indexHtml)) error('/shop/part-numbers/', 'has no link to /shop/catalog.csv');
+    // A number that two parts share is marked on both rows, and only on those rows.
+    if (parts && rows.length === parts.length) {
+      ordered.forEach((part, i) => {
+        const marked = /Shared OEM #/.test(decode(rows[i].replace(TAG, ' ')));
+        const shouldMark = !!part.oemKey && sharedKeys.has(part.oemKey);
+        if (shouldMark && !marked) error('/shop/part-numbers/', `row ${i + 1} (${part.cm}) shares OEM # ${part.oem} with another part but is not marked "Shared OEM #"`);
+        if (!shouldMark && marked) error('/shop/part-numbers/', `row ${i + 1} (${part.cm}) is marked "Shared OEM #" but no other part has its number`);
+      });
+    }
+    // The filter field: labelled, hidden until its script shows it (no JavaScript: the whole table and no dead field).
+    const filterBox = /<div\b[^>]*\bdata-pn-filter\b[^>]*>/i.exec(indexHtml)?.[0];
+    if (!filterBox || !/\bhidden\b/.test(filterBox)) error('/shop/part-numbers/', 'needs the filter field (a div data-pn-filter with the hidden attribute until the script shows it)');
+    if (!/<label\b[^>]*\bfor="pn-filter"[^>]*>\s*Filter by OEM #, C&(?:amp;)?M # or name\s*<\/label>/i.test(indexHtml)) error('/shop/part-numbers/', 'the filter field needs the label "Filter by OEM #, C&M # or name"');
+    if (!/<input\b[^>]*\bid="pn-filter"/i.test(indexHtml)) error('/shop/part-numbers/', 'the filter field (input#pn-filter) is missing');
   }
 
   // /shop/catalog.csv

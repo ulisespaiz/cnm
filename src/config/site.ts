@@ -74,7 +74,7 @@ export const site = {
   expertise: [
     'CNC machining',
     'CNC milling',
-    'CNC turning',
+    'Lathe turning',
     'Water-jet cutting',
     'Fiber laser cutting',
     'Sheet metal shearing',

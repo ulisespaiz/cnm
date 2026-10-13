@@ -2,7 +2,6 @@
 import { Image } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
-import CtaBand from '../../components/CtaBand.astro';
 import { site } from '../../config/site';
 import { getServices, serviceUrl } from '../../lib/content';
 import { breadcrumbs } from '../../lib/schema';
@@ -23,10 +22,11 @@ const crumbs = [
     <div class="container">
       <Breadcrumbs items={crumbs} />
       <p class="eyebrow">Our Services</p>
-      <h1>Everything we do, <span class="mark">done right</span></h1>
+      <h1>Machining, cutting, welding and fabrication <span class="mark">in {site.address.city}</span></h1>
       <p class="lead">
-        At {site.legalName}, we offer a range of tailored services designed to meet your unique needs. Our commitment
-        to quality, innovation, and client satisfaction sets us apart — helping you achieve lasting success.
+        {site.legalName} has been a family-owned machine shop in {site.address.city} since {site.founded}. We machine on a CNC
+        vertical machining center and an engine lathe, cut with a fiber laser and a waterjet, and weld, roll, form and fabricate
+        metal. {site.replyTime} to quote requests, and you can pick up your parts at {site.address.street}.
       </p>
 
       <div class="service-list">
@@ -49,7 +49,6 @@ const crumbs = [
       </div>
     </div>
   </section>
-  <CtaBand heading="Ready to start your project?" text="Our team is ready to provide expert solutions that ensure your goals are met efficiently and effectively." />
 </Base>
 
 <style>

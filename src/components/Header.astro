@@ -24,20 +24,21 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     <div class="header-actions">
       <a class="header-phone" href={`tel:${site.phoneE164}`}>{site.phone}</a>
 
-      <!-- 768px and up: labelled buttons. Under 768px: icon-only quote list button.
-           The visible label is aria-hidden and a visually-hidden copy names the link at every width. -->
+      <!-- Every width shows a label. 768px and up: icon and full label side by side ("Quote list", "Shop").
+           Under 768px: the icon with a short label under it ("Quote", "Shop"), like a tab bar.
+           The visible label is aria-hidden and a visually-hidden copy gives the link its full name at every width. -->
       <a class="btn btn--red cart-btn" href="/quote/">
         <svg class="cart-btn__icon" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect>
           <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
           <path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path>
         </svg>
-        <span class="cart-btn__label" aria-hidden="true">{shopOn ? 'Quote list' : 'Get a Quote'}</span>
+        <span class="cart-btn__label" aria-hidden="true"><span class="label-short">Quote</span><span class="label-long">{shopOn ? 'Quote list' : 'Get a Quote'}</span></span>
         <span class="visually-hidden">{shopOn ? 'Quote list' : 'Get a Quote'}</span>
         <span class="badge" data-quote-count hidden>0</span>
       </a>
       {shopOn && (
-        <a class="btn shop-btn" href="/shop/" aria-label="Shop">
+        <a class="btn shop-btn" href="/shop/">
           <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
             <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
@@ -59,7 +60,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     {links.map((item) => (
       <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
     ))}
-    <a href="/quote/">{shopOn ? 'My quote list' : 'Get a Quote'} <span class="badge" data-quote-count hidden>0</span></a>
+    <a href="/quote/">{shopOn ? 'Quote list' : 'Get a Quote'} <span class="badge" data-quote-count hidden>0</span></a>
     <a href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
   </nav>
 </header>
@@ -148,7 +149,8 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     color: var(--color-primary) !important;
   }
 
-  /* Quote list + Shop. Phones: icon-only buttons (48px), labelled from 768px. */
+  /* Quote list + Shop. Phones: 48px-tall buttons with the icon over a short label (Quote, Shop); from 768px the
+     icon and the full label sit side by side. */
   .header-actions {
     display: flex;
     align-items: center;
@@ -159,26 +161,29 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     display: none;
   }
 
-  .shop-btn {
-    width: var(--tap);
-    min-width: var(--tap);
-    padding: 0;
+  .shop-btn,
+  .cart-btn {
+    flex-direction: column;
+    gap: 3px;
+    width: 56px;
+    min-width: 56px;
+    padding: 0 2px;
     border-radius: var(--radius);
-  }
-
-  .shop-btn__label {
-    display: none;
+    font-size: 0.75rem;
+    font-weight: 700;
   }
 
   .cart-btn {
     position: relative;
-    width: var(--tap);
-    min-width: var(--tap);
-    padding: 0;
-    border-radius: var(--radius);
   }
 
+  .shop-btn__label,
   .cart-btn__label {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .label-long {
     display: none;
   }
 
@@ -272,30 +277,28 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     box-shadow: none;
   }
 
-  /* Tablet: labelled Quote list and Shop buttons sit next to the burger. */
+  /* Tablet: icon and full label side by side next to the burger. */
   @media (min-width: 768px) {
     .site-header__inner {
       gap: 10px;
     }
 
-    .shop-btn {
-      width: auto;
-    }
-
-    .shop-btn__label {
-      display: inline;
-    }
-
     .header-actions .btn {
+      flex-direction: row;
+      gap: 8px;
+      width: auto;
+      min-width: 0;
       min-height: 44px;
       padding: 0 16px;
+      font-size: 1rem;
+      font-weight: 600;
     }
 
-    .cart-btn {
-      width: auto;
+    .label-short {
+      display: none;
     }
 
-    .cart-btn__label {
+    .label-long {
       display: inline;
     }
   }
