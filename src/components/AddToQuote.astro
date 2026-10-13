@@ -26,16 +26,15 @@ const { id, title, url, options = [], label = 'Add to Quote' } = Astro.props;
     <input id="qty" name="__qty" type="number" min="1" max="999" value="1" inputmode="numeric" />
   </div>
   <button class="btn btn--block" type="submit">{label}</button>
-  <p class="add-form__status" role="status" aria-live="polite" hidden>
-    Added. <a href="/quote/">View your quote (<span data-quote-count>0</span>)</a>
-  </p>
+  <!-- Always in the page, empty (and so unstyled) until an add: a live region announces text put into one that was already there. -->
+  <p class="add-form__status" role="status" aria-live="polite"></p>
   <noscript>
     <p><a href="/contact/">Contact us</a> to request a quote.</p>
   </noscript>
 </form>
 
 <script>
-  import { addItem } from '../scripts/quote-store';
+  import { addItem, lineCount } from '../scripts/quote-store';
 
   document.querySelectorAll<HTMLFormElement>('[data-add-to-quote]').forEach((form) => {
     form.addEventListener('submit', (event) => {
@@ -51,7 +50,11 @@ const { id, title, url, options = [], label = 'Add to Quote' } = Astro.props;
         options,
         qty: Math.max(1, Math.min(999, Math.round(qty))),
       });
-      form.querySelector<HTMLElement>('.add-form__status')!.hidden = false;
+      // New nodes each time, so a second add of the same service is announced again.
+      const link = document.createElement('a');
+      link.href = '/quote/';
+      link.textContent = `View your quote (${lineCount()})`;
+      form.querySelector<HTMLElement>('.add-form__status')!.replaceChildren('Added. ', link);
     });
   });
 </script>
@@ -68,5 +71,10 @@ const { id, title, url, options = [], label = 'Add to Quote' } = Astro.props;
     background: #e8f5ec;
     color: var(--color-success);
     font-weight: 600;
+  }
+
+  .add-form__status:empty {
+    margin: 0;
+    padding: 0;
   }
 </style>

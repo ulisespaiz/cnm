@@ -31,6 +31,9 @@ export const TYPE_LABELS: Record<Part['data']['type'], string> = {
   other: 'Other',
 };
 
+// The one machine the catalog covers today (machines.json id; part URLs are /shop/<id>/...).
+export const MAIN_MACHINE = 'vffs';
+
 let validated = false;
 
 function validate(parts: Part[], sections: Section[]) {
@@ -49,15 +52,20 @@ function validate(parts: Part[], sections: Section[]) {
     // so it must be edited together with them: fail the build instead of publishing a mismatch.
     if (d.description && !d.description.includes(d.cm)) problems.push(`${p.id}: description does not mention ${d.cm}`);
     if (d.description && d.oem && !d.description.includes(d.oem))
-      problems.push(`${p.id}: description does not mention Hayssen part number ${d.oem} (edit it when the number changes)`);
-    // A part may have no Hayssen number: it is then found and quoted by its C&M number
+      problems.push(`${p.id}: description does not mention OEM part number ${d.oem} (edit it when the number changes)`);
+    // Wording the owner ruled out: "a OEM" (it is "an OEM"), and a fit claim by machine type instead of
+    // by the OEM part number ("fits where OEM part X is used on VFFS packaging machines").
+    if (d.description && /\ba OEM\b/i.test(d.description)) problems.push(`${p.id}: description says "a OEM", write "an OEM"`);
+    if (d.description && /\bfits\b/i.test(d.description))
+      problems.push(`${p.id}: description says "fits": fit is identified only by the OEM part number, write "a replacement for OEM part number ..." or "made to match ..."`);
+    // A part may have no OEM number: it is then found and quoted by its C&M number
     // (checked above), and carries neither oem nor oemKey nor oemAlt.
     if (d.oem === undefined && d.oemKey === undefined) {
       if (d.oemAlt.length) problems.push(`${p.id}: oemAlt is set but the part has no oem`);
       continue;
     }
     if (!d.oem || !d.oemKey) {
-      problems.push(`${p.id}: oem and oemKey must be set together (or both left out for a part with no Hayssen number)`);
+      problems.push(`${p.id}: oem and oemKey must be set together (or both left out for a part with no OEM number)`);
       continue;
     }
     if (oemKey(d.oem) !== d.oemKey) problems.push(`${p.id}: oemKey ${d.oemKey} does not match oem ${d.oem}`);
@@ -94,7 +102,7 @@ export async function getParts(filter: { machine?: string; section?: string } = 
     .sort((a, b) => (sectionOrder.get(a.data.section.id)! - sectionOrder.get(b.data.section.id)!) || a.data.order - b.data.order);
 }
 
-// The part's main identifier: its Hayssen number, or its C&M number when it has none.
+// The part's main identifier: its OEM number, or its C&M number when it has none.
 export const mainNumber = (d: Part['data']) => d.oem || d.cm;
 
 export const machineUrl = (machineId: string) => `/shop/${machineId}/`;

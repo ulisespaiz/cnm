@@ -6,7 +6,10 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "prelaunch": "node scripts/prelaunch.mjs"
+    "check": "astro check",
+    "prelaunch": "node scripts/prelaunch.mjs",
+    "check:dist": "node scripts/check-dist.mjs",
+    "test:e2e": "playwright test"
   },
   "repository": {
     "type": "git",
@@ -28,5 +31,11 @@
   "type": "module",
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@playwright/test": "1.63.0",
+    "@types/node": "^24.19.2",
+    "typescript": "~6.0.3"
   }
 }

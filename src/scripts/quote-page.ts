@@ -6,12 +6,14 @@
 // to this page), so a typed part number is added as a plain "look it up" line.
 
 import {
+  STORAGE_KEY,
   addCustom,
   addItem,
   countLabel,
   getItems,
   quoteRef,
   removeItem,
+  renderCount,
   restoreItem,
   setNote,
   setQty,
@@ -54,16 +56,18 @@ function placeholderIcon() {
   return svg;
 }
 
+const placeholder = () => h('span', { class: 'qi__ph' }, placeholderIcon());
+
 const shopOff = document.querySelector<HTMLElement>('.quote-page')?.dataset.shop === 'off';
 
-// A catalog part with no Hayssen number is labelled by its C&M number.
+// A catalog part with no OEM number is labelled by its C&M number.
 const label = (item: QuoteItem) => item.oem ?? (item.kind === 'part' ? item.cm : undefined) ?? item.title;
 
 // updateRow() flatMaps this, so it is always a list.
 function metaText(item: QuoteItem) {
   if (item.kind === 'service') return ['Service'];
   if (item.kind === 'custom') return [item.noCatalog ? "We'll look it up" : 'Not in catalog'];
-  return [item.oem && `Hayssen # ${item.oem}`, item.cm && `C&M # ${item.cm}`].filter(Boolean) as string[];
+  return [item.oem && `OEM # ${item.oem}`, item.cm && `C&M # ${item.cm}`].filter(Boolean) as string[];
 }
 
 // ---------- Items list ----------
@@ -78,9 +82,9 @@ function buildRow(item: QuoteItem) {
   const key = item.key;
   const name = label(item);
 
-  const thumb = item.thumb
-    ? h('img', { src: item.thumb, alt: '', width: 56, height: 75, loading: 'lazy', decoding: 'async' })
-    : h('span', { class: 'qi__ph' }, placeholderIcon());
+  const thumb = item.thumb ? h('img', { src: item.thumb, alt: '', width: 56, height: 75, loading: 'lazy', decoding: 'async' }) : placeholder();
+  // A thumbnail that cannot load (stale URL in an old list) gives way to the placeholder, not a broken-image icon.
+  if (thumb instanceof HTMLImageElement) thumb.addEventListener('error', () => thumb.replaceWith(placeholder()), { once: true });
   const thumbBox = item.url
     ? h('a', { class: 'qi__thumb', href: item.url, tabindex: -1, 'aria-hidden': 'true' }, thumb)
     : h('span', { class: 'qi__thumb' }, thumb);
@@ -96,7 +100,7 @@ function buildRow(item: QuoteItem) {
     class: 'qi__note',
     type: 'text',
     maxlength: 300,
-    placeholder: 'Note for this item (left-hand, material, etc.)',
+    placeholder: 'Note (left-hand, material)', // short: a placeholder cannot wrap, and this row is only 220px wide inside at 320px
     'aria-label': `Note for ${name}`,
     autocomplete: 'off',
   });
@@ -119,10 +123,11 @@ function buildRow(item: QuoteItem) {
 
   const li = h(
     'li',
-    { class: 'qi', 'data-key': key },
+    { class: 'qi', 'data-key': key, tabindex: -1 }, // focusable by script: Undo lands on the restored row
     thumbBox,
-    h('div', { class: 'qi__main' }, title, meta, options, noteToggle, noteInput),
+    h('div', { class: 'qi__main' }, title, meta, options, noteToggle),
     h('div', { class: 'qi__controls' }, h('div', { class: 'qi__stepper', role: 'group', 'aria-label': `Quantity of ${name}` }, minus, qty, plus), remove),
+    noteInput, // last child: it gets a full-width row of its own (QuoteItems.astro)
   );
   li.dataset.noteId = noteId;
   return li;
@@ -161,8 +166,11 @@ function updateRow(li: HTMLLIElement, item: QuoteItem) {
   toggle.hidden = !!item.note; // a note that is set stays visible
 }
 
+const root = document.documentElement;
+
 function render() {
   const items = getItems();
+  root.dataset.quote = items.length ? 'filled' : 'empty'; // public/quote-early.js sets it before first paint
   emptyState.hidden = items.length > 0;
   filledStates.forEach((el) => (el.hidden = items.length === 0));
   countLine.textContent = countLabel(items);
@@ -214,12 +222,17 @@ list.addEventListener('click', (event) => {
     const neighbour = li.nextElementSibling ?? li.previousElementSibling;
     const removed = removeItem(key);
     if (removed) {
-      // The focused button's row is gone: hand focus to the next line's Remove button, or the empty-state heading.
+      // The focused button's row is gone: park focus on the next line's Remove button, or the empty-state
+      // heading. The toast then moves it to Undo and, if Undo is dismissed unused, back to this spot.
       const next = neighbour?.isConnected ? neighbour.querySelector<HTMLElement>('[data-action="remove"]') : null;
       (next ?? document.querySelector<HTMLElement>('[data-quote-empty-title]'))?.focus({ preventScroll: true });
       showToast(`Removed ${label(removed.item)}`, {
         actionLabel: 'Undo',
-        onAction: () => restoreItem(removed.item, removed.index),
+        focusAction: true,
+        onAction: () => {
+          restoreItem(removed.item, removed.index);
+          rows.get(removed.item.key)?.focus();
+        },
       });
     }
   }
@@ -229,9 +242,15 @@ document.querySelector('[data-clear-all]')?.addEventListener('click', () => {
   const before = getItems();
   if (!before.length) return;
   before.forEach((i) => removeItem(i.key));
+  // The button left with the list: park focus on the empty-state heading, as after removing the last line.
+  document.querySelector<HTMLElement>('[data-quote-empty-title]')?.focus({ preventScroll: true });
   showToast(`Removed ${before.length} ${before.length === 1 ? 'item' : 'items'}`, {
     actionLabel: 'Undo',
-    onAction: () => before.forEach((item, index) => restoreItem(item, index)),
+    focusAction: true,
+    onAction: () => {
+      before.forEach((item, index) => restoreItem(item, index));
+      rows.get(before[0].key)?.focus();
+    },
   });
 });
 
@@ -246,6 +265,19 @@ if (shopOff) {
 
 document.addEventListener('quote:change', render);
 render();
+root.style.removeProperty('--quote-rows'); // quote-early.js reserved room for the rows until they were drawn
+
+// Another tab changed the list (a null key means all site data was cleared).
+window.addEventListener('storage', (event) => {
+  if (event.key !== null && event.key !== STORAGE_KEY) return;
+  renderCount();
+  render();
+});
+
+// Back or forward can restore this page from memory with a list that has since been sent or changed.
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) location.reload();
+});
 
 // ---------- Search index (shared by bulk paste and ?part=) ----------
 
@@ -267,7 +299,7 @@ function loadIndex() {
 const lineFromRecord = (rec: IndexRecord, qty: number, note?: string) => ({
   id: rec.i,
   title: rec.n,
-  oem: rec.o || undefined, // a part with no Hayssen number is quoted by its C&M number
+  oem: rec.o || undefined, // a part with no OEM number is quoted by its C&M number
   cm: rec.c || undefined,
   section: rec.st,
   thumb: rec.p || undefined,
@@ -280,29 +312,30 @@ const lineFromRecord = (rec: IndexRecord, qty: number, note?: string) => ({
 
 async function addFromUrl() {
   const params = new URLSearchParams(location.search);
-  const part = params.get('part')?.trim();
+  // 40 characters is longer than any part number; a longer value is junk or an attempt to overflow the list.
+  const part = [...(params.get('part') ?? '').trim()].slice(0, 40).join('').trim();
   if (!part) return;
   const qty = Math.max(1, Math.min(999, Math.round(Number(params.get('qty'))) || 1));
   // Drop the parameters first so a reload does not add the part again.
   history.replaceState(null, '', location.pathname + location.hash);
   if (shopOff) {
     addCustom({ oem: part, qty, catalog: false });
-    showToast(`Added ${qty} × ${part.toUpperCase()} (we'll look it up)`);
+    showToast(`Added ${qty} × OEM # ${part.toUpperCase()} (we'll look it up)`);
     return;
   }
   try {
     const rec = (await loadIndex()).find(part);
     if (rec) {
       addItem(lineFromRecord(rec, qty));
-      showToast(`Added ${qty} × ${rec.o || rec.c} · ${rec.n}`);
+      showToast(`Added ${qty} × ${rec.o ? `OEM # ${rec.o}` : `C&M # ${rec.c}`} · ${rec.n}`);
     } else {
       addCustom({ oem: part, qty });
-      showToast(`Added ${qty} × ${part.toUpperCase()} (not in catalog, we'll look it up)`);
+      showToast(`Added ${qty} × OEM # ${part.toUpperCase()} (not in catalog, we'll look it up)`);
     }
   } catch {
     // The index could not load: keep the number rather than lose it.
     addCustom({ oem: part, qty });
-    showToast(`Added ${qty} × ${part.toUpperCase()}`);
+    showToast(`Added ${qty} × OEM # ${part.toUpperCase()}`);
   }
 }
 
@@ -350,8 +383,9 @@ if (bulk) {
   };
 
   check.addEventListener('click', async () => {
+    if (check.getAttribute('aria-disabled') === 'true') return; // busy: aria-disabled keeps focus on the button
     if (!text.value.trim()) return showError('Paste at least one part number first.');
-    check.disabled = true;
+    check.setAttribute('aria-disabled', 'true');
     try {
       const matcher = await loadIndex();
       const res = parseBulk(text.value, matcher);
@@ -371,13 +405,14 @@ if (bulk) {
             qty.value = String(qtys[i]);
           });
           const dup = row.lines.length > 1 ? h('span', { class: 'bk__dup', text: `${row.lines.length} lines merged` }) : null;
+          const note = row.note ? h('span', { class: 'bk__note', text: `Note: ${row.note}` }) : null;
           if (row.kind === 'match') {
             const rec = row.rec;
             return h(
               'li',
               { class: 'bk__row bk__row--ok' },
               rec.p ? h('img', { src: rec.p, alt: '', width: 36, height: 48, loading: 'lazy' }) : h('span', { class: 'bk__ph' }),
-              h('div', { class: 'bk__what' }, h('strong', { text: rec.o || rec.c || '' }), h('span', { text: rec.n }), dup),
+              h('div', { class: 'bk__what' }, h('strong', { text: rec.o || rec.c || '' }), h('span', { text: rec.n }), note, dup),
               h('span', { class: 'bk__state', text: 'Matched' }),
               qty,
             );
@@ -391,7 +426,7 @@ if (bulk) {
             'li',
             { class: 'bk__row bk__row--miss' },
             h('span', { class: 'bk__ph' }),
-            h('div', { class: 'bk__what' }, h('strong', { text: row.text }), h('span', { text: 'Not in the catalog' }), dup),
+            h('div', { class: 'bk__what' }, h('strong', { text: row.text }), h('span', { text: 'Not in the catalog' }), note, dup),
             h('label', { class: 'bk__anyway', for: `bulk-add-${i}` }, box, ' Add anyway'),
             qty,
           );
@@ -402,10 +437,11 @@ if (bulk) {
       summary.textContent = parts.join(' · ');
       preview.hidden = false;
       updateAdd();
+      summary.focus(); // the button stays enabled and focused, but the result is below it: read it out and bring it into view
     } catch {
       showError('We could not load the parts list. Please try again, or describe the parts in the form.');
     } finally {
-      check.disabled = false;
+      check.removeAttribute('aria-disabled');
     }
   });
 
@@ -423,7 +459,8 @@ if (bulk) {
     result = null;
     preview.hidden = true;
     message.hidden = true;
-    bulk.open = false;
+    bulk.open = false; // the button that had focus is now hidden: take focus to the list it added to
+    document.getElementById('items-title')?.focus({ preventScroll: true });
     document.querySelector('[data-quote-items]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 }

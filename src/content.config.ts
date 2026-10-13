@@ -2,15 +2,15 @@ import { defineCollection, reference } from 'astro:content';
 import { file, glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
-// Parts catalog. One machine (Hayssen VFFS) split into sections (sections.json);
-// every part has a C&M catalog number, and most also have an OEM (Hayssen)
-// number. A part with no Hayssen number is identified by its C&M number alone.
+// Parts catalog. One machine (VFFS packaging machines) split into sections (sections.json);
+// every part has a C&M catalog number, and most also have an OEM
+// number. A part with no OEM number is identified by its C&M number alone.
 // Data: src/content/machines.json, sections.json, parts.json. Images live in
 // src/assets/parts/. Validation runs at build time in src/lib/parts.ts.
 const machines = defineCollection({
   loader: file('src/content/machines.json'),
   schema: z.object({
-    name: z.string(), // "Hayssen VFFS"
+    name: z.string(), // "VFFS Packaging Machines"
     summary: z.string(),
     models: z.array(z.string()).default([]), // owner to fill once known
     order: z.number().default(0),
@@ -59,7 +59,7 @@ const parts = defineCollection({
       name: z.string(), // cleaned display name
       nameRaw: z.string(), // exactly as in the source catalog
       description: z.string().max(600).optional(), // plain-text product description for the part page (shown only when present)
-      oem: z.string().optional(), // display form, e.g. 03187A0897; absent when the part has no Hayssen number
+      oem: z.string().optional(), // display form, e.g. 03187A0897; absent when the part has no OEM number
       oemKey: z.string().optional(), // normalized: uppercase A-Z0-9 only; set whenever oem is
       oemAlt: z.array(z.string()).default([]), // extra keys that must also match (typos as written in the source)
       oemVerify: z.boolean().default(false), // owner must confirm the number

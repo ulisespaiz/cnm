@@ -64,7 +64,7 @@ let lastSection = '';
         <select data-sort>
           <option value="best" hidden>Best match</option>
           <option value="catalog" selected>Catalog order</option>
-          <option value="pn">Part # A–Z</option>
+          <option value="pn">OEM # A–Z</option>
           <option value="name">Name A–Z</option>
         </select>
       </label>
@@ -80,10 +80,11 @@ let lastSection = '';
       <div class="plist__head" aria-hidden="true">
         <span></span>
         <span>Part</span>
-        <span>Hayssen part #</span>
+        <span>OEM #</span>
         <span>C&amp;M #</span>
         <span>Quantity</span>
       </div>
+      <p class="plist__searching">Searching…</p>
       <ol class="plist__rows" data-rows aria-label="Parts">
         {
           parts.map((p, i) => {
@@ -108,11 +109,11 @@ let lastSection = '';
         }
       </ol>
       <div class="pempty" data-empty hidden>
-        <h3 data-empty-title>No parts match</h3>
+        <h2 data-empty-title>No parts match</h2>
         <p>Send us the part number and we'll check it. {site.replyTime}.</p>
         <div class="pempty__actions">
           <button type="button" class="btn btn--red" data-request-part data-empty-request>Request this part</button>
-          <button type="button" class="btn btn--outline" data-clear>Clear filters</button>
+          <button type="button" class="btn btn--outline" data-clear data-empty-clear>Clear filters</button>
           <a class="btn btn--outline" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
         </div>
       </div>
@@ -161,9 +162,9 @@ let lastSection = '';
 
     .plist__side {
       position: sticky;
-      top: calc(var(--store-header) + 16px);
+      top: calc(var(--store-stick) + 16px);
       display: block;
-      max-height: calc(100vh - var(--store-header) - 32px);
+      max-height: calc(100vh - var(--store-stick) - 32px);
       overflow: auto;
       padding: 18px 18px 8px;
       border: 1px solid var(--color-border);

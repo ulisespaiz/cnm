@@ -1,0 +1,126 @@
+# Checks every pull request and every push to main, and can deploy main to Cloudflare Workers.
+#
+# build:  runs twice, once per parts shop state (site.store.enabled), as two matrix legs:
+#           shop on  - build, check dist/ (scripts/check-dist.mjs), `astro check` (types in
+#                      .astro, .ts and .mjs files), Playwright smoke tests
+#           shop off - the same build with the switch line in src/config/site.ts rewritten to
+#                      `enabled: false` inside the job only (nothing is committed), then
+#                      check dist/ and the Playwright tests (the shop tests skip themselves)
+# deploy: runs `wrangler deploy` from GitHub Actions, only on a push to main, only after both
+#         build legs pass, and only once the repo secret CLOUDFLARE_API_TOKEN exists.
+#
+# The deploy job is an ALTERNATIVE to Cloudflare Workers Builds (the Git integration in the
+# Cloudflare dashboard): use one or the other. With both on, every push to main is deployed
+# twice. See README "Deploying from GitHub Actions" for the switch-over steps.
+
+name: CI
+
+# Branches are checked through their pull request only (a push trigger on every branch would run
+# each PR commit twice); main is checked on push, which is also what deploys it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # A newer push replaces an older run of the same branch, but a run on main always finishes.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build:
+    name: Build and test (shop ${{ matrix.shop }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      # Let both shop states finish so one run shows every failure.
+      fail-fast: false
+      matrix:
+        shop: ['on', 'off']
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Flips the switch in this job's checkout only. check:dist and the tests read the same
+      # line, so they expect a shop-less build. The grep fails the job if the line ever changes
+      # shape (the sed would then silently leave the shop on and this leg would test nothing new).
+      - name: Turn the parts shop off
+        if: matrix.shop == 'off'
+        run: |
+          sed -i 's|enabled: true, // Parts shop switch|enabled: false, // Parts shop switch|' src/config/site.ts
+          grep -n 'enabled: false, // Parts shop switch' src/config/site.ts
+
+      - run: npm run build
+
+      - run: npm run check:dist
+
+      # Type-checks .astro, .ts and .mjs files. The types do not depend on the shop switch.
+      - name: Type-check
+        if: matrix.shop == 'on'
+        run: npm run check
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: playwright-report-shop-${{ matrix.shop }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  deploy:
+    name: Deploy to Cloudflare Workers
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    # Secrets cannot be tested in a job-level `if`, so they are mapped to env here and each
+    # step is guarded with `if: env.CLOUDFLARE_API_TOKEN != ''`. Without the secret the job
+    # only prints a notice, and Workers Builds (if connected) stays the one that deploys.
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Deploy skipped
+        if: env.CLOUDFLARE_API_TOKEN == ''
+        run: echo "::notice title=Deploy skipped::The repo secret CLOUDFLARE_API_TOKEN is not set, so nothing was deployed from GitHub Actions."
+
+      - uses: actions/checkout@v6
+        if: env.CLOUDFLARE_API_TOKEN != ''
+
+      - uses: actions/setup-node@v6
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        with:
+          node-version: 24
+          cache: npm
+
+      # wrangler.jsonc runs `npm run build` before it uploads dist/, so the dependencies are needed.
+      - run: npm ci
+        if: env.CLOUDFLARE_API_TOKEN != ''
+
+      - uses: cloudflare/wrangler-action@v3
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          # The action's default Wrangler (3.90) predates the static-assets settings in wrangler.jsonc.
+          wranglerVersion: '4'

@@ -4,6 +4,14 @@ import { site, serviceAreas } from '../config/site';
 
 const abs = (path: string) => new URL(path, site.url).href;
 
+// Where the shop works: the counties its service-area cities are in, then the cities.
+// Used by the business and by every Service so they always agree.
+const counties = ['Monterey', 'San Benito', 'Santa Cruz', 'Santa Clara'];
+export const areaServed = () => [
+  ...counties.map((county) => ({ '@type': 'AdministrativeArea', name: `${county} County, CA` })),
+  ...serviceAreas.map((name) => ({ '@type': 'City', name: `${name}, CA` })),
+];
+
 // The business entity. Every page carries it; AI and search engines use it as
 // the canonical description of the company.
 export function localBusiness(services: { name: string; url: string }[] = []) {
@@ -23,7 +31,6 @@ export function localBusiness(services: { name: string; url: string }[] = []) {
     image: [abs('/og.jpg'), abs('/logo.png')],
     telephone: site.phoneE164,
     email: site.email,
-    priceRange: 'Quote',
     currenciesAccepted: 'USD',
     address: {
       '@type': 'PostalAddress',
@@ -53,10 +60,7 @@ export function localBusiness(services: { name: string; url: string }[] = []) {
       areaServed: 'US-CA',
       availableLanguage: ['English'],
     },
-    areaServed: [
-      { '@type': 'AdministrativeArea', name: 'Monterey County, CA' },
-      ...serviceAreas.map((name) => ({ '@type': 'City', name: `${name}, CA` })),
-    ],
+    areaServed: areaServed(),
     knowsAbout: site.expertise,
     ...(services.length
       ? {
@@ -110,8 +114,8 @@ export function breadcrumbs(items: { name: string; path: string }[]) {
 }
 
 // A replacement part. No `offers` (prices are quote-only) and deliberately no
-// `brand`, `mpn` or `seller`: the Hayssen number, when the part has one, is listed
-// as a plain "Hayssen part number" property and the part is tied to the machine it
+// `brand`, `mpn` or `seller`: the OEM number, when the part has one, is listed
+// as a plain "OEM part number" property and the part is tied to the kind of machine it
 // replaces through isAccessoryOrSparePartFor, so nothing claims the part is
 // made by, or sold on behalf of, the machine's manufacturer.
 export function product(p: {
@@ -121,7 +125,7 @@ export function product(p: {
   images: string[];
   category: string;
   sku: string; // C&M number
-  oem?: string; // Hayssen part number; leave out when the part has none
+  oem?: string; // OEM part number; leave out when the part has none
 }) {
   return {
     '@context': 'https://schema.org',
@@ -132,8 +136,8 @@ export function product(p: {
     sku: p.sku,
     category: p.category,
     ...(p.images.length ? { image: p.images.map(abs) } : {}),
-    ...(p.oem ? { additionalProperty: [{ '@type': 'PropertyValue', name: 'Hayssen part number', value: p.oem }] } : {}),
-    isAccessoryOrSparePartFor: { '@type': 'Product', name: 'Hayssen VFFS packaging machine' },
+    ...(p.oem ? { additionalProperty: [{ '@type': 'PropertyValue', name: 'OEM part number', value: p.oem }] } : {}),
+    isAccessoryOrSparePartFor: { '@type': 'Product', name: 'VFFS packaging machine' },
   };
 }
 

@@ -3,10 +3,15 @@ import { Image } from 'astro:assets';
 import logo from '../assets/site/cnm-logo.png';
 import { site } from '../config/site';
 import { hoursRows } from '../lib/hours';
-import { getSections, sectionUrl } from '../lib/parts';
+import { getSections, MAIN_MACHINE, sectionUrl } from '../lib/parts';
+import { getServices, serviceUrl } from '../lib/content';
 
 const shopOn = site.store.enabled;
-const sections = shopOn ? await getSections('hayssen-vffs') : [];
+// The blue "Need a quote?" band repeats what the page already is on the quote and contact pages.
+const path = Astro.url.pathname.replace(/\/?$/, '/');
+const showCta = !['/quote/', '/quote/thanks/', '/contact/'].includes(path);
+const services = await getServices();
+const sections = shopOn ? await getSections(MAIN_MACHINE) : [];
 const hours = hoursRows();
 const year = new Date().getFullYear();
 const social = Object.entries(site.social).filter(([, url]) => url);
@@ -24,18 +29,20 @@ const company = [
 ];
 ---
 
-<footer class="site-footer">
+<footer class:list={['site-footer', { 'site-footer--no-cta': !showCta }]}>
   <div class="container">
-    <section class="cta" aria-labelledby="footer-cta">
-      <div>
-        <h2 id="footer-cta">Need a part or a quote?</h2>
-        <p>{site.replyTime}. Send a part number or a drawing, or call us.</p>
-      </div>
-      <div class="cta__actions">
-        <a class="btn btn--red" href="/quote/">Request a Quote</a>
-        <a class="btn btn--light" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
-      </div>
-    </section>
+    {showCta && (
+      <section class="cta" aria-labelledby="footer-cta">
+        <div>
+          <h2 id="footer-cta">Need a part or a quote?</h2>
+          <p>{site.replyTime}. Send a part number or a drawing, or call us.</p>
+        </div>
+        <div class="cta__actions">
+          <a class="btn btn--red" href="/quote/">Request a Quote</a>
+          <a class="btn btn--light" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
+        </div>
+      </section>
+    )}
 
     <div class:list={['cols', { 'cols--no-shop': !shopOn }]}>
       <div class="brand-col">
@@ -69,7 +76,7 @@ const company = [
       </div>
 
       {shopOn && (
-        <nav aria-labelledby="footer-shop">
+        <nav class="col-shop" aria-labelledby="footer-shop">
           <h2 class="heading" id="footer-shop">Shop</h2>
           <ul>
             <li><a href="/shop/">Parts catalog</a></li>
@@ -78,6 +85,13 @@ const company = [
           </ul>
         </nav>
       )}
+
+      <nav aria-labelledby="footer-services">
+        <h2 class="heading" id="footer-services">Services</h2>
+        <ul>
+          {services.map((s) => <li><a href={serviceUrl(s)}>{s.data.title}</a></li>)}
+        </ul>
+      </nav>
 
       <nav aria-labelledby="footer-company">
         <h2 class="heading" id="footer-company">Company</h2>
@@ -104,7 +118,7 @@ const company = [
       <p class="legal__links">
         <a href="/privacy/">Privacy Policy</a>
         <span aria-hidden="true">·</span>
-        <a href="https://ghosxt.com/" rel="noopener">Website by Ghosxt</a>
+        <a href="https://ghosxt.com/" rel="noopener nofollow">Website by Ghosxt</a>
       </p>
     </div>
   </div>
@@ -131,6 +145,11 @@ const company = [
 
   .site-footer h2 {
     margin: 0;
+  }
+
+  /* No CTA band above the columns: they already have 40px of their own */
+  .site-footer--no-cta {
+    padding-top: 0;
   }
 
   /* CTA strip */
@@ -195,7 +214,9 @@ const company = [
     }
   }
 
-  /* Columns */
+  /* Columns: brand, Shop (parts shop on only), Services, Company, Hours.
+     Phones, two columns: the brand and Hours take a full row. Shop stands in the left
+     column beside Services and Company; with the shop off, Services and Company sit side by side. */
   .cols {
     display: grid;
     gap: 32px 24px;
@@ -208,57 +229,70 @@ const company = [
     grid-column: 1 / -1;
   }
 
+  .col-shop {
+    grid-column: 1;
+    grid-row: span 2;
+  }
+
+  /* From 700px, three columns. Parts shop on: the brand takes the top row, Shop stands in the
+     left column (two rows tall) and Hours sits under Services and Company. Parts shop off: the
+     brand stands in the left column instead. No cell is left empty. */
   @media (min-width: 700px) {
     .cols {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .hours-col {
-      grid-column: auto;
-    }
-  }
-
-  @media (min-width: 1050px) {
-    .cols {
-      grid-template-columns: 1.5fr 1fr 1fr 1fr;
-      gap: 32px 40px;
+      grid-column: 2 / -1;
     }
 
-    .brand-col {
-      grid-column: auto;
-    }
-  }
-
-  /* Parts shop off: three columns (brand, Company, Hours). Company takes the full row
-     on phones. From 700px the brand sits beside Company and Hours, which stack, so no
-     cell is left empty; the desktop row puts all three side by side. */
-  .cols--no-shop > nav {
-    grid-column: 1 / -1;
-  }
-
-  @media (min-width: 700px) {
+    /* The brand column holds the email address: give it a wider share so it does not break mid-word. */
     .cols--no-shop {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1.5fr 1fr 1fr;
     }
 
     .cols--no-shop > .brand-col {
       grid-column: 1;
       grid-row: span 2;
     }
-
-    .cols--no-shop > nav {
-      grid-column: auto;
-    }
   }
 
+  /* Parts shop off, desktop: brand, Services, Company and Hours in one row. The Hours column
+     never gets narrower than its two-column rows need (13.5rem). */
   @media (min-width: 1050px) {
     .cols--no-shop {
-      grid-template-columns: 1.5fr 1fr 1fr;
+      grid-template-columns: 1.5fr 1fr 1fr minmax(13.5rem, 1.1fr);
+      gap: 32px 40px;
     }
 
     .cols--no-shop > .brand-col {
       grid-column: auto;
       grid-row: auto;
+    }
+
+    .cols--no-shop > .hours-col {
+      grid-column: auto;
+    }
+  }
+
+  /* Parts shop on, desktop: five columns need the full 1200px container for the Hours column. */
+  @media (min-width: 1200px) {
+    .cols:not(.cols--no-shop) {
+      grid-template-columns: 1.4fr 1fr 1fr 1fr minmax(13.5rem, 1.2fr);
+      gap: 32px;
+    }
+
+    .cols:not(.cols--no-shop) > .brand-col {
+      grid-column: auto;
+    }
+
+    .cols:not(.cols--no-shop) > .col-shop {
+      grid-column: auto;
+      grid-row: auto;
+    }
+
+    .cols:not(.cols--no-shop) > .hours-col {
+      grid-column: auto;
     }
   }
 

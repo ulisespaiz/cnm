@@ -22,6 +22,7 @@ const { machine } = Astro.props;
 const sections = await getSections(machine.id);
 const parts = await getParts({ machine: machine.id });
 const crumbs = [
+  { name: 'Home', path: '/' },
   { name: 'Parts Store', path: '/shop/' },
   { name: machine.data.name, path: machineUrl(machine.id) },
 ];
@@ -29,14 +30,14 @@ const jsonLd = [
   breadcrumbs(crumbs),
   itemList(
     sections.map((s) => ({ name: s.data.title, path: sectionUrl(s) })),
-    `${machine.data.name} replacement parts by section`,
+    'Replacement parts for VFFS packaging machines by section',
   ),
 ];
 ---
 
 <Base
-  title={`${machine.data.name} Parts: Find Your Part Number`}
-  description={`Replacement parts for ${machine.data.name} machines in ${sections.length} sections. Find your part by Hayssen or C&M part number. ${site.replyTime}.`}
+  title={`${machine.data.name}: Find Your Part Number`}
+  description={`Replacement parts for VFFS packaging machines in ${sections.length} sections. Find your part by OEM or C&M part number. ${site.replyTime}.`}
   jsonLd={jsonLd}
 >
   <div class="storebar">
@@ -49,7 +50,7 @@ const jsonLd = [
 
     <header class="hub__head">
       <p class="eyebrow">Parts Store</p>
-      <h1>Find your <span class="mark">{machine.data.name}</span> part number</h1>
+      <h1>Find your part number for <span class="mark">{machine.data.name}</span></h1>
       <p class="lead">{machine.data.summary}</p>
       {
         machine.data.models.length > 0 && (

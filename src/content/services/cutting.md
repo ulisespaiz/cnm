@@ -28,10 +28,10 @@ faqs:
 ---
 We offer precise cutting solutions using advanced laser, water-jet, and shearing techniques for a wide variety of materials and thicknesses. Perfect for projects requiring clean, accurate cuts with tight tolerances and excellent surface finishes.
 
-### Water-Jet Cutting
+## Water-Jet Cutting
 
 Precision cutting for various materials with our state-of-the-art water-jet technology. Perfect for complex shapes and heat-sensitive materials.
 
-### Laser Cutting
+## Laser Cutting
 
 High-precision laser cutting services with exceptional edge quality. Ideal for intricate designs and rapid production needs.

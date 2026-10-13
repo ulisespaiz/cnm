@@ -57,7 +57,7 @@ export const site = {
     leadTimeFallback: 'Lead time confirmed on your quote',
     madeTo: 'Made to match your part number, sample or print',
     disclaimer:
-      'Hayssen is a trademark of its respective owner. C&M Machine Shop Inc. is an independent machine shop and is not affiliated with, sponsored or endorsed by Hayssen or BW Packaging Systems. Part numbers are listed only to identify the machine parts our replacements fit.',
+      "OEM part numbers are the original equipment manufacturer's numbers, listed only to identify the part our replacement matches. C&M Machine Shop Inc. is an independent machine shop and is not affiliated with or endorsed by any machine manufacturer.",
   },
 
   // Topics the shop is known for; feeds schema.org knowsAbout and llms.txt.

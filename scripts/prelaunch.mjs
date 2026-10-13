@@ -1,4 +1,5 @@
-// Fails while placeholder content would ship. Run before pointing DNS at the site.
+// Fails while placeholder content would ship (TODO) or an answer from the owner is still
+// outstanding (CONFIRM). Run before pointing DNS at the site.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -15,7 +16,7 @@ for (const file of ['src/config/site.ts', ...walk('src/pages'), ...walk('src/con
   const isDraft = /^draft:\s*true/m.test(text);
   if (isDraft) continue; // drafts never reach production
   text.split('\n').forEach((line, i) => {
-    if (/\bTODO\b/.test(line)) problems.push(`${file}:${i + 1}  ${line.trim()}`);
+    if (/\b(?:TODO|CONFIRM)\b/.test(line)) problems.push(`${file}:${i + 1}  ${line.trim()}`);
   });
 }
 

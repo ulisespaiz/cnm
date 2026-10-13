@@ -32,8 +32,13 @@ const sections = await getSections(machine.id);
 const others = sections.filter((s) => s.id !== section.id);
 const title = section.data.title;
 
-const description = `${title} for Hayssen VFFS machines: ${parts.length} replacement parts listed by Hayssen or C&M part number. Add parts to a quote request.`;
+// Titles stay within 65 characters (search results cut them off): the shop name is added when it fits and
+// left off when it does not, never the words "Packaging Machines".
+const pageTitle = `${title} for VFFS Packaging Machines`;
+const withShopName = `${pageTitle} | ${site.name}`.length <= 65;
+const description = `${title} for VFFS packaging machines: ${parts.length} replacement parts listed by OEM or C&M part number. Add parts to a quote request.`;
 const crumbs = [
+  { name: 'Home', path: '/' },
   { name: 'Parts Store', path: '/shop/' },
   { name: machine.data.name, path: machineUrl(machine.id) },
   { name: title, path: sectionUrl(section) },
@@ -42,12 +47,12 @@ const jsonLd = [
   breadcrumbs(crumbs),
   itemList(
     parts.map((p) => ({ name: `${p.data.name} (${mainNumber(p.data)})`, path: partUrl(p) })),
-    `${title} for Hayssen VFFS machines`,
+    `${title} for VFFS packaging machines`,
   ),
 ];
 ---
 
-<Base title={`${title} for Hayssen VFFS Machines`} description={description} jsonLd={jsonLd}>
+<Base title={pageTitle} brand={withShopName} description={description} jsonLd={jsonLd}>
   <div class="storebar">
     <div class="container container--wide"><PartSearch variant="bar" /></div>
   </div>
@@ -57,9 +62,9 @@ const jsonLd = [
     <a class="back-link" href={machineUrl(machine.id)}>‹ {machine.data.name}</a>
 
     <header class="sec__head">
-      <p class="eyebrow">{machine.data.name} replacement parts</p>
-      <h1>{title} for Hayssen VFFS machines</h1>
-      <p class="lead">{section.data.blurb}</p>
+      <p class="eyebrow">Replacement parts for {machine.data.name}</p>
+      <h1>{title} for VFFS packaging machines</h1>
+      <p class="lead">{section.data.blurb} Find your part by its OEM part number or C&amp;M number.</p>
     </header>
 
     <PartTable parts={parts} sections={[section]} lockSection eager={6} />
@@ -90,6 +95,13 @@ const jsonLd = [
     margin-bottom: 10px;
     padding: 5px 12px;
     font-size: 0.875rem;
+  }
+
+  /* phones: the back link above the title already names the machine */
+  @media (max-width: 767px) {
+    .sec__head .eyebrow {
+      display: none;
+    }
   }
 
   .sec__head .lead {

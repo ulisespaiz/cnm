@@ -1,4 +1,7 @@
 ---
+// /quote/: the items card (QuoteItems) and the details form (QuoteForm) side by side, the part request below.
+// public/quote-early.js (a classic script from 'self': the CSP allows no inline ones) flags a returning
+// visitor's saved list before first paint, so the empty state never flashes.
 import Base from '../../layouts/Base.astro';
 import QuoteForm from '../../components/QuoteForm.astro';
 import QuoteItems from '../../components/QuoteItems.astro';
@@ -14,6 +17,7 @@ import { site } from '../../config/site';
   noindex
   hideMobileBar
 >
+  <script is:inline src="/quote-early.js" slot="head"></script>
   <section class="section quote-page" data-shop={site.store.enabled ? undefined : 'off'}>
     <div class="container">
       <p class="eyebrow">C&amp;M MACHINE SHOP</p>
@@ -35,19 +39,14 @@ import { site } from '../../config/site';
         </section>
       </div>
 
-      <details class:list={['qp__request', { 'qp__request--off': !site.store.enabled }]} id="cant-find">
+      <details class="qp__request" id="cant-find">
         <summary>
-          {site.store.enabled ? (
-            <>Can't find your part? Send us the part number</>
-          ) : (
-            <>
-              <span>Need a replacement part? Send us the part number</span>
-              <svg class="qp__chev" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5l4 4 4-4" /></svg>
-            </>
-          )}
+          <span>{site.store.enabled ? "Can't find your part? Send us the part number" : 'Need a replacement part? Send us the part number'}</span>
+          <svg class="qp__chev" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5l4 4 4-4" /></svg>
         </summary>
         <PartRequestForm compact urlPrefill={false} />
       </details>
+      {site.store.enabled && <p class="muted qp__legal">{site.store.disclaimer}</p>}
       <p class="muted qp__call">Questions? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.</p>
     </div>
   </section>
@@ -81,7 +80,8 @@ import { site } from '../../config/site';
     align-items: start;
   }
 
-  /* Phones: the list first, then the form. Desktop: form left, list right. */
+  /* The list first, then the form: stacked on phones, side by side from 900px. The columns follow the
+     DOM, so Tab order and reading order match what is on screen. */
   .qp__items {
     grid-area: items;
   }
@@ -96,8 +96,8 @@ import { site } from '../../config/site';
 
   @media (min-width: 900px) {
     .qp {
-      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-      grid-template-areas: 'form items';
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+      grid-template-areas: 'items form';
       gap: 32px;
     }
   }
@@ -135,6 +135,12 @@ import { site } from '../../config/site';
     padding: 22px 20px 20px;
   }
 
+  /* "Continue: your details" jumps here. html's scroll-padding-top (80px) already clears the sticky
+     header; the margin adds a little air, 88px from the top edge in all. */
+  #info-title {
+    scroll-margin-top: 8px;
+  }
+
   .qp__request {
     margin-top: 24px;
     border: 1px solid var(--color-border);
@@ -142,24 +148,20 @@ import { site } from '../../config/site';
     background: #fff;
   }
 
+  /* The chevron shows that it opens (shop on or off) */
   .qp__request summary {
     display: flex;
     align-items: center;
-    min-height: var(--tap);
-    padding: 0 16px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  /* Parts shop off: this is the only way to the part request, so show that it opens. */
-  .qp__request--off summary {
     justify-content: space-between;
     gap: 12px;
-    padding: 12px 16px;
+    min-height: var(--tap);
+    padding: 14px 16px;
+    font-weight: 600;
+    cursor: pointer;
     list-style: none;
   }
 
-  .qp__request--off summary::-webkit-details-marker {
+  .qp__request summary::-webkit-details-marker {
     display: none;
   }
 
@@ -168,7 +170,7 @@ import { site } from '../../config/site';
     transition: transform 0.15s;
   }
 
-  .qp__request--off[open] .qp__chev {
+  .qp__request[open] .qp__chev {
     transform: rotate(180deg);
   }
 
@@ -176,6 +178,12 @@ import { site } from '../../config/site';
     margin: 0 12px 12px;
     border: 0;
     padding: 8px 4px 4px;
+  }
+
+  .qp__legal {
+    margin: 16px 0 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
   }
 
   .qp__call {

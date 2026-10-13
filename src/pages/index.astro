@@ -4,7 +4,7 @@ import Base from '../layouts/Base.astro';
 import FeaturedParts from '../components/FeaturedParts.astro';
 import { site } from '../config/site';
 import { getEquipment, getServices, serviceUrl } from '../lib/content';
-import { getParts, getSections, sectionUrl } from '../lib/parts';
+import { getParts, getSections, MAIN_MACHINE, sectionUrl } from '../lib/parts';
 import { faqPage } from '../lib/schema';
 import banner from '../assets/work/our-work-2.jpg';
 import shopPhoto from '../assets/site/front-office-cnm.jpeg';
@@ -21,7 +21,7 @@ const services = await getServices();
 const machines = await getEquipment();
 const parts = shopOn ? await getParts() : [];
 const sections = shopOn
-  ? (await getSections('hayssen-vffs')).map((s) => ({
+  ? (await getSections(MAIN_MACHINE)).map((s) => ({
       title: s.data.title,
       href: sectionUrl(s),
       count: parts.filter((p) => p.data.section.id === s.id).length,
@@ -30,14 +30,15 @@ const sections = shopOn
 // Owner's headline: "25 years of precision" (fixed, not computed).
 const yearsInBusiness = 25;
 
-// Real C&M shop photos only, each captioned for the machine it shows.
+// Real C&M shop photos only, each captioned for the machine it shows. `alt` says what the
+// photo looks like; the caption beside it already names the machine, so the alt must not repeat it.
 const work = [
-  { src: finishing, title: 'Wide-Belt Finishing', text: 'Timesavers 32 RB Series wide-belt machine for deburring and finishing metal parts.' },
-  { src: machiningCenter, title: 'CNC Machining Center', text: 'Vertical machining center with Kurt vises holding the workpieces.' },
-  { src: lathe, title: 'Engine Lathe', text: 'Sharp 22120B engine lathe with digital readout for turning cylindrical components.' },
-  { src: waterjet, title: 'Waterjet Cutting', text: 'Flow waterjet cutting table in our Salinas shop.' },
-  { src: laser, title: 'Fiber Laser Cutting', text: 'Fiber laser cutting system for stainless steel, aluminum, brass and mild steel.' },
-  { src: verticalMill, title: 'CNC Vertical Mill', text: 'CNC vertical milling machine for precision milling in our shop.' },
+  { src: finishing, alt: 'White machine with a dark safety door and a control panel, abrasive belts hanging beside it', title: 'Wide-Belt Finishing', text: 'Timesavers 32 RB Series wide-belt machine for deburring and finishing metal parts.' },
+  { src: machiningCenter, alt: 'Open machine door with three blue vises on the table below the spindle', title: 'CNC Machining Center', text: 'Vertical machining center with Kurt vises holding the workpieces.' },
+  { src: lathe, alt: 'Long lathe bed with a chuck, a tailstock and a digital readout, bar stock racked behind', title: 'Engine Lathe', text: 'Sharp 22120B engine lathe with digital readout for turning cylindrical components.' },
+  { src: waterjet, alt: 'Large cutting table with a gantry carrying the C&M shop sign, in a corrugated-steel shop', title: 'Waterjet Cutting', text: 'Flow waterjet cutting table in our Salinas shop.' },
+  { src: laser, alt: 'Black enclosure with a long slatted cutting table and a dust collector with six round filters', title: 'Fiber Laser Cutting', text: 'Fiber laser cutting system for stainless steel, aluminum, brass and mild steel.' },
+  { src: verticalMill, alt: 'White and gray machine with a control panel and a window onto the work area', title: 'CNC Vertical Mill', text: 'CNC vertical milling machine for precision milling in our shop.' },
 ];
 
 const faqs = [
@@ -48,8 +49,8 @@ const faqs = [
   ...(shopOn
     ? [
         {
-          q: 'Do you sell replacement parts for Hayssen machines?',
-          a: `Yes. Our parts catalog lists ${parts.length} replacement parts for Hayssen VFFS machines, searchable by Hayssen part number or C&M number. If your part is not listed, send us the number and we will quote it.`,
+          q: 'Do you sell replacement parts for VFFS packaging machines?',
+          a: `Yes. Our parts catalog lists ${parts.length} replacement parts for vertical form fill seal (VFFS) packaging machines, matched by OEM part number and searchable by OEM part number or C&M number. If your part is not listed, send us the number and we will quote it.`,
         },
       ]
     : []),
@@ -71,19 +72,19 @@ const faqs = [
 ---
 
 <Base
-  title={`${site.legalName.replace(/\.$/, '')} | Machine Shop in Salinas, CA`}
+  title={`${site.name} | CNC Machining & Fabrication in ${site.address.city}, CA`}
   description={site.description}
   jsonLd={[faqPage(faqs)]}
 >
   <section class="hero">
     <div class="container">
-      <p class="eyebrow">Founded in {site.founded}</p>
+      <p class="eyebrow">Founded in {site.founded} · {site.address.city}, {site.address.region}</p>
       <h1>{yearsInBusiness} years of <span class="mark">precision.</span><br /> Still your machine shop.</h1>
       <p class="lead">
         {shopOn ? (
           <>
-            Custom machining &amp; fabrication services, and a parts store with {parts.length} replacement parts for Hayssen
-            VFFS machines.
+            Custom machining &amp; fabrication services, and a parts store with {parts.length} replacement parts for vertical
+            form fill seal (VFFS) packaging machines.
           </>
         ) : (
           <>Custom machining and fabrication, plus replacement parts made to your drawing, sample or part number for food processing and packaging equipment.</>
@@ -92,7 +93,7 @@ const faqs = [
 
       {shopOn && (
         <form class="part-search" action="/shop/" method="get" role="search">
-          <label for="hero-q">Search by Hayssen or C&amp;M part number</label>
+          <label for="hero-q">Search by OEM or C&amp;M part number</label>
           <div class="part-search__row">
             <input
               id="hero-q"
@@ -130,10 +131,9 @@ const faqs = [
     <Image
       src={banner}
       alt="CNC vertical machining center with Kurt vises and the C&M logo on the door, inside the C&M shop"
-      widths={[640, 1024, 1280]}
+      widths={[640, 768, 1024, 1280]}
       sizes="100vw"
       loading="eager"
-      fetchpriority="high"
     />
     <div class="banner__overlay">
       <div class="container">
@@ -151,8 +151,8 @@ const faqs = [
             <h2>The smarter way to get your <span class="text-blue">parts.</span></h2>
           </div>
           <p class="lead">
-            Replacement parts for Hayssen VFFS machines, made to match your part number, sample or print. Search by
-            Hayssen or C&amp;M part number, add what you need to your quote list, and send it. Nothing to pay online.
+            Replacement parts for VFFS packaging machines, made to match your part number, sample or print. Search by
+            OEM or C&amp;M part number, add what you need to your quote list, and send it. Nothing to pay online.
           </p>
         </div>
 
@@ -160,7 +160,7 @@ const faqs = [
           <div class="store__count">
             <p class="store__eyebrow">Parts catalog</p>
             <p class="store__num">{parts.length}</p>
-            <p class="store__label">replacement parts for Hayssen VFFS machines, in {sections.length} sections</p>
+            <p class="store__label">replacement parts for VFFS packaging machines, in {sections.length} sections</p>
             <div class="store__actions">
               <a class="btn btn--red" href="/shop/">Browse all parts</a>
               <a class="btn btn--light" href="/quote/#bulk">Paste a part list</a>
@@ -195,7 +195,7 @@ const faqs = [
           <article class="bento__card">
             <h3>3 steps to your part</h3>
             <ol class="steps">
-              <li>Search by Hayssen or C&amp;M part number</li>
+              <li>Search by OEM or C&amp;M part number</li>
               <li>Send your quote request</li>
               <li>Pick up in {site.address.city}, or ask about shipping</li>
             </ol>
@@ -228,6 +228,10 @@ const faqs = [
           and laser cutting to custom fabrication and blueprint-based projects, we handle work of any scale and
           complexity. Our skilled team combines advanced machinery with craftsmanship to turn your concepts into
           reality.
+        </p>
+        <p>
+          Based in {site.address.city}, we serve customers across the Monterey Bay area and beyond.
+          <a class="areas-link" href="/service-areas/">See the areas we serve</a>.
         </p>
         <div class="hero__actions">
           <a class="btn btn--dark" href="/about/">Learn more about us</a>
@@ -278,7 +282,7 @@ const faqs = [
       <ul class="gallery" tabindex="0" aria-label="Recent work samples">
         {work.map((w) => (
           <li>
-            <Image src={w.src} alt={`${w.title}: ${w.text}`} widths={[360, 560]} sizes="(min-width: 900px) 360px, 80vw" />
+            <Image src={w.src} alt={w.alt} widths={[360, 560]} sizes="(min-width: 900px) 360px, 80vw" />
             <h3>{w.title}</h3>
             <p class="muted">{w.text}</p>
           </li>
@@ -310,7 +314,8 @@ const faqs = [
   }
 
   .hero h1 {
-    max-width: 16ch;
+    /* em, not ch: ch follows the font, so the fallback and Geist gave different widths and rewrapped the headline */
+    max-width: 11.25em;
   }
 
   .hero__actions {
@@ -348,7 +353,7 @@ const faqs = [
     min-width: 0;
     min-height: var(--tap);
     padding: 0 14px;
-    border: 2px solid var(--color-border);
+    border: 2px solid var(--color-field-border);
     border-radius: var(--radius);
     background: #fff;
     color: inherit;
@@ -448,6 +453,7 @@ const faqs = [
     font-weight: 700;
     line-height: 1.1;
     letter-spacing: -0.03em;
+    text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
   }
 
   .split-head {
@@ -644,6 +650,13 @@ const faqs = [
     .about-split {
       grid-template-columns: 1.2fr 1fr;
     }
+  }
+
+  /* One box even when the sentence wraps: the tap target is 44px+ tall and the text stays where it was */
+  .areas-link {
+    display: inline-block;
+    padding-block: 12px;
+    margin-block: -12px;
   }
 
   .about-split__media {

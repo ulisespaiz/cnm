@@ -12,11 +12,39 @@ const crumbs = [
   { name: 'Home', path: '/' },
   { name: 'Service Areas', path: '/service-areas/' },
 ];
+
+// County of every city in serviceAreas (site.ts). A city missing here stops the build, so a
+// new city is never left off the page or listed under the wrong county.
+const counties = ['Monterey County', 'San Benito County', 'Santa Cruz County', 'Santa Clara County'] as const;
+const countyOf: Record<(typeof serviceAreas)[number], (typeof counties)[number]> = {
+  Salinas: 'Monterey County',
+  Monterey: 'Monterey County',
+  'Carmel-by-the-Sea': 'Monterey County',
+  'Pacific Grove': 'Monterey County',
+  Seaside: 'Monterey County',
+  Marina: 'Monterey County',
+  Castroville: 'Monterey County',
+  Prunedale: 'Monterey County',
+  Gonzales: 'Monterey County',
+  Soledad: 'Monterey County',
+  Hollister: 'San Benito County',
+  Watsonville: 'Santa Cruz County',
+  Gilroy: 'Santa Clara County',
+  'Morgan Hill': 'Santa Clara County',
+  'San Jose': 'Santa Clara County',
+};
+const unplaced = serviceAreas.filter((city) => !countyOf[city]);
+if (unplaced.length) throw new Error(`service-areas: add a county for ${unplaced.join(', ')}`);
+const groups = counties.map((name) => ({
+  name,
+  id: `county-${name.toLowerCase().replace(/\s+/g, '-')}`,
+  cities: serviceAreas.filter((city) => countyOf[city] === name),
+}));
 ---
 
 <Base
-  title="Service Areas"
-  description={`${site.name} serves ${serviceAreas.slice(0, 6).join(', ')} and the greater Monterey Bay area.`}
+  title="Service Areas in Monterey Bay & Beyond"
+  description={`Machine shop in ${site.address.city} serving Monterey County, Hollister, Watsonville, Gilroy and San Jose. Machining, cutting, welding and fabrication, with local pickup.`}
   jsonLd={[breadcrumbs(crumbs)]}
 >
   <section class="section">
@@ -24,11 +52,21 @@ const crumbs = [
       <Breadcrumbs items={crumbs} />
       <h1>Service Areas</h1>
       <p>Based in {site.address.city}, we serve customers across Monterey, San Benito, Santa Cruz and Santa Clara counties.</p>
-      <ul class="area-list">
-        {serviceAreas.map((city) => (
-          <li>{pageByCity.has(city) ? <a href={pageByCity.get(city)}>{city}</a> : city}</li>
-        ))}
-      </ul>
+      <address class="shop">
+        <strong>{site.legalName}</strong>
+        <span>{site.address.street}, {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}</span>
+        <a href={`tel:${site.phoneE164}`}>{site.phone}</a>
+      </address>
+      {groups.map((g) => (
+        <section class="county" aria-labelledby={g.id}>
+          <h2 id={g.id}>{g.name}</h2>
+          <ul class="area-list">
+            {g.cities.map((city) => (
+              <li>{pageByCity.has(city) ? <a href={pageByCity.get(city)}>{city}</a> : city}</li>
+            ))}
+          </ul>
+        </section>
+      ))}
       <p class="muted">Don't see your city? <a href="/contact/">Ask us</a>, we may still be able to help.</p>
     </div>
   </section>
@@ -36,10 +74,32 @@ const crumbs = [
 </Base>
 
 <style>
+  .shop {
+    display: grid;
+    gap: 2px;
+    margin: 0 0 24px;
+    font-style: normal;
+  }
+
+  /* Phone number is a tap target: 44px minimum */
+  .shop a {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 44px;
+    font-weight: 600;
+  }
+
+  .county h2 {
+    margin: 32px 0 4px;
+    font-size: 1.4rem;
+  }
+
   .area-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
     gap: 8px 20px;
+    margin: 0 0 16px;
     padding: 0;
     list-style: none;
   }

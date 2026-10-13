@@ -4,7 +4,8 @@
 
 :root {
   --store-header: 73px; /* sticky site header height */
-  --store-bar: 64px; /* sticky search bar under the header */
+  --store-bar: 65px; /* sticky search bar under the header */
+  --store-stick: var(--store-header); /* where the list's sticky parts stick; see html:has(.storebar) below */
   --oem-font: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 }
 
@@ -47,7 +48,7 @@
   white-space: nowrap;
 }
 
-/* A part with no Hayssen number: muted placeholder in the Hayssen column; the C&M # is its main number */
+/* A part with no OEM number: muted placeholder in the OEM column; the C&M # is its main number */
 .oem-none {
   color: var(--color-muted);
   font-size: 0.9rem;
@@ -136,9 +137,19 @@
   display: inline-flex;
   flex: none;
   overflow: hidden;
-  border: 1px solid #c9c9c9;
+  border: 1px solid var(--color-field-border);
   border-radius: 10px;
   background: #fff;
+}
+
+/* the box clips (overflow: hidden), so the focus ring sits inside the buttons and the field */
+.qty:focus-within {
+  border-color: var(--color-accent);
+}
+
+.qty__btn:focus-visible,
+.qty__input:focus-visible {
+  outline-offset: -3px;
 }
 
 .qty__btn {
@@ -198,21 +209,25 @@
 
 .plist__tools {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .plist__sort {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   font-weight: 600;
 }
 
 .plist__sort select {
+  max-width: 100%;
   min-height: 48px;
   padding: 0 36px 0 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-field-border);
   border-radius: var(--radius);
   background: #fff;
   color: inherit;
@@ -277,7 +292,7 @@
 
 .phead {
   position: sticky;
-  top: var(--store-header);
+  top: var(--store-stick);
   z-index: 3;
   display: flex;
   align-items: center;
@@ -348,6 +363,7 @@
   grid-area: thumb;
   align-self: start;
   width: 60px;
+  text-decoration: none; /* the "No photo" text sits in a link */
 }
 
 .prow__main {
@@ -413,7 +429,9 @@
   display: none;
 }
 
-@media (min-width: 1024px) {
+/* The five-column table needs about 1200px with the filter sidebar beside it: below that the name
+   column shrinks to nothing, so tablets and small laptops keep the compact row above. */
+@media (min-width: 1200px) {
   .plist__rows,
   .plist__head {
     --cols: 72px minmax(0, 1fr) 196px 88px 300px;
@@ -421,12 +439,14 @@
 
   .plist__head {
     position: sticky;
-    top: var(--store-header);
+    top: var(--store-stick);
     z-index: 4;
     display: grid;
     grid-template-columns: var(--cols);
+    align-items: center;
     gap: 0 14px;
-    padding: 10px 16px;
+    height: 38px; /* the .phead below sticks 38px under it */
+    padding: 0 16px;
     border: 1px solid var(--color-border);
     border-bottom: 0;
     border-radius: var(--radius) var(--radius) 0 0;
@@ -443,7 +463,7 @@
   }
 
   .phead {
-    top: calc(var(--store-header) + 38px);
+    top: calc(var(--store-stick) + 38px);
   }
 
   .prow {
@@ -491,8 +511,10 @@
   text-align: center;
 }
 
-.pempty h3 {
+/* an h2 for the page outline, sized as the h3 it replaced */
+.pempty h2 {
   margin-bottom: 0.4em;
+  font-size: 1.25rem;
 }
 
 .pempty__actions {
@@ -505,6 +527,19 @@
 
 .pempty[hidden] {
   display: none;
+}
+
+/* "Searching…" stands in for the rows until the search index is ready (see html[data-q] below) */
+.plist__searching {
+  display: none;
+  margin: 0;
+  padding: 32px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: #333;
+  font-weight: 600;
+  text-align: center;
 }
 
 /* ---------- filters ---------- */
@@ -664,6 +699,68 @@ body:has(dialog[open]) {
   background: rgb(255 255 255 / 0.97);
 }
 
+/* Part pages on phones: the bar scrolls away with the page and does not take sticky height. */
+@media (max-width: 767px) {
+  .storebar--static {
+    position: static;
+  }
+}
+
+/* The sticky stack: the site header, the search bar under it (only while it is sticky) and, in the
+   list, the column header (desktop) and the section header (store home). --store-stick is where the
+   list's parts stick; scroll-padding keeps a focused control out from under all of it. Pages
+   without these keep the default in global.css. */
+html:has(.storebar) {
+  --store-stick: calc(var(--store-header) + var(--store-bar));
+  scroll-padding-top: calc(var(--store-stick) + 16px);
+}
+
+@media (max-width: 767px) {
+  html:has(.storebar--static) {
+    --store-stick: var(--store-header);
+  }
+}
+
+html:has([data-plist] .phead) {
+  scroll-padding-top: calc(var(--store-stick) + 44px + 16px);
+}
+
+@media (min-width: 1200px) {
+  html:has([data-plist] .plist__head) {
+    scroll-padding-top: calc(var(--store-stick) + 38px + 16px);
+  }
+
+  html:has([data-plist] .phead) {
+    scroll-padding-top: calc(var(--store-stick) + 38px + 44px + 16px);
+  }
+}
+
+/* Search landing: public/shop-early.js sets html[data-q] before first paint when the store home is
+   opened with ?q=, and part-filter.ts sets it for a search made on the page. The browse blocks give
+   way to the results, and until the index-filtered list is ready (html[data-q-ready]) the rows and
+   the request form wait behind one "Searching…" line, so nothing above or inside the list collapses
+   after first paint. The footer would sit right under that short line and then be pushed off the
+   screen by the results (a big layout shift), so it stays invisible, in place, until then.
+   Without JavaScript neither attribute is set and nothing is hidden. */
+html[data-q] .shop__tiles,
+html[data-q] .shop__trust,
+html[data-q] .shop__cant {
+  display: none;
+}
+
+html[data-q]:not([data-q-ready]) .plist__searching {
+  display: block;
+}
+
+html[data-q]:not([data-q-ready]) .plist__rows,
+html[data-q]:not([data-q-ready]) .shop__request {
+  display: none;
+}
+
+html[data-q]:not([data-q-ready]) .site-footer {
+  visibility: hidden;
+}
+
 .psearch {
   position: relative;
   width: 100%;
@@ -689,7 +786,7 @@ body:has(dialog[open]) {
   width: 100%;
   min-height: 52px;
   padding: 0 16px 0 48px;
-  border: 2px solid #c9c9c9;
+  border: 2px solid var(--color-field-border);
   border-radius: var(--radius);
   background: #fff;
   color: #111;
@@ -744,6 +841,14 @@ body:has(dialog[open]) {
   display: none;
 }
 
+/* The panel floats over whatever sits under the search box. The page regions marked data-ps-under
+   (store home: tiles, "can't find it", trust strip, parts list) are hidden while it is open: nothing
+   there can be used through the panel, and a sliver of a link left showing under the panel's bottom
+   edge is a target too small to hit (WCAG 2.5.8). They keep their space, so nothing moves. */
+html[data-ps-open] [data-ps-under] {
+  visibility: hidden;
+}
+
 .ps-list {
   margin: 0;
   padding: 0;
@@ -758,7 +863,8 @@ body:has(dialog[open]) {
   border-bottom: 1px solid #eee;
 }
 
-.ps-hit[aria-selected='true'] {
+.ps-hit:hover,
+.ps-hit:focus-within {
   background: var(--color-tint);
 }
 
@@ -772,6 +878,12 @@ body:has(dialog[open]) {
   padding: 8px 8px 8px 12px;
   color: inherit;
   text-decoration: none;
+}
+
+/* the panel scrolls (overflow: auto), which would clip a ring drawn outside the link */
+.ps-hit__link:focus-visible,
+.ps-more:focus-visible {
+  outline-offset: -3px;
 }
 
 .ps-hit__thumb {
@@ -906,6 +1018,7 @@ body:has(dialog[open]) {
   font-size: 0.9rem;
 }
 
+/* the sticky bars are already cleared by scroll-padding on <html> */
 #request {
-  scroll-margin-top: calc(var(--store-header) + 16px);
+  scroll-margin-top: 8px;
 }

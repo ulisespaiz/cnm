@@ -29,7 +29,7 @@ export async function photoOf(img: Img): Promise<Thumb> {
 }
 
 // Everything the add-to-quote button needs, as data attributes. A part with no
-// Hayssen number carries an empty data-oem; the C&M number identifies it.
+// OEM number carries an empty data-oem; the C&M number identifies it.
 export async function addData(part: Part, sectionTitle: string) {
   const thumb = await thumbOf(part.data.images[0]);
   return {
@@ -59,4 +59,4 @@ export function attrChips(part: Part) {
   return [a.width ? `${a.width}″` : '', a.side ?? '', a.size ?? ''].filter(Boolean);
 }
 
-export const SHOP_DESCRIPTION_SUFFIX = 'Replacement part for Hayssen VFFS machines. Request a quote.';
+export const SHOP_DESCRIPTION_SUFFIX = 'Replacement part for VFFS packaging machines. Request a quote.';
