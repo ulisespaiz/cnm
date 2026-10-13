@@ -99,13 +99,46 @@ const { data } = Astro.props;
     display: inline;
   }
 
+  /* The label must never leave the blue button (it is white: outside the button it vanishes). Little side padding, and
+     it wraps onto a second line when the text is enlarged. */
   .addbar :global(.padd__add) {
     min-width: 0;
+    padding: 4px 8px;
+    white-space: normal;
+    line-height: 1.15;
   }
 
-  @media (min-width: 768px) {
+  /* 320px wide: call button, quantity box and Add to Quote have to share 288px. Tighter bar, narrower stepper. */
+  @media (max-width: 22.4375em) {
+    .addbar {
+      gap: 6px;
+      padding-inline: 8px;
+    }
+
+    .addbar :global(.qty__btn) {
+      width: 38px;
+    }
+
+    .addbar :global(.qty__input) {
+      width: 42px;
+    }
+
+    .addbar :global(.padd) {
+      gap: 6px;
+    }
+  }
+
+  @media (min-width: 48em) {
     .addbar {
       display: none;
+    }
+  }
+
+  /* Very short window (400% zoom, a phone on its side): the bar sits in the page, right under the Add block. */
+  @media (max-height: 32.5em) {
+    .addbar {
+      position: static;
+      box-shadow: none;
     }
   }
 </style>

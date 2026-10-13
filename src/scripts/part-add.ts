@@ -5,6 +5,7 @@
 // hides the control that had focus, so focus is moved to the one that replaces it.
 import { addItem, lineCount } from './quote-store';
 import { showToast } from './toast';
+import { announce } from './announce';
 import './copy';
 
 export interface PartData {
@@ -48,11 +49,22 @@ const dataOf = (el: HTMLElement): PartData => ({
 });
 
 const timers = new WeakMap<HTMLElement, number>();
+let qtyTimer: number | undefined;
 
-function flash(btn: HTMLElement) {
+// The + and - buttons keep focus and the number changes next to them: say the new quantity once the presses stop.
+function announceQty(input: HTMLInputElement) {
+  window.clearTimeout(qtyTimer);
+  qtyTimer = window.setTimeout(() => announce(`Quantity ${input.value}`), 400);
+}
+
+// For 1.5 s the button reads "✓ Added". Its accessible name changes with it ("Added: <number>"), so what a voice-control user
+// sees and can say ("click Added") is part of the name (WCAG 2.5.3, Label in Name); the idle name comes back with the label.
+function flash(btn: HTMLElement, number: string) {
   const label = btn.querySelector<HTMLElement>('[data-add-label]');
   if (label && label.dataset.idle === undefined) label.dataset.idle = label.textContent ?? '';
+  if (btn.dataset.idleName === undefined) btn.dataset.idleName = btn.getAttribute('aria-label') ?? '';
   if (label) label.textContent = '✓ Added';
+  btn.setAttribute('aria-label', `Added: ${number}`);
   btn.dataset.state = 'added';
   window.clearTimeout(timers.get(btn));
   timers.set(
@@ -60,6 +72,8 @@ function flash(btn: HTMLElement) {
     window.setTimeout(() => {
       delete btn.dataset.state;
       if (label) label.textContent = label.dataset.idle ?? 'Add to Quote';
+      if (btn.dataset.idleName) btn.setAttribute('aria-label', btn.dataset.idleName);
+      else btn.removeAttribute('aria-label');
     }, 1500),
   );
 }
@@ -75,7 +89,10 @@ document.addEventListener('click', (event) => {
   const step = target.closest<HTMLElement>('[data-step]');
   if (step) {
     const input = step.closest('[data-qtybox]')?.querySelector<HTMLInputElement>('[data-qty]');
-    if (input) input.value = String(clampQty(Number(input.value) + Number(step.dataset.step)));
+    if (input) {
+      input.value = String(clampQty(Number(input.value) + Number(step.dataset.step)));
+      announceQty(input);
+    }
     return;
   }
 
@@ -93,8 +110,9 @@ document.addEventListener('click', (event) => {
     if (!host) return;
     const bar = add.closest<HTMLElement>('[data-addbar]');
     const barShown = !!bar && getComputedStyle(bar).display !== 'none';
-    addPart(dataOf(host), readQty(host), { toast: !barShown });
-    flash(add);
+    const part = dataOf(host);
+    addPart(part, readQty(host), { toast: !barShown });
+    flash(add, part.oem || part.cm);
     if (bar) {
       bar.dataset.state = 'added';
       bar.querySelector<HTMLElement>('.addbar__view')?.focus();

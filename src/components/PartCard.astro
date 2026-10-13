@@ -15,6 +15,8 @@ interface Props {
 
 const { part, eager = false } = Astro.props;
 const { data } = part;
+// The photo has an empty alt on purpose: the whole card is one link, and its text already gives the part's name and
+// number. A description in the alt would make a screen reader read the name and number twice (the part page has it).
 const photo = data.images[0];
 const section = await getEntry(data.section);
 ---
@@ -25,7 +27,7 @@ const section = await getEntry(data.section);
       photo ? (
         <Image
           src={photo}
-          alt={data.imageAlt}
+          alt=""
           widths={[160, 250]}
           sizes="(min-width: 900px) 250px, 45vw"
           loading={eager ? 'eager' : 'lazy'}

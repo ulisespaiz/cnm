@@ -69,6 +69,7 @@ const jsonLd = [
     </div>
 
     <section class="shop__list" id="all-parts" data-ps-under aria-labelledby="all-title">
+      <a class="shop__skip" href="#request">Skip the parts list</a>
       <h2 id="all-title" class="shop__h2 shop__h2--list">All parts <span class="muted">· <a href={machineUrl(machineId)}>How to find your part number</a></span></h2>
       <PartTable parts={parts} sections={sections} grouped />
     </section>
@@ -142,6 +143,25 @@ const jsonLd = [
     font-weight: 600;
   }
 
+  /* The list holds every part, hundreds of Tab stops: this link is hidden until it has keyboard focus, then jumps to the part request form after the list */
+  .shop__skip:not(:focus) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .shop__skip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
   .shop__h2 {
     margin: 0 0 10px;
     font-size: 1.2rem;
@@ -211,7 +231,7 @@ const jsonLd = [
     font-weight: 600;
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .shop {
       gap: 20px;
       padding-block: 32px 16px;

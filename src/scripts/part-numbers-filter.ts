@@ -47,8 +47,9 @@ function init(root: HTMLElement) {
   const input = root.querySelector<HTMLInputElement>('input')!;
   const status = root.querySelector<HTMLElement>('[data-pn-status]')!;
   const empty = root.querySelector<HTMLElement>('[data-pn-empty]')!;
-  const table = document.querySelector<HTMLTableElement>('[data-pn-table]');
-  if (!table) return;
+  const found = document.querySelector<HTMLTableElement>('[data-pn-table]');
+  if (!found) return;
+  const table: HTMLTableElement = found;
 
   const rows: Row[] = [...table.querySelectorAll<HTMLElement>('tbody tr')].map((el) => {
     const key = el.dataset.k ?? '';
@@ -103,6 +104,15 @@ function init(root: HTMLElement) {
     return strict;
   }
 
+  // The rows change on every key; the spoken count waits until typing pauses (a screen reader would otherwise say
+  // "Showing 4", "Showing 0", "Showing 9" ... for each keystroke).
+  let statusTimer: number | undefined;
+  const say = (text: string) => {
+    window.clearTimeout(statusTimer);
+    if (!text) status.textContent = '';
+    else statusTimer = window.setTimeout(() => (status.textContent = text), 600);
+  };
+
   function apply() {
     const test = matcher(input.value);
     let shown = 0;
@@ -111,8 +121,11 @@ function init(root: HTMLElement) {
       r.el.hidden = !show;
       if (show) shown++;
     }
-    status.textContent = test ? `Showing ${shown} of ${rows.length} parts` : '';
+    say(test ? `Showing ${shown} of ${rows.length} parts` : '');
     empty.hidden = !test || shown > 0;
+    // With every row hidden the table would be a header with an empty body, which is invalid table markup for a screen
+    // reader; the "No part in the list matches that" line above stands in for it.
+    table.hidden = !!test && shown === 0;
   }
 
   input.addEventListener('input', apply);

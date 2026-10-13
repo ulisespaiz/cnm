@@ -9,3 +9,6 @@ export function scrollToEl(el: HTMLElement | null) {
   requestAnimationFrame(() => requestAnimationFrame(jump));
   window.setTimeout(jump, 250);
 }
+
+/** 'smooth', or 'auto' (an instant jump) for a reader who asked their system to reduce motion (WCAG 2.3.3). */
+export const scrollBehavior = (): ScrollBehavior => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');

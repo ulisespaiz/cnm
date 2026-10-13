@@ -5,6 +5,7 @@
 // give way to the results, see store.css); html[data-q-ready] says the index-filtered list is
 // on screen, or that the index failed. public/shop-early.js sets data-q before first paint.
 import { loadIndex, search } from './part-search';
+import { scrollBehavior } from './scroll-to';
 
 const FACETS = ['section', 'type', 'width', 'side'] as const;
 type Facet = (typeof FACETS)[number];
@@ -93,6 +94,7 @@ function init(root: HTMLElement) {
           const n = rows.filter((r) => r[f] === box.value && pass(r, ranks, f)).length;
           const label = box.closest<HTMLElement>('label')!;
           label.querySelector('[data-fcount]')!.textContent = String(n);
+          label.querySelector('[data-funit]')!.textContent = n === 1 ? ' part' : ' parts';
           label.hidden = n === 0 && !box.checked;
           if (!label.hidden) any++;
         });
@@ -270,14 +272,14 @@ function init(root: HTMLElement) {
 
   document.addEventListener('partsearch:apply', ((e: CustomEvent<{ query: string; fromInput?: boolean }>) => {
     setQuery(e.detail.query, false);
-    if (e.detail.query && !e.detail.fromInput) reveal('smooth');
+    if (e.detail.query && !e.detail.fromInput) reveal(scrollBehavior());
   }) as EventListener);
 
   // Mobile: the filter panel lives in a bottom sheet; desktop: in the sidebar.
   if (form && sheet) {
     const sideHost = root.querySelector<HTMLElement>('[data-side-host]')!;
     const sheetHost = root.querySelector<HTMLElement>('[data-sheet-host]')!;
-    const mq = matchMedia('(min-width: 1024px)');
+    const mq = matchMedia('(min-width: 64em)');
     const place = () => {
       (mq.matches ? sideHost : sheetHost).append(form);
       if (mq.matches && sheet.open) sheet.close();

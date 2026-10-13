@@ -46,6 +46,9 @@ const services = (await getServices()).map((s) => ({ name: s.data.title, url: se
   </head>
   <body class:list={{ 'no-mobile-bar': hideMobileBar }}>
     <a class="skip-link" href="#main">Skip to content</a>
+    <!-- Live region for src/scripts/announce.ts (copy results, quantity changes). It exists before the first message, so a screen
+         reader already knows it. At the top of the page, not the end: a hidden box at the end would add a pixel of scroll height. -->
+    <div id="sr-status" class="visually-hidden" role="status" aria-live="polite"></div>
     <Header />
     <main id="main" tabindex="-1">
       <slot />

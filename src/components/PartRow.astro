@@ -57,6 +57,7 @@ const add = await addData(part, sectionTitle);
       {d.attrs.side && <span class="chip-attr">{d.attrs.side}</span>}
     </div>
   </div>
+  <div class="prow__nums">
   <div class="prow__oem">
     {
       d.oem ? (
@@ -74,5 +75,6 @@ const add = await addData(part, sectionTitle);
     }
   </div>
   <div class:list={['prow__cm', { 'prow__cm--main': !d.oem }]}><span class="visually-hidden">C&M number </span>{d.cm}</div>
+  </div>
   <PartAdd data={add} />
 </li>

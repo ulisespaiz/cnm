@@ -40,6 +40,7 @@ SHOW_DRAFTS=1 npm run build   # production build including drafts, for review
 | Colors, fonts, spacing | tokens at the top of `src/styles/global.css` |
 | OEM part number index (`/shop/part-numbers/`) and catalog CSV (`/shop/catalog.csv`) | `src/pages/shop/part-numbers/index.astro`, `src/pages/shop/catalog.csv.ts`; both read `src/lib/catalog.ts` |
 | How to order page (`/how-to-order/`) and its FAQ | `src/pages/how-to-order.astro` (facts from `src/config/site.ts`) |
+| Privacy policy (`/privacy/`) and accessibility statement (`/accessibility/`) | `src/pages/privacy.astro`, `src/pages/accessibility.astro`; both linked from the footer (`src/components/Footer.astro`) and listed in `llms.txt` |
 | IndexNow key and submit script | `indexNowKey` in `src/config/site.ts`, `public/<key>.txt`, `scripts/indexnow.mjs` |
 | Old URL → new URL redirects | `public/_redirects` |
 | Security and cache headers | `public/_headers` |
@@ -272,6 +273,49 @@ two inputs sit in a `<fieldset data-reach id="...">`; `src/scripts/web3forms-sub
 for the pair ("Enter an email or a phone number so we can reply.") when both are empty, tied to both
 fields with `aria-invalid` and `aria-describedby`. An email that is typed is still checked as an email,
 and an empty email is left out of the Web3Forms request (Web3Forms uses `email` as the reply-to).
+
+## Privacy policy and accessibility statement
+
+`/privacy/` (`src/pages/privacy.astro`) and `/accessibility/` (`src/pages/accessibility.astro`) describe what the site
+actually does. Each page's top comment lists where in the code a statement can be checked. The privacy policy says the site
+sets no cookies, keeps only the quote reference and quote list in the browser (local storage `quote-list-v2`, session
+storage `last-quote-ref`), runs no analytics or third-party scripts, and sends form data only to Web3Forms. The tests in
+`tests/smoke.spec.ts` ("privacy policy") fail if that stops being true or if a form sends a field the policy does not list.
+
+Update the page and its date (`UPDATED` / `UPDATED_ISO` in `privacy.astro`) when a change:
+
+- adds a cookie, an analytics, advertising or other third-party script, or an embed (this also needs a change to the CSP in `public/_headers`);
+- adds or changes a form field, or what is kept in the browser;
+- adds a service provider, or changes how long requests are kept.
+
+The policy says only what the code, the config or the owner has confirmed. It makes no promise about a deletion schedule, about who
+can read the inbox or about what Web3Forms keeps; the owner's open questions are the `CONFIRM` lines in the top comment of
+`privacy.astro`, so `npm run prelaunch` lists them. Set `UPDATED` to the day the policy goes live. When a change matters to a
+visitor, fill the `NOTICE` constant in `privacy.astro` (it shows a notice under the date; leave it empty otherwise).
+
+The accessibility statement is dated by the review it describes (`REVIEWED` / `REVIEWED_ISO` in `accessibility.astro`). After a
+new review (axe on every page at phone and desktop width, keyboard testing, and a screen reader pass if one is done), change
+the date and update "How we test" and "Known limitations" to match what the review found. The statement says the goal is
+WCAG 2.2 Level AA; it never claims full conformance. The ADA names no technical standard for a private business website,
+and nobody can certify a pass: WCAG 2.1/2.2 AA is the yardstick courts and demand letters use, and the statement is a goal
+with a record of what was checked (axe-core, keyboard, zoom, contrast; Chromium only, no screen reader pass yet).
+
+Code conventions that keep the statement true (WCAG 2.2 AA is the goal; the statement lists what was checked and what is known to fall short):
+
+- Media queries use `em`, not `px` (`@media (min-width: 48em)` is 768px at the default text size). A reader who raises the browser's
+  default text size then gets the phone layout sooner. `matchMedia` calls in the scripts follow the same rule.
+- No `overflow-x: hidden` on `body`: it hides overflow instead of letting a reader scroll to it. Long words wrap (`overflow-wrap`
+  in `global.css`), and a grid without named columns gets `minmax(0, 1fr)` columns, so enlarged text cannot push the page sideways.
+- Nothing may stay stuck to the screen on a very short window (400% zoom, a phone on its side): the header, search bar, list headers and
+  bottom bars become static under `max-height: 32.5em`.
+- The phone menu makes `main`, `footer` and the bottom bars `inert` while it is open (`Header.astro`), and `prefers-reduced-motion` is
+  honored in CSS (`global.css`) and in scripts (`scrollBehavior()` in `src/scripts/scroll-to.ts`).
+- Spoken updates (copy result, quantity) go through the `#sr-status` live region that `Base.astro` renders (`src/scripts/announce.ts`);
+  the counts under the search fields wait about 600ms after the last key before they are spoken.
+
+With the parts shop off (`site.store.enabled`), both pages leave out the parts store, the catalog, the parts search and the
+quote list wording; the quote reference and the services a visitor adds to a request are still described, because the site
+still keeps them in the browser.
 
 ## Checks
 

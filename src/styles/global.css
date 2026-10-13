@@ -54,12 +54,22 @@ html {
   scroll-padding-top: 80px;
 }
 
+/* A grid without its own columns (display: grid and nothing else) has one automatic column, and that column is never
+   narrower than the longest unbreakable piece inside it: with larger text or a narrow screen it grows past the page
+   and the page cannot be scrolled to the overflow. Implicit columns share the width and may shrink to nothing instead,
+   so a long word or address wraps. Grids that name their columns, or set their own grid-auto-columns, are not touched. */
+* {
+  grid-auto-columns: minmax(0, 1fr);
+}
+
 body {
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
   font: 400 1.0625rem/1.6 var(--font-body);
-  overflow-x: hidden;
+  /* A long word or an address must wrap instead of pushing the page sideways. There is no overflow-x: hidden on the
+     page: if enlarged text or a long word ever overflows, the reader can scroll to it instead of losing it (WCAG 1.4.4, 1.4.10). */
+  overflow-wrap: break-word;
 }
 
 /* Paper grain from the original site: a tiny tiled SVG noise, no image request,
@@ -69,8 +79,9 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.07'/%3E%3C/svg%3E");
 }
 
-/* Room for the fixed call/quote bar on phones */
-@media (max-width: 767px) {
+/* Room for the fixed call/quote bar on phones (not on a very short window, where the bar is not fixed: see MobileBar.astro). Breakpoints are in em, not px: a reader who raises the browser's default
+   text size then gets the phone layout sooner, instead of a desktop layout that no longer fits (WCAG 1.4.4). */
+@media (max-width: 47.9375em) {
   body:not(.no-mobile-bar) {
     padding-bottom: calc(var(--mobile-bar-height) + env(safe-area-inset-bottom));
   }
@@ -78,6 +89,12 @@ body {
   /* Keep a focused field or link out from under the fixed bottom bar (68px call/quote bar, 64px add bar) */
   html {
     scroll-padding-bottom: calc(var(--mobile-bar-height) + 16px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 47.9375em) and (max-height: 32.5em) {
+  body:not(.no-mobile-bar) {
+    padding-bottom: 0;
   }
 }
 
@@ -89,6 +106,23 @@ img {
 
 a {
   color: var(--color-primary);
+}
+
+/* Text breaks at any letter rather than run off the page when one word (an email address, a long part name) is wider than
+   its box: larger text, a narrow screen or a flex or grid item that shrinks to its content. Normal text never breaks
+   mid-word, because it only happens where a word would overflow. (Not on table cells: their columns are sized by content.) */
+p,
+li,
+dt,
+dd,
+h1,
+h2,
+h3,
+h4,
+summary,
+address,
+a[href^='mailto:'] {
+  overflow-wrap: anywhere;
 }
 
 h1,
@@ -114,6 +148,7 @@ h2 {
 /* Highlighted word in a heading, as on the original site */
 .mark {
   display: inline-block;
+  overflow-wrap: anywhere; /* a long highlighted word breaks at a narrow width instead of running off the page */
   padding: 0 0.18em;
   border-radius: 10px;
   background: var(--color-primary);
@@ -314,6 +349,13 @@ main:focus {
   display: none;
 }
 
+/* Windows High Contrast (forced colors) drops the fill and the ring: a border keeps the count a visible shape. */
+@media (forced-colors: active) {
+  .badge {
+    border: 1px solid CanvasText;
+  }
+}
+
 /* Grids */
 .grid {
   display: grid;
@@ -482,7 +524,7 @@ textarea[aria-invalid='true'] {
   align-items: start; /* a field with an error under it must not stretch its neighbour's label and input apart */
 }
 
-@media (min-width: 640px) {
+@media (min-width: 40em) {
   .field-row {
     grid-template-columns: 1fr 1fr;
   }
@@ -524,7 +566,7 @@ textarea[aria-invalid='true'] {
   pointer-events: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48em) {
   .toast-region {
     bottom: 24px;
   }
@@ -562,4 +604,19 @@ textarea[aria-invalid='true'] {
   display: inline-flex;
   align-items: center;
   cursor: pointer;
+}
+
+/* A reader who asked their system for less motion gets none: hover lifts, fades and rotations happen instantly.
+   (Smooth scrolling in the scripts checks the same setting: scrollBehavior() in src/scripts/scroll-to.ts.) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+  }
 }

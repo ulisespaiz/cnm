@@ -317,7 +317,7 @@ const faqs = [
     margin-top: 8px;
   }
 
-  @media (max-width: 479px) {
+  @media (max-width: 29.9375em) {
     .hero__actions .btn {
       flex: 1 1 100%;
     }
@@ -368,7 +368,7 @@ const faqs = [
     background: var(--color-border);
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48em) {
     .stats {
       grid-template-columns: repeat(4, 1fr);
     }
@@ -379,7 +379,7 @@ const faqs = [
     grid-column: 1 / -1;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48em) {
     .stats--3 {
       grid-template-columns: repeat(3, 1fr);
     }
@@ -434,7 +434,11 @@ const faqs = [
     display: flex;
     align-items: flex-end;
     padding-bottom: clamp(24px, 5vw, 56px);
-    background: linear-gradient(90deg, rgb(0 0 0 / 0.6), rgb(0 0 0 / 0.1) 70%);
+    /* The bottom layer darkens the strip behind the title: on a phone the brightest pixels of the photo came within a
+       hair of the 3:1 that large white text needs (WCAG 1.4.3). */
+    background:
+      linear-gradient(0deg, rgb(0 0 0 / 0.5), rgb(0 0 0 / 0) 65%),
+      linear-gradient(90deg, rgb(0 0 0 / 0.6), rgb(0 0 0 / 0.1) 70%);
   }
 
   .banner__title {
@@ -454,7 +458,7 @@ const faqs = [
     margin-bottom: 32px;
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .split-head {
       grid-template-columns: 1fr 1fr;
       align-items: end;
@@ -467,7 +471,7 @@ const faqs = [
     gap: 16px;
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .store {
       grid-template-columns: 1fr 1.4fr;
     }
@@ -513,7 +517,7 @@ const faqs = [
     gap: 12px;
   }
 
-  @media (max-width: 479px) {
+  @media (max-width: 29.9375em) {
     .store__actions .btn,
     .featured__actions .btn {
       flex: 1 1 100%;
@@ -528,7 +532,7 @@ const faqs = [
     list-style: none;
   }
 
-  @media (min-width: 560px) {
+  @media (min-width: 35em) {
     .store__sections {
       grid-template-columns: repeat(2, 1fr);
     }
@@ -578,13 +582,13 @@ const faqs = [
     margin-top: 40px;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48em) {
     .bento {
       grid-template-columns: repeat(2, 1fr);
     }
   }
 
-  @media (min-width: 1100px) {
+  @media (min-width: 68.75em) {
     .bento {
       grid-template-columns: repeat(4, 1fr);
     }
@@ -638,7 +642,7 @@ const faqs = [
     align-items: center;
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .about-split {
       grid-template-columns: 1.2fr 1fr;
     }
@@ -688,13 +692,13 @@ const faqs = [
     margin-top: 12px;
   }
 
-  @media (min-width: 640px) {
+  @media (min-width: 40em) {
     .services {
       grid-template-columns: repeat(2, 1fr);
     }
   }
 
-  @media (min-width: 1100px) {
+  @media (min-width: 68.75em) {
     .services {
       grid-template-columns: repeat(4, 1fr);
     }
@@ -773,7 +777,7 @@ const faqs = [
   }
 
   /* Three across; the second row (two machines) is centered */
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .gallery {
       display: flex;
       flex-wrap: wrap;

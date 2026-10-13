@@ -1,21 +1,459 @@
 ---
+// /privacy/: the privacy policy (CalOPPA, Cal. Bus. & Prof. Code 22575-22579, and good practice).
+//
+// Every statement below was checked against what the site's code does. Keep it that way: when a change adds a
+// cookie, an analytics or other third-party script, a form field, browser storage or a service provider, update
+// this page and UPDATED. The facts, and where the code shows them:
+//   - no cookies: no script under src/ or public/ touches the browser's cookie jar (tests/smoke.spec.ts checks it); public/_headers sets none.
+//   - no analytics, ads or trackers: public/_headers `script-src 'self'`, `connect-src 'self' https://api.web3forms.com`;
+//     every script, style and font is served from this site (Base.astro; fonts via @fontsource-variable/geist).
+//   - browser storage: src/scripts/quote-store.ts (localStorage "quote-list-v2": quote reference and quote list,
+//     written on every page by Base.astro's renderCount) and QuoteForm.astro (sessionStorage "last-quote-ref",
+//     read by quote/thanks.astro). Nothing leaves the browser until a form is sent.
+//   - form fields: QuoteForm.astro (kind "quote" and "contact"), PartRequestForm.astro, src/scripts/part-request.ts.
+//   - the form is posted straight to Web3Forms: src/config/forms.ts, src/scripts/web3forms-submit.ts.
+//   - hosting: wrangler.jsonc (Cloudflare Workers static assets, no Worker script and no database).
+//   - outbound links only (no embeds): Footer.astro, contact.astro (Google Maps listing, Yelp, the site's developer).
+// The parts shop switch (site.store.enabled): with the shop off this page does not mention the parts store, the
+// catalog, the parts search or the quote list. The quote reference and the services a visitor adds to a request are
+// still kept in the browser then, so they are still described.
+//
+// Rule for this page: it says only what the code, the config or the owner has confirmed. A wrong promise is worse than
+// a missing one (CalOPPA, Cal. Bus. & Prof. Code 22575-22576: a site must follow its own posted policy). So the page makes
+// no claim about who can read the inbox, about a deletion schedule, or about what Web3Forms keeps beyond "may".
+// Open questions for the owner, one per marker line below (`npm run prelaunch` lists every marker line; none of this shows
+// on the page):
+// CONFIRM the Cloudflare and Web3Forms privacy-policy links by clicking each once on the live site (if one moved, change its href here and in tests/smoke.spec.ts)
+// CONFIRM what Web3Forms adds to the notification email and keeps (open a past email and the dashboard; send no test form), then name it in the forms and providers sections
+// CONFIRM "How long we keep information": the page says there is no fixed deletion schedule; if the shop deletes on a real schedule, state it there instead
+// CONFIRM who can read the inbox; the page says nothing about it, and once the owner says who, one sentence can go in "Security" (for example "We limit access to the inbox that receives your messages to people at the shop who need it to answer you.")
+// CONFIRM the rights-request practice: the page says the shop may ask a requester to confirm the name and email address or phone number used before it shows, changes or deletes anything
+// CONFIRM the date: UPDATED and UPDATED_ISO below are the day this was written; set them, and "Last updated" in tests/smoke.spec.ts, to the day the policy goes live
+// CONFIRM the California paragraph (Civil Code 1798.83) and the whole page with the owner or counsel: which laws apply to a shop of this size is a legal question this page does not answer
 import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import { site } from '../config/site';
+import { hoursSentence } from '../lib/hours';
+import { breadcrumbs } from '../lib/schema';
+
+const shopOn = site.store.enabled;
+
+// The effective date: change both together when the policy changes.
+const UPDATED = 'October 13, 2026';
+const UPDATED_ISO = '2026-10-13';
+
+// A notice shown at the top of the page when a change matters to a visitor ("Changes to this policy" promises it). Leave
+// it empty when there is none; say what changed and since when ("As of <date>, ..."), and remove it once it has been up a while.
+const NOTICE: string = '';
+
+// The heading of the browser-storage subsection, and the text of every link to it.
+const browserHeading = shopOn ? 'Your quote list and quote reference, kept in your browser' : 'Your request and quote reference, kept in your browser';
+
+const host = new URL(site.url).host;
+const address = `${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}`;
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Privacy Policy', path: '/privacy/' },
+];
+
+const sections = [
+  { id: 'who-we-are', title: 'Who we are and how to contact us' },
+  { id: 'what-we-collect', title: 'What we collect' },
+  { id: 'cookies', title: 'Cookies, browser storage and tracking' },
+  { id: 'how-we-use', title: 'How we use information' },
+  { id: 'providers', title: 'Who else handles your information' },
+  { id: 'retention', title: 'How long we keep information' },
+  { id: 'your-choices', title: 'Your choices and rights' },
+  { id: 'dnt', title: 'Do Not Track and Global Privacy Control' },
+  { id: 'children', title: 'Children' },
+  { id: 'security', title: 'Security' },
+  { id: 'other-sites', title: 'Links to other sites' },
+  { id: 'changes', title: 'Changes to this policy' },
+];
 ---
 
-<Base title="Privacy Policy" description={`How ${site.name} handles information submitted through this website.`}>
+<Base
+  title="Privacy Policy"
+  description={`How ${site.name} handles the information you send us and the data this site keeps in your browser, and the choices you have. Updated ${UPDATED}.`}
+  jsonLd={[breadcrumbs(crumbs)]}
+>
   <section class="section">
-    <div class="container prose">
-      <h1>Privacy Policy</h1>
-      {/* CONFIRM: the owner reviews this privacy policy before launch, then delete this note. */}
-      <h2>What we collect</h2>
-      <p>When you send a quote request, a part request or a message, we receive the details you enter (name, email, phone, company, PO or reference number, when you need it, delivery preference, ZIP code, machine model or serial number, project details and the {site.store.enabled ? 'parts or services' : 'part numbers or services'} you add to your request). Your quote list is stored in your own browser until you send it.</p>
-      <h2>How it is delivered</h2>
-      <p>Form submissions are relayed to our inbox by Web3Forms, a form-processing service. We use the information only to respond to your request.</p>
-      <h2>Sharing</h2>
-      <p>We do not sell your personal information. We share it only with Web3Forms, to deliver your form to us.</p>
-      <h2>Your choices</h2>
-      <p>California residents may ask what we hold about them or ask us to delete it. Contact <a href={`mailto:${site.email}`}>{site.email}</a> or call {site.phone}.</p>
+    <div class="container">
+      <div class="prose policy">
+        <Breadcrumbs items={crumbs} />
+        <h1>Privacy Policy</h1>
+        <p class="policy__date"><strong>Last updated: <time datetime={UPDATED_ISO}>{UPDATED}</time></strong>. This policy took effect on that date.</p>
+        {NOTICE && <p class="policy__notice"><strong>Notice:</strong> {NOTICE}</p>}
+        <p class="lead">
+          This policy explains what information {site.legalName} collects through this website, how we use it, who else handles it
+          and what choices you have. We have tried to keep it short and plain.
+        </p>
+
+        <h2 id="short">The short version</h2>
+        <ul>
+          <li>
+            We collect what you choose to send us: what you type into our forms, and what you tell us by email or phone. Our hosting provider
+            also receives the technical details every website visit involves, such as your IP address, and so does our form service when you send a form.
+          </li>
+          <li>This site sets no cookies of its own, and it has no analytics, advertising or tracking scripts.</li>
+          {shopOn ? (
+            <li>Your quote list is saved in your own browser. We see it only if you send it to us with a quote request.</li>
+          ) : (
+            <li>The services you add to your request are saved in your own browser. We see them only if you send your request.</li>
+          )}
+          <li>We do not sell your personal information, and we do not share it for advertising.</li>
+          <li>You can ask us to show you, correct or delete what you sent us. See <a href="#your-choices">Your choices and rights</a>.</li>
+        </ul>
+
+        <nav class="policy__toc" aria-labelledby="policy-toc">
+          <p id="policy-toc" class="policy__toc-title">On this page</p>
+          <ul>
+            {sections.map((s) => <li><a href={`#${s.id}`}>{s.title}</a></li>)}
+          </ul>
+        </nav>
+
+        <h2 id="who-we-are">Who we are and how to contact us</h2>
+        <p>
+          {site.legalName} is a family-owned machine shop at {address}. We run this website. In this policy, “we” and “us” mean {site.legalName}
+        </p>
+        <p>For any question about this policy or about your information, contact us:</p>
+        <ul>
+          <li>Email: <a href={`mailto:${site.email}`}>{site.email}</a></li>
+          <li>Phone: <a href={`tel:${site.phoneE164}`}>{site.phone}</a></li>
+          <li>Hours (Pacific Time): {hoursSentence()}</li>
+          <li>Mail: {site.legalName}, {address}</li>
+        </ul>
+
+        <h2 id="what-we-collect">What we collect</h2>
+        <p>
+          This section covers four kinds of information: what you type into our forms, what your browser keeps for this site (we cannot see it),
+          technical details our hosting provider handles, and what you send by email or phone.
+        </p>
+
+        <h3>What you type into our forms</h3>
+        <p>
+          This site has three forms: the quote request form, the contact form and the part request form. A field marked with an asterisk (*) on
+          the form has to be filled in; the lists below say “(required)” for the same fields. Two forms also need something that has no asterisk:
+          a quote request needs {shopOn ? 'at least one item on your quote list' : 'at least one service or part number on your request'}, or something written
+          in the notes, and a part request needs a part number or a description. Everything else is optional.
+        </p>
+        <h4>Quote request form</h4>
+        <ul>
+          <li>Your full name (required)</li>
+          <li>Your company or organization</li>
+          <li>Your email address, your phone number or both (at least one is required, so we can reply)</li>
+          <li>A PO or reference number</li>
+          <li>When you need it (ASAP or rush, this week, 2–4 weeks, or flexible)</li>
+          <li>Pickup in {site.address.city} or shipping and, if you choose shipping, your ZIP code</li>
+          <li>Additional notes you write, such as specifications, tolerances, materials, quantities, deadlines or a machine model or serial number</li>
+          {shopOn ? (
+            <li>The parts and services on your quote list, and your quote reference (see <a href="#browser-storage">{browserHeading}</a>)</li>
+          ) : (
+            <li>The services and part numbers on your request, and your quote reference (see <a href="#browser-storage">{browserHeading}</a>)</li>
+          )}
+        </ul>
+        <p>
+          {shopOn
+            ? 'For each line of your quote list we receive the OEM part number (where the part has one) and the C&M number, the name, the quantity, the section, any options you chose, any note you wrote for that line and the page address of the item.'
+            : 'For each line of your request we receive the name or part number, the quantity, any options you chose, any note you wrote for that line and the page address of the item, where it has one.'}
+        </p>
+        <h4>Contact form</h4>
+        <ul>
+          <li>Your name (required)</li>
+          <li>Your company or organization</li>
+          <li>Your email address, your phone number or both (at least one is required)</li>
+          <li>Your message (required)</li>
+        </ul>
+        <h4>Part request form</h4>
+        <ul>
+          <li>The {shopOn ? 'OEM part number' : 'part number'} and a quantity</li>
+          <li>A description of what the part does, and the machine model or serial number</li>
+          <li>Your name (required)</li>
+          <li>Your email address, your phone number or both (at least one is required)</li>
+          <li>
+            {shopOn
+              ? 'What you searched for, or the part number you typed if you did not search, and the full web address of the page you sent it from (it can include the words you searched for)'
+              : 'The full web address of the page you sent it from'}
+          </li>
+        </ul>
+        <p>
+          Each message also has a subject line. It includes your name; on a quote request it also includes your quote reference and, if you gave one,
+          your company, and on a part request it also includes the part number. Web3Forms may add technical details of its own when it delivers the message.
+          When you press send, your browser sends the form straight to Web3Forms, which emails it to us
+          (see <a href="#providers">Who else handles your information</a>). The website itself has no database and no server code of its
+          own, so the website keeps no copy of what you send. Copies are kept in our email inbox and may be kept by Web3Forms
+          (see <a href="#providers">Who else handles your information</a>).
+        </p>
+        <p>
+          This site does not take payments, and we do not ask for payment card, bank or government ID numbers in any form. Please do
+          not type them into a notes or message box.
+        </p>
+
+        <h3 id="browser-storage">{browserHeading}</h3>
+        <p>
+          Your browser keeps some information for the site, in its local storage. We cannot see it, and it is not sent anywhere until you send
+          a quote request.
+        </p>
+        <ul>
+          <li>
+            A quote reference: a short code made of the date and four random characters, for example Q-261013-AB3K. Your browser creates
+            it the first time you open any page of this site, if it lets the site store data. It is not linked to you until you send us a quote request.
+          </li>
+          {shopOn ? (
+            <li>
+              Your quote list: the parts and services you add with the Add to Quote button or by pasting part numbers, with their
+              quantities, options and any note you write on a line.
+            </li>
+          ) : (
+            <li>Your request: the services you add with the Add to Quote button, or part numbers added from a link, with their quantities, options and any note you write on a line.</li>
+          )}
+        </ul>
+        <p>
+          Neither has an expiry date. {shopOn ? 'Your quote list' : 'Your request'} stays in your browser until you remove the items, press Clear all items or send your
+          quote request. The quote reference stays after that too: sending a quote request replaces it with a new one. Clearing this site's data in your
+          browser settings removes both.
+        </p>
+        <p>
+          When you send a quote request from this site, your browser also keeps the quote reference in its session storage, so the thank-you
+          page can show it. Your browser removes it when you close the tab.
+        </p>
+
+        <h3>Technical information handled by our hosting provider</h3>
+        <p>
+          Cloudflare hosts this website. When you open a page, your browser asks Cloudflare's network for it, so Cloudflare handles your
+          IP address, details about your browser and device, the page address you asked for, the page you came from and the time of the request.
+          It does this to deliver the site and to protect it from abuse. We add no analytics or tracking of our own to this.
+        </p>
+        {shopOn && (
+          <p>
+            If you use the parts search box, the words you search for are added to the address of the results page (for example <code>/shop/?q=…</code>),
+            so they are part of the request Cloudflare handles. The search itself runs in your browser.
+          </p>
+        )}
+        <p>
+          Because your browser connects directly to Web3Forms when you send a form, Web3Forms receives your IP address and browser
+          details too, as any website you connect to does.
+        </p>
+
+        <h3>What you send us by email or phone</h3>
+        <p>
+          If you email or call us, we receive your email address or phone number and whatever you tell us or attach, such as a drawing or a photo.
+          This site has no file upload: drawings and photos reach us by email. If a form cannot be sent, the page offers an email link that opens
+          your own email program with your request filled in. Sending that email is an ordinary email, handled by your email provider and ours.
+        </p>
+
+        <h2 id="cookies">Cookies, browser storage and tracking</h2>
+        <ul>
+          <li><strong>Cookies we set:</strong> none. Our website's code does not read or set cookies.</li>
+          <li>
+            <strong>Browser storage:</strong> only what is described under <a href="#browser-storage">{browserHeading}</a> above.
+            It makes the site work and is not used to track you.
+          </li>
+          <li>
+            <strong>Analytics, advertising and tracking:</strong> none. The site has no analytics service, no advertising, no social media
+            widgets, no embedded maps or videos and no third-party fonts. Its scripts, styles and fonts all come from this site.
+          </li>
+          <li>
+            <strong>How you can check:</strong> the site's security policy tells your browser to run scripts only from this site, and to connect only to
+            this site and to Web3Forms (to send a form you submit).
+          </li>
+          <li>
+            <strong>Cookies from our hosting provider:</strong> Cloudflare may set strictly necessary security cookies to protect the site from abuse. Our code
+            does not set them, and we do not use them for tracking.
+          </li>
+        </ul>
+
+        <h2 id="how-we-use">How we use information</h2>
+        <p>We use the information you send us to:</p>
+        <ul>
+          <li>answer your questions and requests;</li>
+          <li>prepare and send you quotes;</li>
+          <li>fill your orders, and arrange pickup or shipping;</li>
+          <li>keep business records, such as quotes, orders and correspondence; and</li>
+          <li>protect the site and our business from spam, abuse and fraud.</li>
+        </ul>
+        <p>
+          We do not sell your personal information, and we do not share it for advertising. We do not use it to make
+          automated decisions about you.
+        </p>
+
+        <h2 id="providers">Who else handles your information</h2>
+        <p>
+          These service providers handle information for us. The website sends what you submit through our forms only to Web3Forms. Web3Forms and
+          Cloudflare may use service providers of their own, as their privacy policies explain.
+        </p>
+        <ul>
+          <li>
+            <strong>Cloudflare</strong>: hosts the website and helps keep it secure.{' '}
+            <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare's privacy policy</a>.
+          </li>
+          <li>
+            <strong>Web3Forms</strong>: receives the forms you send, delivers them to our inbox and may keep a copy for a time under its own policy.{' '}
+            <a href="https://web3forms.com/privacy" rel="noopener">Web3Forms' privacy policy</a>.
+          </li>
+          <li><strong>Our email provider</strong>: stores the email we receive, including the messages that Web3Forms delivers and any email you send us.</li>
+        </ul>
+        <p>We may also disclose information when the law requires it.</p>
+
+        <h2 id="retention">How long we keep information</h2>
+        <p>
+          We keep your requests and messages in our email inbox for as long as we need them to respond to you, prepare quotes, fill orders and meet
+          our record-keeping obligations. We do not have a fixed deletion schedule. You can ask us to delete your information (see <a href="#your-choices">Your choices and rights</a>).
+          Web3Forms and our email provider keep their own copies under their own policies. What the site keeps in your browser stays there until you remove it, as described above.
+        </p>
+
+        <h2 id="your-choices">Your choices and rights</h2>
+        <p>
+          You can ask us to show you the personal information you sent us, to correct it or to delete it. Email <a href={`mailto:${site.email}`}>{site.email}</a>{' '}
+          or call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>. Tell us the name and the email address or phone number you used, and your quote reference if you have one,
+          so that we can find it.
+        </p>
+        <p>
+          We will answer as soon as we can. Before we show, change or delete anything, we may ask you to repeat the name and the email address or phone
+          number you used. If the law or our records require us to keep something, we will tell you.
+        </p>
+        <p>
+          You control what the site keeps in your browser. Remove items, or press Clear all items{shopOn ? ' on your quote list' : ''}, or clear the data
+          for {host} in your browser settings.
+        </p>
+        <h3>California residents</h3>
+        <p>
+          We do not sell your personal information, we do not share it for advertising, and we do not give it to other businesses for their own marketing
+          (California Civil Code section 1798.83). You can ask what we hold, and ask us to correct or delete it, as described above. You can make
+          these requests whether or not you live in California.
+        </p>
+
+        <h2 id="dnt">Do Not Track and Global Privacy Control</h2>
+        <p>
+          <strong>Do Not Track.</strong> Some browsers send a “Do Not Track” signal. This site does not use cookies, analytics or advertising tools to
+          track visitors over time or across other websites. Apart from the <a href="#providers">service providers listed above</a>, it does not allow third parties to
+          collect personal information about your online activities over time and across different websites when you use it. Because there is no such
+          tracking to turn off, the site behaves the same whether or not your browser sends the signal.
+        </p>
+        <p>
+          <strong>Global Privacy Control.</strong> This browser setting asks websites not to sell or share your personal information. We do not sell or
+          share it, so there is nothing to opt out of. The site treats every visitor the same way.
+        </p>
+
+        <h2 id="children">Children</h2>
+        <p>
+          This site is for businesses. It is not directed to children under 13, and we do not knowingly collect information from them. If you think
+          a child has sent us information, contact us and we will delete it.
+        </p>
+
+        <h2 id="security">Security</h2>
+        <p>
+          This site is served over HTTPS, and your browser sends forms to Web3Forms over HTTPS.
+          No method of sending or storing information is 100% secure, so we cannot promise absolute security.
+        </p>
+
+        <h2 id="other-sites">Links to other sites</h2>
+        <p>
+          This site links to other websites: our Google Maps listing, our Yelp page and the site of the company that built this website, as well as the privacy
+          policies above. We do not embed their content in our pages. When you follow a link, the other site's privacy policy applies, not ours. Your
+          browser sends the other site only the address of our site ({host}), not the page you were on.
+        </p>
+
+        <h2 id="changes">Changes to this policy</h2>
+        <p>
+          When we change this policy, we post the new version on this page and update the “Last updated” date at the top. If we make a material change, we will say
+          so in a notice at the top of this page when the new version is posted.
+        </p>
+      </div>
     </div>
   </section>
 </Base>
+
+<style>
+  .policy h1 {
+    margin-bottom: 8px;
+    font-size: clamp(2rem, 5vw + 0.5rem, 3rem);
+  }
+
+  .policy__date {
+    margin-bottom: 16px;
+  }
+
+  /* A notice about a change (the NOTICE constant above): set apart, with text and a border, not only a color */
+  .policy__notice {
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    border: 2px solid var(--color-primary);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  .policy h2 {
+    margin-top: 2em;
+    font-size: clamp(1.4rem, 1.5vw + 1rem, 1.75rem);
+    letter-spacing: -0.02em;
+  }
+
+  .policy h3 {
+    margin-top: 1.6em;
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
+  }
+
+  .policy h4 {
+    margin: 1.2em 0 0.4em;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .policy ul {
+    margin: 0 0 1em;
+    padding-left: 1.4em;
+  }
+
+  .policy li + li {
+    margin-top: 0.35em;
+  }
+
+  .policy code {
+    font-size: 0.95em;
+    overflow-wrap: anywhere;
+  }
+
+  /* "On this page": a short list of links, two columns once there is room */
+  .policy__toc {
+    margin: 1.5em 0 0;
+    padding: 16px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  .policy__toc-title {
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+
+  .policy__toc ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .policy__toc li + li {
+    margin-top: 0;
+  }
+
+  .policy__toc a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  @media (min-width: 43.75em) {
+    .policy__toc ul {
+      columns: 2;
+      column-gap: 32px;
+    }
+
+    .policy__toc li {
+      break-inside: avoid;
+    }
+  }
+</style>

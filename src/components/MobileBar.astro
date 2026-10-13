@@ -3,7 +3,7 @@ import { site } from '../config/site';
 ---
 
 <nav class="mobile-bar" aria-label="Quick actions">
-  <a class="mobile-bar__call" href={`tel:${site.phoneE164}`}>
+  <a class="mobile-bar__call" href={`tel:${site.phoneE164}`} aria-label={`Call ${site.phone}`}>
     <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"
       ><path
         fill="currentColor"
@@ -60,9 +60,17 @@ import { site } from '../config/site';
     display: none;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48em) {
     .mobile-bar {
       display: none;
+    }
+  }
+
+  /* Very short window (400% zoom, a phone on its side): the bar sits at the end of the page instead of covering it. */
+  @media (max-height: 32.5em) {
+    .mobile-bar {
+      position: static;
+      box-shadow: none;
     }
   }
 </style>

@@ -47,6 +47,9 @@ const Heading = compact ? 'h3' : 'h2';
     <input type="hidden" name="page" value="" />
     <input type="checkbox" name="botcheck" class="visually-hidden" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
+    <!-- For people who see the asterisks: what they mean. A screen reader gets "required" from the fields themselves. -->
+    <p class="req-note" aria-hidden="true"><span class="req">*</span> Required</p>
+
     <div class="field-row">
       <div class="field">
         <label for="pr-number">{shopOn ? 'OEM part number' : 'Part number'}</label>
@@ -117,6 +120,7 @@ const Heading = compact ? 'h3' : 'h2';
   <p class="pr__call">
     Prefer to talk? <a class="pr__tel" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
   </p>
+  <p class="pr__privacy">See our <a href="/privacy/">Privacy Policy</a> for how we handle what you send.</p>
 </section>
 
 <script>
@@ -152,6 +156,12 @@ const Heading = compact ? 'h3' : 'h2';
 
   .req {
     color: var(--color-accent);
+  }
+
+  .req-note {
+    margin: 0 0 12px;
+    color: var(--color-muted);
+    font-size: 0.9rem;
   }
 
   .opt {
@@ -229,6 +239,19 @@ const Heading = compact ? 'h3' : 'h2';
   .pr__call {
     margin: 14px 0 0;
     color: var(--color-muted);
+  }
+
+  .pr__privacy {
+    margin: 20px 0 0; /* the link's 12px of tap padding must not reach the phone link above */
+    color: var(--color-muted);
+    font-size: 0.9rem;
+  }
+
+  /* a link in running text: padding makes the tap target 44px tall, the negative margin keeps the text where it was */
+  .pr__privacy a {
+    display: inline-block;
+    padding-block: 12px;
+    margin-block: -12px;
   }
 
   .pr__tel {

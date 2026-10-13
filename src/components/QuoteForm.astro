@@ -50,6 +50,9 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
   <!-- Honeypot: humans never see or tick this -->
   <input type="checkbox" name="botcheck" class="visually-hidden" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
+  <!-- For people who see the asterisks: what they mean. A screen reader gets "required" from the fields themselves. -->
+  <p class="req-note" aria-hidden="true"><span class="req">*</span> Required</p>
+
   <div class="field-row">
     <div class="field">
       <label for={`${kind}-name`}>{isQuote ? 'Full Name' : 'Name'} <span class="req" aria-hidden="true">*</span></label>
@@ -139,9 +142,10 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
     {isQuote ? 'Send Quote Request →' : 'Send Message →'}
   </button>
   <p class="form-alert" role="status" aria-live="polite" data-form-status></p>
-  <p class="form-note">
-    {site.replyTime}. Prefer to talk? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.
-  </p>
+  <div class="form-note">
+    <p>{site.replyTime}. Prefer to talk? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.</p>
+    <p>See our <a href="/privacy/">Privacy Policy</a> for how we handle what you send.</p>
+  </div>
 </form>
 
 <script>
@@ -220,6 +224,12 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
     color: var(--color-accent);
   }
 
+  .req-note {
+    margin: 0 0 12px;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+  }
+
   .opt {
     color: var(--color-muted);
     font-weight: 400;
@@ -244,7 +254,7 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
     gap: 10px;
   }
 
-  @media (min-width: 480px) {
+  @media (min-width: 30em) {
     .delivery__options {
       grid-template-columns: 1fr 1fr;
     }
@@ -331,5 +341,14 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
 
   .quote-form--contact .form-note {
     text-align: left;
+  }
+
+  .form-note p {
+    margin: 0;
+  }
+
+  /* 24px: each link's 44px tap area (see global.css, .form-note a) reaches 12px past its line, so two links need 24px between them not to overlap */
+  .form-note p + p {
+    margin-top: 24px;
   }
 </style>

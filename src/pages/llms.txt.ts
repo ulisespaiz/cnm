@@ -92,6 +92,7 @@ ${machines.map((m) => `- ${m.data.name}${m.data.blurb ? `: ${m.data.blurb}` : ''
 - [Service areas](${abs('/service-areas/')})
 - [Contact](${abs('/contact/')})
 - [Privacy policy](${abs('/privacy/')})
+- [Accessibility statement](${abs('/accessibility/')})
 ${optionalSection}`;
   return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 };

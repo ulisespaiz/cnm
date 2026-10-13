@@ -31,6 +31,7 @@ npm run prelaunch        # lists TODO/CONFIRM left before go-live
 npm run indexnow         # tells IndexNow (Bing etc.) the sitemap URLs; deploy-time only, see "IndexNow"
 ```
 
+- `tests/a11y.spec.ts` guards the accessibility fixes (em breakpoints, inert phone menu, 320px reflow, live regions, footer hours).
 - `tests/redirects.spec.ts` checks `public/_redirects` as data (astro preview does not apply redirects);
   `tests/bulk-parse.spec.ts` checks the bulk-paste parser. Both need no browser.
 - Tests in a sandbox: `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e`.
@@ -115,6 +116,16 @@ disagree. `scripts/indexnow.mjs` POSTs the sitemap URLs to `https://api.indexnow
 `deploy` job (after `wrangler deploy`, `continue-on-error`) or by hand. **Never run it in a test or from an agent session
 without `--dry-run`**: no test, npm test script or build step may call it (`tests/indexnow.spec.ts` checks the wiring as data).
 It exits 0 with a message when offline or when the site is not live yet.
+
+## Accessibility
+
+Goal: WCAG 2.2 AA; `/accessibility/` says what was checked and what is known to fall short (README "Privacy policy and accessibility statement").
+- Media queries are in `em` (`48em`, not `768px`), so a larger default text size gets the phone layout. No `overflow-x: hidden` on `body`.
+- Never add a claim to the statement that no check backs; when a review is repeated, update its date, "How we test" and "Known limitations" together.
+- The privacy policy (`/privacy/`) follows the same rule: it says only what the code, `src/config/site.ts` or the owner has confirmed (no deletion
+  schedule, inbox access, response deadline or Web3Forms retention the repo cannot show). Open owner questions are `CONFIRM` lines in the page's
+  top comment, so `npm run prelaunch` lists them. A line of text that ends before a tag or `{expression}` loses its line break in Astro, so keep
+  "(see <a>" on one line (a test checks the built pages).
 
 ## CSP
 

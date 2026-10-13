@@ -751,7 +751,8 @@
   "featured": false,
   "order": 29,
   "flags": [
-   "Listed twice in source (second section lists it as plain \"SPRING\", same OEM); merged, kept the dimensioned name and both photos."
+   "Listed twice in source (second section lists it as plain \"SPRING\", same OEM); merged, kept the dimensioned name and both photos.",
+   "Accessibility review (2026-10-13): the size in the name has no unit (inch or millimeter), as in the source catalog. Confirm the unit and add it to the name, so it is clear to a screen reader and a search too. Not changed here: no unit was guessed."
   ]
  },
  {
@@ -783,7 +784,8 @@
   "featured": false,
   "order": 30,
   "flags": [
-   "Listed twice in source (\"PLATEN BAR POLY 5/16 X 22 3/4\" and \"BAR POLY 5/16 X 22\\\"\", same OEM); merged. Confirm length (22 3/4\" vs 22\")."
+   "Listed twice in source (\"PLATEN BAR POLY 5/16 X 22 3/4\" and \"BAR POLY 5/16 X 22\\\"\", same OEM); merged. Confirm length (22 3/4\" vs 22\").",
+   "Accessibility review (2026-10-13): the size in the name has no unit (inch or millimeter), as in the source catalog. Confirm the unit and add it to the name, so it is clear to a screen reader and a search too. Not changed here: no unit was guessed."
   ]
  },
  {
@@ -3429,7 +3431,8 @@
   "order": 137,
   "flags": [
    "Verify: no Hayssen part number in the source catalog (the OEM # line is blank). Listed by C&M number only; add the Hayssen number if there is one.",
-   "Source spells the name \"HOULDER\"; shown as \"Shoulder\"."
+   "Source spells the name \"HOULDER\"; shown as \"Shoulder\".",
+   "Accessibility review (2026-10-13): the size in the name has no unit (inch or millimeter), as in the source catalog. Confirm the unit and add it to the name, so it is clear to a screen reader and a search too. Not changed here: no unit was guessed."
   ],
   "shortName": "Stainless Shoulder Bolt ½ x 7/8 Long"
  },

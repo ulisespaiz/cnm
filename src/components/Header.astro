@@ -70,8 +70,13 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
   const menu = document.querySelector<HTMLElement>('[data-menu]');
 
   if (toggle && menu) {
+    // While the panel is open the page under it is inert: a tap outside the panel only closes it (it never lands on a
+    // link or button that peeks out below the panel's edge, WCAG 2.5.8), and Tab and a screen reader's cursor stay in the
+    // header and the menu instead of moving to content the panel covers.
+    const behind = () => document.querySelectorAll<HTMLElement>('main, footer, .mobile-bar, .addbar');
     const setOpen = (open: boolean) => {
       menu.hidden = !open;
+      behind().forEach((el) => (el.inert = open));
       toggle.setAttribute('aria-expanded', String(open));
     };
     const isOpen = () => !menu.hidden;
@@ -80,7 +85,13 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     menu.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('a')) setOpen(false);
     });
-    // Tabbing past the last link ("Call ...") must not leave the panel open over the page.
+    // Tabbing past the last link ("Call ...") must not leave the panel open over the page. The page behind is inert
+    // while the panel is open, so the panel closes on that Tab (making the page live again) and focus goes on into it.
+    menu.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab' || e.shiftKey) return;
+      const links = menu.querySelectorAll('a');
+      if (e.target === links[links.length - 1]) setOpen(false);
+    });
     menu.addEventListener('focusout', (e) => {
       const n = e.relatedTarget as Node | null;
       if (n && !menu.contains(n) && n !== toggle) setOpen(false);
@@ -94,8 +105,8 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
         toggle.focus();
       }
     });
-    // Nav links show inline from 1100px, so drop the panel if the window grows past it.
-    window.matchMedia('(min-width: 1100px)').addEventListener('change', (e) => {
+    // Nav links show inline from 68.75em (1100px at the default text size), so drop the panel if the window grows past it.
+    window.matchMedia('(min-width: 68.75em)').addEventListener('change', (e) => {
       if (e.matches) setOpen(false);
     });
   }
@@ -113,6 +124,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
 
   .site-header__inner {
     display: flex;
+    flex-wrap: wrap; /* only matters when the text is enlarged a lot: the burger then drops to a second row instead of off the screen */
     align-items: center;
     gap: 8px;
     min-height: 72px;
@@ -149,6 +161,14 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     color: var(--color-primary) !important;
   }
 
+  /* The current page is not shown by color alone (WCAG 1.4.1): the link is also underlined. */
+  .nav-desktop a[aria-current='page'],
+  .nav-mobile a[aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+
   /* Quote list + Shop. Phones: 48px-tall buttons with the icon over a short label (Quote, Shop); from 768px the
      icon and the full label sit side by side. */
   .header-actions {
@@ -165,9 +185,9 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
   .cart-btn {
     flex-direction: column;
     gap: 3px;
-    width: 56px;
+    width: auto; /* 56px at the default text size; wider when the text is enlarged, so the label stays inside the button */
     min-width: 56px;
-    padding: 0 2px;
+    padding: 0 0.25rem;
     border-radius: var(--radius);
     font-size: 0.75rem;
     font-weight: 700;
@@ -277,8 +297,16 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     box-shadow: none;
   }
 
+  /* A very short window (a page zoomed to 400%, a phone on its side): nothing stays stuck to the top, so the page keeps
+     its reading room (WCAG 1.4.10). `relative`, not `static`: the phone menu is placed against the header. */
+  @media (max-height: 32.5em) {
+    .site-header {
+      position: relative;
+    }
+  }
+
   /* Tablet: icon and full label side by side next to the burger. */
-  @media (min-width: 768px) {
+  @media (min-width: 48em) {
     .site-header__inner {
       gap: 10px;
     }
@@ -304,7 +332,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
   }
 
   /* Desktop: the nav links come out of the burger. */
-  @media (min-width: 1100px) {
+  @media (min-width: 68.75em) {
     .burger-btn,
     .nav-mobile {
       display: none;
@@ -338,14 +366,14 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     }
   }
 
-  @media (min-width: 1280px) {
+  @media (min-width: 80em) {
     .nav-desktop {
       gap: 28px;
     }
   }
 
   /* The phone number only joins the header when there is room to breathe. */
-  @media (min-width: 1440px) {
+  @media (min-width: 90em) {
     .header-phone {
       display: inline-flex;
       align-items: center;

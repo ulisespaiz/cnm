@@ -27,7 +27,10 @@ const { groups } = Astro.props;
             <label class="filters__opt">
               <input type="checkbox" name={g.name} value={o.value} />
               <span data-flabel>{o.label}</span>
+              {/* The count is read as part of the option's name, set off from the label ("14″, 3 parts"), not run into it. */}
+              <span class="visually-hidden">, </span>
               <span class="filters__n" data-fcount>{o.n}</span>
+              <span class="visually-hidden" data-funit>{o.n === 1 ? ' part' : ' parts'}</span>
             </label>
           ))}
         </fieldset>
