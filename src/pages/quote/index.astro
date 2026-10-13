@@ -12,8 +12,8 @@ import { site } from '../../config/site';
 <Base
   title="Request a Quote"
   description={site.store.enabled
-    ? "Send us your list of parts and project details and we'll email you a detailed quote."
-    : "Tell us about your part or project and we'll email you a detailed quote."}
+    ? "Send us your list of parts and project details and we'll send you a detailed quote."
+    : "Tell us about your part or project and we'll send you a detailed quote."}
   noindex
   hideMobileBar
 >
@@ -22,7 +22,8 @@ import { site } from '../../config/site';
     <div class="container">
       <p class="eyebrow">C&amp;M MACHINE SHOP</p>
       <h1>Request a Quote</h1>
-      <p class="lead">Tell us how to reach you and what you need, and we'll get back to you with pricing as soon as possible.</p>
+      <p class="lead">Tell us how to reach you and what you need. {site.replyTime}.</p>
+      <p class="qp__how"><a href="/how-to-order/">How ordering works</a></p>
 
       <div class="qp">
         <div class="qp__items">
@@ -71,7 +72,19 @@ import { site } from '../../config/site';
   }
 
   .quote-page .lead {
-    margin-bottom: 28px;
+    margin-bottom: 4px;
+  }
+
+  /* A small link under the intro: what to send, pickup and shipping */
+  .qp__how {
+    margin: 0 0 20px;
+  }
+
+  .qp__how a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
   }
 
   .qp {

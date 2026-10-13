@@ -7,7 +7,8 @@
 #                      `enabled: false` inside the job only (nothing is committed), then
 #                      check dist/ and the Playwright tests (the shop tests skip themselves)
 # deploy: runs `wrangler deploy` from GitHub Actions, only on a push to main, only after both
-#         build legs pass, and only once the repo secret CLOUDFLARE_API_TOKEN exists.
+#         build legs pass, and only once the repo secret CLOUDFLARE_API_TOKEN exists. After the
+#         deploy it runs `npm run indexnow` (best effort, continue-on-error).
 #
 # The deploy job is an ALTERNATIVE to Cloudflare Workers Builds (the Git integration in the
 # Cloudflare dashboard): use one or the other. With both on, every push to main is deployed
@@ -124,3 +125,12 @@ jobs:
           command: deploy
           # The action's default Wrangler (3.90) predates the static-assets settings in wrangler.jsonc.
           wranglerVersion: '4'
+
+      # Tells IndexNow (Bing and the other engines that use it) which URLs the site has. Best effort: it
+      # reads dist/sitemap-*.xml, which the deploy step's build just wrote, and it exits 0 with a message
+      # when the site is not live yet or the network is down. continue-on-error keeps a failure here from
+      # failing the deploy. README "IndexNow". It never runs in the build job or in the tests.
+      - name: Notify IndexNow
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        continue-on-error: true
+        run: npm run indexnow

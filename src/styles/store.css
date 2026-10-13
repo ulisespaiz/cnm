@@ -84,6 +84,7 @@
   justify-content: center;
   gap: 8px;
   width: 44px;
+  min-width: 44px; /* a flex row at 320px must not squeeze the 44px target */
   height: 44px;
   padding: 0;
   border: 0;

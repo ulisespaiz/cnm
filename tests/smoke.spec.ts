@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { expect, test as base, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, test as base, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 
 // Smoke tests for the production build (served by `astro preview`, see playwright.config.ts).
 // They follow the build they find: the parts shop tests are skipped when dist/ was built with
@@ -385,11 +385,209 @@ test('the contact form shows a success message', async ({ page, web3forms }) => 
   expect(web3forms[0].fields.subject).toBe('Website message from Test Customer');
 });
 
+// ---------- Reaching the customer: a name plus an email or a phone number ----------
+// The quote, contact and part request forms need a name and at least one of email or phone. Neither
+// field is required on its own (so the forms still post without JavaScript); with both empty one inline
+// error is tied to both fields (src/scripts/web3forms-submit.ts, the <fieldset data-reach>).
+const REACH_ERROR = 'Enter an email or a phone number so we can reply.';
+const CUSTOMER_EMAIL = 'test.customer@example.com';
+const CUSTOMER_PHONE = '(831) 555-0100';
+
+interface ReachForm {
+  title: string;
+  /** Opens the page and returns the form. */
+  open: (page: Page) => Promise<Locator>;
+  /** Fills everything except email and phone. */
+  fill: (form: Locator) => Promise<void>;
+  send: (form: Locator) => Promise<void>;
+  /** Waits for the form's success state. */
+  expectSent: (page: Page, form: Locator) => Promise<void>;
+  email: RegExp;
+  phone: RegExp;
+}
+
+const reachForms: ReachForm[] = [
+  {
+    title: 'quote form',
+    open: async (page) => {
+      await page.goto('/quote/');
+      return page.locator('form[data-kind="quote"]');
+    },
+    fill: async (form) => {
+      await form.getByLabel(/Full Name/).fill('Test Customer');
+      await form.getByLabel(/Additional Notes/).fill('Smoke test, please ignore.');
+    },
+    send: (form) => form.getByRole('button', { name: /Send Quote Request/ }).click(),
+    expectSent: async (page) => {
+      await expect(page).toHaveURL(/\/quote\/thanks\/$/);
+    },
+    email: /Email Address/,
+    phone: /Phone Number/,
+  },
+  {
+    title: 'contact form',
+    open: async (page) => {
+      await page.goto('/contact/');
+      return page.locator('form[data-kind="contact"]');
+    },
+    fill: async (form) => {
+      await form.getByLabel(/^Name/).fill('Test Customer');
+      await form.getByLabel(/^Message/).fill('Smoke test, please ignore.');
+    },
+    send: (form) => form.getByRole('button', { name: /Send Message/ }).click(),
+    expectSent: async (_page, form) => {
+      await expect(form.locator('[data-form-status]')).toContainText('Thanks, we got your message');
+    },
+    email: /^Email/,
+    phone: /^Phone/,
+  },
+  {
+    title: 'part request form',
+    open: async (page) => {
+      await page.goto('/quote/');
+      await page.locator('#cant-find > summary').click();
+      return page.locator('form[data-part-request]');
+    },
+    fill: async (form) => {
+      await form.getByLabel(/^Name/).fill('Test Customer');
+      await form.locator('#pr-number').fill('10097A9999');
+    },
+    send: (form) => form.getByRole('button', { name: /Send part request/ }).click(),
+    expectSent: async (page) => {
+      await expect(page.locator('[data-pr-success]')).toBeVisible();
+    },
+    email: /^Email/,
+    phone: /^Phone/,
+  },
+];
+
+for (const f of reachForms) {
+  test.describe(`${f.title}: name plus an email or a phone number`, () => {
+    test('phone only sends, without an email field', async ({ page, web3forms }) => {
+      const form = await f.open(page);
+      await f.fill(form);
+      await form.getByLabel(f.phone).fill(CUSTOMER_PHONE);
+      await f.send(form);
+      await f.expectSent(page, form);
+
+      expect(web3forms).toHaveLength(1);
+      const sent = web3forms[0].fields;
+      expect(sent.name).toBe('Test Customer');
+      expect(sent.phone).toBe(CUSTOMER_PHONE);
+      expect(sent, 'an empty email is not sent: Web3Forms uses it as the reply-to address').not.toHaveProperty('email');
+    });
+
+    test('email only sends, with the email as reply-to', async ({ page, web3forms }) => {
+      const form = await f.open(page);
+      await f.fill(form);
+      await form.getByLabel(f.email).fill(CUSTOMER_EMAIL);
+      await f.send(form);
+      await f.expectSent(page, form);
+
+      expect(web3forms).toHaveLength(1);
+      const sent = web3forms[0].fields;
+      expect(sent.name).toBe('Test Customer');
+      expect(sent.email).toBe(CUSTOMER_EMAIL);
+      expect(sent.phone ?? '').toBe('');
+    });
+
+    test('both given sends both', async ({ page, web3forms }) => {
+      const form = await f.open(page);
+      await f.fill(form);
+      await form.getByLabel(f.email).fill(CUSTOMER_EMAIL);
+      await form.getByLabel(f.phone).fill(CUSTOMER_PHONE);
+      await f.send(form);
+      await f.expectSent(page, form);
+
+      expect(web3forms).toHaveLength(1);
+      expect(web3forms[0].fields).toMatchObject({ email: CUSTOMER_EMAIL, phone: CUSTOMER_PHONE });
+    });
+
+    test('neither shows one error tied to both fields and sends nothing', async ({ page, web3forms }) => {
+      const form = await f.open(page);
+      const email = form.getByLabel(f.email);
+      const phone = form.getByLabel(f.phone);
+      const reach = form.locator('fieldset[data-reach]');
+      const url = page.url();
+      await f.fill(form);
+
+      // Neither input is required in the HTML, so the form still posts without JavaScript
+      await expect(email).not.toHaveAttribute('required', /.*/);
+      await expect(phone).not.toHaveAttribute('required', /.*/);
+
+      await f.send(form);
+
+      // One message for the pair, under both fields, named by both fields' aria-describedby
+      const error = reach.locator('.field-error');
+      await expect(error).toHaveCount(1);
+      await expect(error).toHaveText(REACH_ERROR);
+      const errorId = await error.getAttribute('id');
+      expect(errorId).toBeTruthy();
+      for (const field of [email, phone]) {
+        await expect(field).toHaveAttribute('aria-invalid', 'true');
+        expect(((await field.getAttribute('aria-describedby')) ?? '').split(/\s+/)).toContain(errorId);
+      }
+      await expect(form.locator('.field-error')).toHaveCount(1);
+      // The same as the per-field errors: focus on the first field, and the message in the status line
+      await expect(email).toBeFocused();
+      await expect(form.locator('[data-form-status]')).toHaveText(REACH_ERROR);
+      expect(page.url()).toBe(url);
+      expect(web3forms, 'nothing is sent').toHaveLength(0);
+
+      // Filling either field answers the error for both
+      await phone.fill(CUSTOMER_PHONE);
+      await expect(form.locator('.field-error')).toHaveCount(0);
+      await expect(email).not.toHaveAttribute('aria-invalid', /.*/);
+      await expect(phone).not.toHaveAttribute('aria-invalid', /.*/);
+      expect(((await email.getAttribute('aria-describedby')) ?? '').includes(errorId!)).toBe(false);
+      await expect(form.locator('[data-form-status]')).toHaveText('');
+
+      await f.send(form);
+      await f.expectSent(page, form);
+      expect(web3forms).toHaveLength(1);
+      expect(web3forms[0].fields.phone).toBe(CUSTOMER_PHONE);
+    });
+
+    test('a badly typed email is still refused, even with a phone number', async ({ page, web3forms }) => {
+      const form = await f.open(page);
+      const email = form.getByLabel(f.email);
+      await f.fill(form);
+      await email.fill('not-an-email');
+      await form.getByLabel(f.phone).fill(CUSTOMER_PHONE);
+      await f.send(form);
+
+      await expect(email).toHaveAttribute('aria-invalid', 'true');
+      await expect(email).toBeFocused();
+      await expect(form.locator('.field-error')).toHaveCount(1);
+      await expect(form.locator('.field-error')).not.toHaveText(REACH_ERROR);
+      expect(web3forms).toHaveLength(0);
+
+      await email.fill(CUSTOMER_EMAIL);
+      await f.send(form);
+      await f.expectSent(page, form);
+      expect(web3forms).toHaveLength(1);
+      expect(web3forms[0].fields.email).toBe(CUSTOMER_EMAIL);
+    });
+  });
+}
+
+test('an empty contact form lists every problem at once, including the missing email or phone', async ({ page, web3forms }) => {
+  await page.goto('/contact/');
+  const form = page.locator('form[data-kind="contact"]');
+  await form.getByRole('button', { name: /Send Message/ }).click();
+
+  await expect(form.locator('.field-error')).toHaveCount(3);
+  await expect(form.locator('fieldset[data-reach] .field-error')).toHaveText(REACH_ERROR);
+  await expect(form.locator('[data-form-status]')).toHaveText('Please fix 3 fields: Name, Email or phone, Message.');
+  await expect(form.getByLabel(/^Name/)).toBeFocused();
+  expect(web3forms).toHaveLength(0);
+});
+
 test('pages load without console errors', async ({ page, request, problems }) => {
-  const urls = ['/', '/services/', '/contact/', '/quote/', '/quote/thanks/'];
+  const urls = ['/', '/services/', '/contact/', '/quote/', '/quote/thanks/', '/how-to-order/'];
   if (shopOn) {
     const part = await findPart(request);
-    urls.push('/shop/', part.u.replace(/[^/]+\/$/, ''), part.u);
+    urls.push('/shop/', '/shop/part-numbers/', part.u.replace(/[^/]+\/$/, ''), part.u);
   }
   for (const url of urls) {
     const response = await page.goto(url);
@@ -398,4 +596,421 @@ test('pages load without console errors', async ({ page, request, problems }) =>
     await page.waitForLoadState('networkidle');
     expect(problems, url).toEqual([]);
   }
+});
+
+// ---------- OEM part number index, catalog CSV, how to order ----------
+
+interface CatalogPart {
+  id: string;
+  machine: string;
+  section: string;
+  oem?: string;
+  cm: string;
+  name: string;
+  nameRaw?: string;
+  flags?: string[];
+}
+const catalog: CatalogPart[] = JSON.parse(readFileSync('src/content/parts.json', 'utf8'));
+const sectionTitle = new Map<string, string>(JSON.parse(readFileSync('src/content/sections.json', 'utf8')).map((x: { id: string; title: string }) => [x.id, x.title]));
+const siteConfig = readFileSync('src/config/site.ts', 'utf8');
+// A plain string literal from src/config/site.ts (the single source of truth for the business facts).
+const configString = (name: string) => new RegExp(`^\\s*${name}:\\s*'([^']*)'`, 'm').exec(siteConfig)?.[1] ?? '';
+const SITE_ORIGIN = new URL(/^ {2}url:\s*'([^']+)'/m.exec(siteConfig)![1]).origin;
+const partPath = (p: CatalogPart) => `/shop/${p.machine}/${p.section}/${p.id}/`;
+const squash = (text: string | null | undefined) => (text ?? '').replace(/\s+/g, ' ').trim();
+
+// The order of the index and the CSV: OEM number as text, then C&M number; parts with no OEM number last.
+const inCatalogOrder = [...catalog].sort((a, b) => {
+  const ka = a.oem ? a.oem.replace(/[^A-Z0-9]/gi, '').toUpperCase() : '';
+  const kb = b.oem ? b.oem.replace(/[^A-Z0-9]/gi, '').toUpperCase() : '';
+  if (!ka !== !kb) return ka ? -1 : 1;
+  return ka < kb ? -1 : ka > kb ? 1 : a.cm < b.cm ? -1 : a.cm > b.cm ? 1 : 0;
+});
+
+// RFC 4180 reader (CRLF records, "quoted" fields with "" for a quote), so the test does not trust the code that wrote the file.
+function parseCsv(text: string): string[][] {
+  const records: string[][] = [];
+  let record: string[] = [];
+  let field = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') {
+        field += '"';
+        i++;
+      } else if (c === '"') quoted = false;
+      else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ',') {
+      record.push(field);
+      field = '';
+    } else if (c === '\r' && text[i + 1] === '\n') {
+      record.push(field);
+      records.push(record);
+      record = [];
+      field = '';
+      i++;
+    } else field += c;
+  }
+  if (field || record.length) {
+    record.push(field);
+    records.push(record);
+  }
+  return records;
+}
+
+async function jsonLd(page: Page) {
+  const blocks = (await page.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t));
+  return blocks.flatMap((d) => (Array.isArray(d['@graph']) ? d['@graph'] : [d]));
+}
+
+test.describe('OEM part number index', () => {
+  test.skip(!shopOn, 'the parts shop is off in this build');
+
+  test('lists every part in one labelled table, in OEM-number order, each row linking to its part page', async ({ page, request }) => {
+    await page.goto('/shop/part-numbers/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('OEM part number index');
+
+    const table = page.getByRole('table', { name: /146 parts, sorted by OEM #/ });
+    await expect(table).toHaveCount(1);
+    await expect(table.getByRole('columnheader')).toHaveText(['OEM #', 'C&M #', 'Part name', 'Section']);
+    const rows = table.locator('tbody tr');
+    await expect(rows).toHaveCount(146);
+    expect(catalog).toHaveLength(146);
+
+    const listed = await rows.evaluateAll((trs) =>
+      trs.map((tr) => ({
+        oem: tr.querySelector('.oem, .oem-none .visually-hidden')?.textContent?.trim() ?? '',
+        cm: /CM-\d{4}/.exec(tr.querySelector('.pn__cm')?.textContent ?? '')?.[0] ?? '',
+        name: tr.querySelector('.pn__name a')?.firstChild?.textContent?.trim() ?? '',
+        href: tr.querySelector('.pn__name a')?.getAttribute('href') ?? '',
+        section: tr.querySelector('.pn__sec')?.textContent?.trim() ?? '',
+      })),
+    );
+    expect(listed).toEqual(
+      inCatalogOrder.map((p) => ({ oem: p.oem ?? 'No OEM #', cm: p.cm, name: p.name, href: partPath(p), section: sectionTitle.get(p.section) })),
+    );
+    // The parts with an OEM number come first, the ones without are last
+    const noOem = inCatalogOrder.filter((p) => !p.oem).length;
+    expect(noOem).toBeGreaterThan(0);
+    expect(listed.slice(-noOem).every((r) => r.oem === 'No OEM #')).toBe(true);
+    expect(listed.slice(0, -noOem).every((r) => r.oem !== 'No OEM #')).toBe(true);
+
+    // Every link answers
+    const statuses = await Promise.all(listed.map(async (r) => [r.href, (await request.get(r.href)).status()] as const));
+    expect(statuses.filter(([, status]) => status !== 200)).toEqual([]);
+
+    // A row opens its part page
+    await rows.filter({ hasText: PART }).getByRole('link').click();
+    await expect(page).toHaveURL(new RegExp(`/shop/vffs/.+/${PART.toLowerCase()}-`));
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(PART);
+  });
+
+  test.describe('without JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+
+    test('the whole table is in the HTML', async ({ page }) => {
+      await page.goto('/shop/part-numbers/');
+      await expect(page.locator('table tbody tr')).toHaveCount(146);
+      await expect(page.getByRole('link', { name: 'Download the catalog (CSV)' })).toHaveAttribute('href', '/shop/catalog.csv');
+    });
+  });
+
+  test('stacks each row on a phone and stays a table on a desktop, with no sideways scrolling', async ({ page }) => {
+    const box = async (selector: string) => (await page.locator(selector).first().boundingBox())!;
+
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto('/shop/part-numbers/');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 'phone: no horizontal scroll').toBeLessThanOrEqual(0);
+    const oem = await box('tbody tr .pn__oem');
+    const name = await box('tbody tr .pn__name');
+    expect(name.y, 'phone: the part name sits under the numbers').toBeGreaterThanOrEqual(oem.y + oem.height - 1);
+    expect(name.height, 'phone: a 44px tap target').toBeGreaterThanOrEqual(44);
+    // the column headers are still there for screen readers
+    await expect(page.getByRole('columnheader', { name: 'OEM #' })).toHaveCount(1);
+
+    await page.setViewportSize({ width: 1280, height: 800 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 'desktop: no horizontal scroll').toBeLessThanOrEqual(0);
+    const dOem = await box('tbody tr .pn__oem');
+    const dName = await box('tbody tr .pn__name');
+    expect(Math.abs(dName.y - dOem.y), 'desktop: one line per row').toBeLessThan(dOem.height);
+    expect(dName.x).toBeGreaterThan(dOem.x + dOem.width);
+  });
+
+  test('has a short title, its own description, a canonical URL and a breadcrumb', async ({ page, request }) => {
+    await page.goto('/shop/part-numbers/');
+    expect((await page.title()).length).toBeLessThanOrEqual(65);
+    const description = await page.locator('meta[name="description"]').getAttribute('content');
+    expect(description!.length).toBeLessThanOrEqual(160);
+    await page.goto('/shop/');
+    expect(await page.locator('meta[name="description"]').getAttribute('content'), 'unique description').not.toBe(description);
+
+    await page.goto('/shop/part-numbers/');
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${SITE_ORIGIN}/shop/part-numbers/`);
+    const crumbs = (await jsonLd(page)).find((d) => d['@type'] === 'BreadcrumbList');
+    expect(crumbs.itemListElement.map((i: { name: string; item: string }) => [i.name, i.item])).toEqual([
+      ['Home', `${SITE_ORIGIN}/`],
+      ['Parts Store', `${SITE_ORIGIN}/shop/`],
+      ['OEM Part Number Index', `${SITE_ORIGIN}/shop/part-numbers/`],
+    ]);
+    // the visible breadcrumb names the same pages (desktop)
+    await expect(page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('listitem')).toHaveText(['Home', 'Parts Store', 'OEM Part Number Index']);
+
+    const sitemap = await (await request.get('/sitemap-0.xml')).text();
+    expect(sitemap).toContain(`<loc>${SITE_ORIGIN}/shop/part-numbers/</loc>`);
+  });
+
+  test('points to bulk paste, the part request form and the CSV, and is linked from the shop', async ({ page }) => {
+    await page.goto('/shop/part-numbers/');
+    await expect(page.getByRole('link', { name: 'Paste it on the quote page' })).toHaveAttribute('href', '/quote/#bulk');
+    await expect(page.getByRole('link', { name: 'Send us the part number' }).first()).toHaveAttribute('href', '#request');
+    await expect(page.locator('#request form[data-part-request]')).toHaveCount(1);
+    await expect(page.locator('.store-disclaimer')).toContainText('not affiliated with or endorsed by any machine manufacturer');
+    await expect(page.getByRole('link', { name: 'Download the catalog (CSV)' })).toHaveAttribute('href', '/shop/catalog.csv');
+
+    for (const url of ['/shop/', '/shop/vffs/']) {
+      await page.goto(url);
+      await expect(page.locator('main').getByRole('link', { name: /OEM part number index/ }).first(), url).toHaveAttribute('href', '/shop/part-numbers/');
+    }
+    await page.goto('/');
+    await expect(page.locator('footer').getByRole('navigation', { name: 'Shop' }).getByRole('link', { name: 'OEM part number index' })).toHaveAttribute('href', '/shop/part-numbers/');
+  });
+});
+
+test.describe('catalog CSV', () => {
+  test.skip(!shopOn, 'the parts shop is off in this build');
+
+  test('the download link saves a UTF-8 file with a BOM, a header and one line per part', async ({ page }) => {
+    await page.goto('/shop/part-numbers/');
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: 'Download the catalog (CSV)' }).click()]);
+    expect(download.suggestedFilename()).toMatch(/\.csv$/);
+    const saved = readFileSync((await download.path())!);
+    expect([...saved.subarray(0, 3)], 'UTF-8 byte order mark').toEqual([0xef, 0xbb, 0xbf]);
+
+    const text = saved.toString('utf8').slice(1);
+    const lines = text.replace(/\r\n$/, '').split('\r\n');
+    expect(lines, 'header + 146 parts').toHaveLength(147);
+    expect(lines[0]).toBe('OEM part number,C&M number,Part name,Section,URL');
+    expect(parseCsv(text)).toHaveLength(147);
+  });
+
+  test('matches the catalog, uses RFC 4180 quoting, and has no owner-only text', async ({ request }) => {
+    const response = await request.get('/shop/catalog.csv');
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toMatch(/^text\/csv/);
+    const body = await response.body();
+    expect([...body.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+    const text = body.toString('utf8').slice(1);
+
+    const records = parseCsv(text);
+    expect(records[0]).toEqual(['OEM part number', 'C&M number', 'Part name', 'Section', 'URL']);
+    expect(records.slice(1)).toEqual(inCatalogOrder.map((p) => [p.oem ?? '', p.cm, p.name, sectionTitle.get(p.section), `${SITE_ORIGIN}${partPath(p)}`]));
+    expect(records.every((r) => r.length === 5)).toBe(true);
+    // a name with a double quote is quoted and the quote doubled; so is one with a comma
+    expect(text).toContain(',"Bearing Ball 1""",');
+    expect(text).toContain(',"Air Cylinder, Special (1.5"" Bore x 3.5"" Stroke)",');
+
+    // nothing from the owner's notes: not the flags, not the name as written in the source catalog
+    const cells = new Set(records.flat());
+    for (const p of catalog) {
+      for (const flag of p.flags ?? []) if (flag.trim().length >= 8) expect(text.includes(flag), `flag of ${p.cm}`).toBe(false);
+      if (p.nameRaw && p.nameRaw !== p.name) expect(cells.has(p.nameRaw), `nameRaw of ${p.cm}`).toBe(false);
+    }
+    expect(text).not.toMatch(/Verify:/);
+    // no cell a spreadsheet would run as a formula
+    for (const cell of cells) expect(cell).not.toMatch(/^[=+\-@\t\r]/);
+  });
+
+  test('public/_headers gives the file its type and a short cache', () => {
+    const rule = /^\/shop\/catalog\.csv\n((?:[ \t]+.*\n?)*)/m.exec(readFileSync('public/_headers', 'utf8'))?.[1] ?? '';
+    expect(rule).toMatch(/Content-Type:\s*text\/csv;\s*charset=utf-8/i);
+    expect(rule).toMatch(/Cache-Control:.*max-age=\d{1,4}\b/i);
+  });
+});
+
+test.describe('how to order', () => {
+  test('renders the steps, the facts from the site config, and a visible FAQ that matches its FAQPage JSON-LD', async ({ page }) => {
+    await page.goto('/how-to-order/');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('How to get a part or job quoted');
+    expect((await page.title()).length).toBeLessThanOrEqual(65);
+    expect((await page.locator('meta[name="description"]').getAttribute('content'))!.length).toBeLessThanOrEqual(160);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${SITE_ORIGIN}/how-to-order/`);
+
+    const main = page.getByRole('main');
+    await expect(main).toContainText('no online checkout');
+    // quote-only: nothing on the page offers a price or a cart
+    await expect(main).not.toContainText(/\$\d/);
+    await expect(main.getByRole('button', { name: /add to cart|checkout|buy now/i })).toHaveCount(0);
+
+    // facts come from src/config/site.ts
+    await expect(main).toContainText(configString('replyTime'));
+    await expect(main).toContainText(configString('shipping'));
+    await expect(main).toContainText(configString('leadTimeFallback'));
+    await expect(main).toContainText('772 Vertin Ave, Salinas, CA 93901');
+    await expect(main.locator('.ho__hours')).toContainText('7:00am – 4:00pm');
+    await expect(main.locator('.ho__hours')).toContainText('10:00am – 2:00pm');
+    await expect(main.getByRole('link', { name: configString('phone') }).first()).toHaveAttribute('href', `tel:${configString('phoneE164')}`);
+    await expect(main.getByRole('link', { name: configString('email') }).first()).toHaveAttribute('href', `mailto:${configString('email')}`);
+    // what to send
+    for (const label of ['A sample, photo or drawing', 'How many', 'When you need it', 'Pickup or shipping']) await expect(main.getByText(label, { exact: true })).toBeVisible();
+    await expect(main).toContainText('ZIP code');
+
+    // visible FAQ: 4 to 6 questions, and FAQPage JSON-LD with the same questions and answers
+    const items = page.locator('details.faq');
+    const count = await items.count();
+    expect(count).toBeGreaterThanOrEqual(4);
+    expect(count).toBeLessThanOrEqual(6);
+    const visible = await items.evaluateAll((els) => els.map((el) => ({ q: el.querySelector('summary')?.textContent ?? '', a: el.querySelector('p')?.textContent ?? '' })));
+    const faq = (await jsonLd(page)).find((d) => d['@type'] === 'FAQPage');
+    expect(faq, 'FAQPage JSON-LD').toBeTruthy();
+    expect(faq.mainEntity.map((e: { name: string; acceptedAnswer: { text: string } }) => ({ q: squash(e.name), a: squash(e.acceptedAnswer.text) }))).toEqual(
+      visible.map((v) => ({ q: squash(v.q), a: squash(v.a) })),
+    );
+    const crumbs = (await jsonLd(page)).find((d) => d['@type'] === 'BreadcrumbList');
+    expect(crumbs.itemListElement.map((i: { name: string }) => i.name)).toEqual(['Home', 'How to Order']);
+
+    // the first answer is open, and the others open on a click
+    await expect(items.first()).toHaveJSProperty('open', true);
+    await items.nth(1).locator('summary').click();
+    await expect(items.nth(1).locator('p')).toBeVisible();
+  });
+
+  test('follows the parts shop switch', async ({ page }) => {
+    await page.goto('/how-to-order/');
+    const main = page.getByRole('main');
+    if (shopOn) {
+      await expect(main.getByRole('link', { name: 'Paste a list' })).toHaveAttribute('href', '/quote/#bulk');
+      await expect(main.getByRole('link', { name: 'Browse the parts store' }).first()).toHaveAttribute('href', '/shop/');
+      await expect(main.getByRole('link', { name: 'OEM part number index', exact: true })).toHaveAttribute('href', '/shop/part-numbers/');
+      await expect(main.getByRole('link', { name: 'Send a part number' })).toHaveAttribute('href', '/shop/#request');
+      await expect(main.getByText('Part request form', { exact: true })).toBeVisible();
+    } else {
+      // services and the part request form only: no catalog, quote list or bulk paste, and no link into /shop/
+      await expect(main.locator('a[href^="/shop"]')).toHaveCount(0);
+      await expect(main).not.toContainText(/bulk paste|paste a list|quote list|catalog|parts store/i);
+      await expect(main.getByRole('link', { name: 'Send a part number' })).toHaveAttribute('href', '/quote/#cant-find');
+      await expect(main.getByRole('link', { name: 'See our services' })).toHaveAttribute('href', '/services/');
+      await expect(main.getByText('Replacement part request', { exact: true })).toBeVisible();
+    }
+    await expect(main.getByRole('link', { name: 'Request a Quote' }).first()).toHaveAttribute('href', '/quote/');
+  });
+
+  test('keeps a C&M number in one piece (no line break at its hyphen)', async ({ page }) => {
+    test.skip(!shopOn, 'the C&M number examples are in the parts shop wording');
+    await page.goto('/how-to-order/');
+    const kept = page.locator('.ho__steps .nowrap, .ho__ways .nowrap');
+    await expect(kept.first()).toBeVisible();
+    expect(await kept.allTextContents()).toEqual(expect.arrayContaining(['CM-0111', '03187A0897 x2', '2 x CM-0002']));
+    for (const el of await kept.all()) await expect(el).toHaveCSS('white-space', 'nowrap');
+  });
+
+  test('keeps the reply time range in one piece (no line break inside "1–2 business days")', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto('/how-to-order/');
+    const range = page.locator('main .nowrap', { hasText: /^\d+–\d+ business days$/ });
+    // hero lead, step 4 (or 3), the facts card and the FAQ answers
+    expect(await range.count()).toBeGreaterThanOrEqual(4);
+    for (const el of await range.all()) await expect(el).toHaveCSS('white-space', 'nowrap');
+    // The hero sentence is where it used to break ("within 1–" / "2 business days"): the span must stay on one line
+    const hero = page.locator('.lead .nowrap');
+    await expect(hero).toHaveCount(1);
+    expect(await hero.evaluate((el) => el.getClientRects().length)).toBe(1);
+  });
+
+  test('fits a phone without sideways scrolling', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto('/how-to-order/');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  });
+
+  test('is linked from the footer, the quote page, llms.txt and the sitemap (and from the shop index with the shop on)', async ({ page, request }) => {
+    await page.goto('/');
+    await expect(page.locator('footer').getByRole('navigation', { name: 'Company' }).getByRole('link', { name: 'How to Order' })).toHaveAttribute('href', '/how-to-order/');
+
+    await page.goto('/quote/');
+    const how = page.getByRole('link', { name: 'How ordering works' });
+    await expect(how).toHaveAttribute('href', '/how-to-order/');
+    await expect(how, 'near the top of the quote page').toBeVisible();
+    expect((await how.boundingBox())!.y).toBeLessThan(450);
+
+    if (shopOn) {
+      await page.goto('/shop/');
+      await expect(page.getByRole('link', { name: 'How ordering works' })).toHaveAttribute('href', '/how-to-order/');
+    }
+
+    const llms = await (await request.get('/llms.txt')).text();
+    expect(llms).toContain(`${SITE_ORIGIN}/how-to-order/`);
+    const sitemap = await (await request.get('/sitemap-0.xml')).text();
+    expect(sitemap).toContain(`<loc>${SITE_ORIGIN}/how-to-order/</loc>`);
+  });
+});
+
+// Facts the pages state must come from src/config/site.ts or be true of every form: no payment, language or
+// "email only" claims, no drafting note on the privacy page.
+test.describe('stated facts', () => {
+  test('the business JSON-LD claims no payment, language or coordinates', async ({ page }) => {
+    await page.goto('/');
+    const business = (await jsonLd(page)).find((d) => d['@type'] === 'LocalBusiness');
+    expect(business, 'LocalBusiness JSON-LD').toBeTruthy();
+    expect(business).not.toHaveProperty('currenciesAccepted');
+    expect(business).not.toHaveProperty('geo');
+    expect(business.contactPoint).not.toHaveProperty('availableLanguage');
+  });
+
+  test('the privacy page has no drafting note and lists the fields the forms collect', async ({ page }) => {
+    await page.goto('/privacy/');
+    const main = page.getByRole('main');
+    await expect(main).not.toContainText(/template|before launch/i);
+    for (const field of ['company', 'PO or reference number', 'ZIP code', 'machine model or serial number']) await expect(main).toContainText(field);
+    await expect(main).not.toContainText('city,');
+  });
+
+  test('quote copy does not promise an email to a visitor who gave a phone number', async ({ page }) => {
+    for (const url of ['/quote/', '/quote/thanks/']) {
+      await page.goto(url);
+      await expect(page.getByRole('main'), url).not.toContainText(/email you/i);
+      expect((await page.locator('meta[name="description"]').getAttribute('content'))!, url).not.toMatch(/email you/i);
+    }
+  });
+
+  test('the parts FAQ says "make", not "carry" or "sell" (no stock claim)', async ({ page }) => {
+    test.skip(!shopOn, 'the VFFS parts FAQ entry exists only with the shop on');
+    for (const url of ['/', '/industries/food-processing-agriculture/']) {
+      await page.goto(url);
+      const questions = await page.locator('details.faq summary').allTextContents();
+      expect(questions.some((q) => /replacement parts for VFFS/.test(q)), url).toBe(true);
+      expect(questions.filter((q) => /VFFS/.test(q) && /\b(carry|sell|stock)\b/i.test(q)), url).toEqual([]);
+    }
+  });
+});
+
+test.describe('shared pages follow the parts shop switch', () => {
+  test('llms.txt and the footer list the number index and the CSV only with the shop on', async ({ page, request }) => {
+    const llms = await (await request.get('/llms.txt')).text();
+    await page.goto('/');
+    const shopColumn = page.locator('footer').getByRole('navigation', { name: 'Shop' });
+    if (shopOn) {
+      expect(llms).toContain(`(${SITE_ORIGIN}/shop/part-numbers/)`);
+      expect(llms).toContain(`(${SITE_ORIGIN}/shop/catalog.csv)`);
+      await expect(shopColumn.getByRole('link', { name: 'OEM part number index' })).toHaveCount(1);
+    } else {
+      expect(llms).not.toContain('/shop/');
+      await expect(shopColumn).toHaveCount(0);
+      await expect(page.locator('a[href^="/shop"]')).toHaveCount(0);
+    }
+  });
+});
+
+test.describe('parts shop off: the index and the CSV do not exist', () => {
+  test.skip(shopOn, 'the parts shop is on in this build');
+
+  test('nothing is built, and the /shop/* rule covers the old addresses', () => {
+    expect(existsSync('dist/shop/part-numbers/index.html')).toBe(false);
+    expect(existsSync('dist/shop/catalog.csv')).toBe(false);
+    expect(existsSync('dist/shop')).toBe(false);
+    const redirects = readFileSync('dist/_redirects', 'utf8');
+    expect(redirects).toMatch(/^\/shop\/\*\s+\/quote\/\s+302\s*$/m);
+    expect(readFileSync('dist/_headers', 'utf8')).not.toContain('/shop/');
+  });
 });

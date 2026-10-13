@@ -1,0 +1,522 @@
+---
+// /how-to-order/: how a part or a job gets quoted. Every fact comes from src/config/site.ts (reply time,
+// pickup, shipping, hours, phone, email) or from what the quote form and the part request form already say.
+// Nothing here promises a price, a lead time, stock or a payment method: C&M is quote-only.
+// Parts shop off (site.store.enabled): the catalog, quote list and bulk paste are not mentioned and nothing
+// links to /shop/; the page then covers services and the part request form.
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { leadTime } from '../components/store';
+import { site } from '../config/site';
+import { hoursRows, hoursSentence } from '../lib/hours';
+import { breadcrumbs, faqPage } from '../lib/schema';
+
+const shopOn = site.store.enabled;
+
+// Keeps a C&M number (CM-0111), a pasted-list example or a range like "1–2 business days" in one piece on a phone:
+// the text is plain data from this file, so it is escaped first and only then are the pieces wrapped.
+const escapeHtml = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const noBreak = (t: string) =>
+  escapeHtml(t).replace(/(?:\d+ x )?\bCM-\d{4}\b|\b\d{5}[A-Z]\d{4} x\d+|\b\d+–\d+ business days\b/g, '<span class="nowrap">$&</span>');
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'How to Order', path: '/how-to-order/' },
+];
+const hours = hoursRows();
+const address = `${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}`;
+
+// The numbered steps. The quote list, the catalog and bulk paste exist only while the shop is on.
+const steps = shopOn
+  ? [
+      {
+        title: 'Find your part number',
+        text: 'Read the OEM part number off the worn part or your machine manual. Look it up in the OEM part number index or search the parts store. Every part also has a C&M number, like CM-0111.',
+      },
+      {
+        title: 'Build your quote list',
+        text: 'Press Add to Quote on a part and set the quantity. Your list is saved in this browser, so it is still there when you come back on the same device. A long list of numbers can be pasted in all at once.',
+      },
+      {
+        title: 'Send your quote request',
+        text: 'On the quote page, add your name and an email or a phone number, say when you need it and whether you will pick it up or want it shipped. It is a request for a quote, not an order, and no payment is taken on the site.',
+      },
+      {
+        title: 'We reply to your request',
+        text: `${site.replyTime}. Pricing and lead time come on the quote. Then pick your parts up in ${site.address.city} or have them shipped.`,
+      },
+    ]
+  : [
+      {
+        title: 'Tell us what you need',
+        text: 'A part number, a sample, a photo, a drawing, or a description of the job. If you are not sure what to ask for, see what we do on the services pages.',
+      },
+      {
+        title: 'Send your quote request',
+        text: 'On the quote page, add your name and an email or a phone number, say when you need it and whether you will pick it up or want it shipped. It is a request for a quote, not an order, and no payment is taken on the site.',
+      },
+      {
+        title: 'We reply to your request',
+        text: `${site.replyTime}. Pricing and lead time come on the quote. Then pick your order up in ${site.address.city} or have it shipped.`,
+      },
+    ];
+
+// What a quote needs, in the words of the quote form and the part request form.
+const send = [
+  {
+    label: shopOn ? 'The part number' : 'The part number, if it has one',
+    text: shopOn
+      ? 'The OEM part number from the worn part or your manual, or our C&M number from the catalog. Your machine model and serial number help us prepare the quote.'
+      : 'The number stamped on the part. Your machine model and serial number help us prepare the quote.',
+  },
+  {
+    label: 'A sample, photo or drawing',
+    text: `We make parts to match your part number, sample or print. Email a photo or drawing to ${site.email} and put your quote reference (shown on the quote page) in the subject; we attach it to your quote.`,
+  },
+  { label: 'How many', text: shopOn ? 'The quantity of each part. On your quote list every line has its own quantity.' : 'The quantity of each part or piece.' },
+  { label: 'When you need it', text: 'The quote form offers “ASAP / rush”, “This week”, “2–4 weeks” or “Flexible”.' },
+  { label: 'Pickup or shipping', text: `Choose Pickup in ${site.address.city} or Ship to me. For shipping, add your ZIP code.` },
+  { label: 'How to reach you', text: 'Your name and an email or a phone number, so we can reply. A company name and a PO or reference number are optional.' },
+];
+
+// Ways to ask. Only the part request form and the services exist with the shop off.
+const ways = [
+  ...(shopOn
+    ? [
+        {
+          title: 'Your quote list',
+          text: 'Add parts from the catalog with Add to Quote, change the quantities, then send the list from the quote page. The quote button in the header shows how many lines you have.',
+          href: '/shop/',
+          cta: 'Browse the parts store',
+        },
+        {
+          title: 'Paste a list of part numbers',
+          text: 'Put one part per line, with an optional quantity, like 03187A0897 x2 or 2 x CM-0002. OEM part numbers can be typed with spaces or dashes, and C&M numbers work too. Up to 200 lines. Check the list, then add the matched lines to your quote.',
+          href: '/quote/#bulk',
+          cta: 'Paste a list',
+        },
+      ]
+    : []),
+  {
+    title: shopOn ? 'Part request form' : 'Replacement part request',
+    text: shopOn
+      ? "Part not in the catalog? Send us the OEM part number and we'll check it. Add what the part does and your machine's model or serial number if you know them."
+      : "Need a replacement part? Send us the part number and we'll check it and quote it. Add what the part does and your machine's model or serial number if you know them.",
+    href: shopOn ? '/shop/#request' : '/quote/#cant-find',
+    cta: 'Send a part number',
+  },
+  {
+    title: 'Machining and fabrication jobs',
+    text: `Describe the job in the notes on the quote form: specifications, tolerances, materials, quantities and deadlines. Email drawings to ${site.email}.`,
+    href: '/services/',
+    cta: 'See our services',
+  },
+];
+
+const shipping = 'Choose Ship to me on the quote form and add your ZIP code.';
+const faqs = [
+  {
+    q: 'Can I order online or see prices?',
+    a: `No. C&M is quote-only: there is no online checkout and there are no prices on the site. Tell us what you need on the quote page and we send you a quote. ${site.replyTime}.`,
+  },
+  {
+    q: 'What should I send to get a quote?',
+    a: shopOn
+      ? 'The OEM part number from the worn part or your manual, or the C&M number from our catalog. Add a sample, photo or drawing if you have one, how many you need, when you need them, and whether you will pick them up or want them shipped (with your ZIP code). Include your name and an email or a phone number so we can reply.'
+      : 'The part number stamped on the part, or a sample, photo or drawing. Add how many you need, when you need them, and whether you will pick them up or want them shipped (with your ZIP code). Include your name and an email or a phone number so we can reply.',
+  },
+  {
+    q: 'How soon will you reply, and what is the lead time?',
+    a: `${site.replyTime}. ${leadTime()}.`,
+  },
+  {
+    q: 'Can I pick it up, or can you ship it?',
+    a: `Local pickup is at ${address}. Shop hours (Pacific Time): ${hoursSentence()}. ${site.store.shipping}. ${shipping}`,
+  },
+  {
+    q: "What if I don't know the part number?",
+    a: `Send what you have: a sample, a photo or a drawing, the part's name, where it sits on the machine, or anything stamped on it, plus your machine's model and serial number if you know them. Use the part request form or the notes on the quote form. We make replacement parts to match your part number, sample or print.`,
+  },
+  shopOn
+    ? {
+        q: 'Can I send a long list of part numbers at once?',
+        a: 'Yes. Paste one part per line, with an optional quantity, into bulk paste on the quote page (up to 200 lines). It matches OEM part numbers and C&M numbers against the catalog, then you check the matches and add them to your quote.',
+      }
+    : {
+        q: 'Do you quote custom machining and fabrication jobs too?',
+        a: `Yes. Describe the job in the notes on the quote form (specifications, tolerances, materials, quantities and deadlines) and email any drawings to ${site.email}.`,
+      },
+];
+---
+
+<Base
+  title="How to Order: Get a Part or Job Quoted"
+  description={`Every part and job is quoted individually: no online checkout and no prices. Send a part number, sample, photo or drawing. ${site.replyTime}.`}
+  jsonLd={[breadcrumbs(crumbs), faqPage(faqs)]}
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={crumbs} />
+      <p class="eyebrow">How to Order</p>
+      <h1>How to get a part or job <span class="mark">quoted</span></h1>
+      <p class="lead">
+        Every part and job is quoted individually: there is no online checkout and there are no prices on this site. Tell us what
+        you need and we'll quote it. <span set:html={noBreak(site.replyTime)} />.
+      </p>
+      <p class="ho__actions">
+        <a class="btn btn--red" href="/quote/">Request a Quote</a>
+        {shopOn ? <a class="btn btn--outline" href="/shop/">Browse the parts store</a> : <a class="btn btn--outline" href="/services/">Our services</a>}
+      </p>
+
+      <h2 id="steps-title" class="ho__h2">How it works</h2>
+      <ol class={`ho__steps ho__steps--${steps.length}`} aria-labelledby="steps-title">
+        {
+          steps.map((s, i) => (
+            <li>
+              <span class="ho__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{s.title}</h3>
+              <p class="muted" set:html={noBreak(s.text)} />
+            </li>
+          ))
+        }
+      </ol>
+      {
+        shopOn && (
+          <p class="ho__index">
+            Looking for a number? The <a href="/shop/part-numbers/">OEM part number index</a> lists every part in one table.
+          </p>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section section--alt" aria-labelledby="send-title">
+    <div class="container ho__two">
+      <div>
+        <p class="eyebrow">What to send</p>
+        <h2 id="send-title">What we need for a quote</h2>
+        <p class="lead">Send what you have; we will ask for anything missing.</p>
+      </div>
+      <ul class="ho__send">
+        {
+          send.map((item) => (
+            <li>
+              <strong>{item.label}</strong>
+              <span class="muted">{item.text}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="ways-title">
+    <div class="container">
+      <p class="eyebrow">Ways to ask</p>
+      <h2 id="ways-title">{shopOn ? 'Quote list, pasted list or part request' : 'Part requests and custom jobs'}</h2>
+      <ul class="ho__ways">
+        {
+          ways.map((w) => (
+            <li>
+              <h3>{w.title}</h3>
+              <p class="muted" set:html={noBreak(w.text)} />
+              <a class="btn btn--outline" href={w.href}>{w.cta}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--alt" aria-labelledby="pickup-title">
+    <div class="container">
+      <p class="eyebrow">Reply, pickup and shipping</p>
+      <h2 id="pickup-title">After you send it</h2>
+      <dl class="ho__facts">
+        <div>
+          <dt>Reply time</dt>
+          <dd><span set:html={noBreak(site.replyTime)} />. {leadTime()}.</dd>
+        </div>
+        <div>
+          <dt>Local pickup</dt>
+          <dd>
+            <a href={site.maps} rel="noopener">{address}</a>
+            <ul class="ho__hours">
+              {hours.map((r) => <li><span>{r.label}</span><span>{r.value}</span></li>)}
+            </ul>
+          </dd>
+        </div>
+        <div>
+          <dt>Shipping</dt>
+          <dd>{site.store.shipping}. {shipping}</dd>
+        </div>
+        <div>
+          <dt>Phone</dt>
+          <dd><a href={`tel:${site.phoneE164}`}>{site.phone}</a></dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd><a href={`mailto:${site.email}`}>{site.email}</a></dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="faq-title">
+    <div class="container faq-wrap">
+      <p class="eyebrow">Common questions</p>
+      <h2 id="faq-title">Ordering <span class="text-blue">questions</span></h2>
+      {
+        faqs.map((f, i) => (
+          <details class="faq" open={i === 0}>
+            <summary>{f.q}</summary>
+            <p set:html={noBreak(f.a)} />
+          </details>
+        ))
+      }
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ho__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 4px 0 0;
+  }
+
+  @media (max-width: 479px) {
+    .ho__actions .btn {
+      flex: 1 1 100%;
+    }
+  }
+
+  .ho__h2 {
+    margin: 36px 0 0;
+    font-size: clamp(1.4rem, 2vw + 0.8rem, 1.9rem);
+  }
+
+  .ho__steps,
+  .ho__ways {
+    display: grid;
+    gap: 16px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ho__ways {
+    margin-top: 28px;
+  }
+
+  /* Steps: one column on phones; three steps go side by side from 700px, four make two rows until 1100px. */
+  @media (min-width: 700px) {
+    .ho__steps--3,
+    .ho__ways {
+      grid-template-columns: repeat(var(--ho-cols, 2), minmax(0, 1fr));
+    }
+
+    .ho__steps--3 {
+      --ho-cols: 3;
+    }
+
+    .ho__steps--4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1100px) {
+    .ho__steps--4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .ho__steps li,
+  .ho__ways li {
+    padding: 24px;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  .ho__steps p,
+  .ho__ways p {
+    margin: 0;
+  }
+
+  .ho__num {
+    display: inline-block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+
+  .ho__steps h3,
+  .ho__ways h3 {
+    margin-bottom: 8px;
+    font-size: 1.25rem;
+  }
+
+  .ho__ways li {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+  }
+
+  .ho__ways h3 {
+    margin: 0;
+  }
+
+  .ho__ways p {
+    flex: 1;
+  }
+
+  .ho__index {
+    margin: 20px 0 0;
+  }
+
+  .ho__two {
+    display: grid;
+    gap: 28px;
+  }
+
+  @media (min-width: 900px) {
+    .ho__two {
+      grid-template-columns: 1fr 1.3fr;
+      align-items: start;
+    }
+  }
+
+  .ho__send {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ho__send li {
+    display: grid;
+    gap: 2px;
+    padding: 14px 16px;
+    border-left: 4px solid var(--color-primary);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: var(--color-bg);
+  }
+
+  .ho__facts {
+    display: grid;
+    gap: 16px;
+    margin: 28px 0 0;
+  }
+
+  /* Two columns from 700px. Local pickup (address + hours) is the tall card: it takes the right column
+     for two rows, so Reply time and Shipping stack beside it and Phone and Email share the last row. */
+  @media (min-width: 700px) {
+    .ho__facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ho__facts > div:nth-child(2) {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+    }
+  }
+
+  .ho__facts > div {
+    padding: 18px 20px;
+    border-radius: var(--radius);
+    background: var(--color-bg);
+  }
+
+  .ho__facts dt {
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .ho__facts dd {
+    margin: 6px 0 0;
+    font-weight: 600;
+  }
+
+  .ho__facts a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    overflow-wrap: anywhere;
+  }
+
+  .ho__hours {
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+    font-weight: 400;
+  }
+
+  .ho__hours li {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 3px;
+    max-width: 22rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ho__hours li:last-child {
+    border-bottom: 0;
+  }
+
+  .faq-wrap {
+    max-width: 820px;
+  }
+
+  .faq {
+    margin-bottom: 12px;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  .faq summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    min-height: 60px;
+    padding: 14px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq summary::after {
+    content: '+';
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 1.2rem;
+  }
+
+  .faq[open] summary::after {
+    content: '−';
+  }
+
+  .faq p {
+    margin: 0;
+    padding: 0 20px 18px;
+    color: var(--color-muted);
+  }
+</style>

@@ -27,14 +27,14 @@ const faqs = [
   ...(shopOn
     ? [
         {
-          q: 'Do you carry parts for VFFS packaging machines?',
+          q: 'Do you make replacement parts for VFFS packaging machines?',
           a: `Yes. Our parts catalog lists ${partCount} replacement parts for vertical form fill seal (VFFS) packaging machines, matched by OEM part number and searchable by OEM part number or C&M number. If yours is not listed, send us the number and we will quote it.`,
         },
       ]
     : []),
   {
     q: 'Where are you located?',
-    a: `Our shop is at ${site.address.street}, ${site.address.city}, CA ${site.address.postalCode}, serving customers across Monterey County. Local pickup is available, or we can ship.`,
+    a: `Our shop is at ${site.address.street}, ${site.address.city}, CA ${site.address.postalCode}, serving customers across Monterey County. Local pickup is available. ${site.store.shipping}.`,
   },
 ];
 ---
@@ -52,7 +52,7 @@ const faqs = [
       <p class="eyebrow">Industries</p>
       <h1>{shopOn ? 'Parts' : 'Replacement parts'} and fabrication for <span class="mark">food processing</span> &amp; agriculture</h1>
       <p class="lead">
-        With more than 30 years of industry experience, {site.legalName} specializes in providing precision-engineered
+        In business in {site.address.city} since {site.founded}, {site.legalName} specializes in providing precision-engineered
         solutions for the food processing and agriculture industries in the Salinas Valley and across Monterey County.
       </p>
       <div class="cta-row">

@@ -4,8 +4,6 @@
 import { bindWeb3Form } from './web3forms-submit';
 import { scrollToEl } from './scroll-to';
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
 function forms() {
   return [...document.querySelectorAll<HTMLFormElement>('[data-part-request]')];
 }
@@ -54,11 +52,7 @@ for (const form of forms()) {
       const description = String(data.get('description') || '').trim();
       if (!number && !description) return 'Enter the part number, or describe the part you need.';
 
-      const contact = String(data.get('contact') || '').trim();
-      if (EMAIL.test(contact)) data.set('email', contact);
-      else if (contact.replace(/\D/g, '').length >= 7) data.set('phone', contact);
-      else return 'Enter a phone number or an email address so we can reply.';
-
+      // Name is required in the HTML; the email-or-phone check is the shared handler's (data-reach).
       const name = String(data.get('name') || '').trim();
       data.set('page', location.href);
       if (!String(data.get('searched_for') || '').trim()) data.set('searched_for', number);
@@ -72,7 +66,8 @@ for (const form of forms()) {
         data.get('machine') ? `Machine: ${data.get('machine')}` : '',
         `Qty: ${data.get('qty') ?? 1}`,
         `Name: ${data.get('name') ?? ''}`,
-        `Contact: ${data.get('contact') ?? ''}`,
+        data.get('email') ? `Email: ${data.get('email')}` : '',
+        data.get('phone') ? `Phone: ${data.get('phone')}` : '',
         `Searched for: ${data.get('searched_for') ?? ''}`,
         `Page: ${data.get('page') ?? ''}`,
       ]

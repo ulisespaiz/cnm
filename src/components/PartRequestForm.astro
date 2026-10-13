@@ -5,6 +5,8 @@
 // document event ({ detail: { query } }) and by ?part= in the URL.
 // With the parts shop off (site.store.enabled) the copy drops the catalog and
 // OEM-number wording: it is a plain "send us the part number" form.
+// A reply needs an email or a phone number, at least one (neither is `required`, so the form still posts
+// without JavaScript): the <fieldset data-reach> is checked by src/scripts/web3forms-submit.ts.
 import { site } from '../config/site';
 import { forms } from '../config/forms';
 
@@ -81,16 +83,25 @@ const Heading = compact ? 'h3' : 'h2';
       )
     }
 
-    <div class="field-row">
-      <div class="field">
-        <label for="pr-name">Name <span class="req" aria-hidden="true">*</span></label>
-        <input id="pr-name" name="name" autocomplete="name" required />
-      </div>
-      <div class="field">
-        <label for="pr-contact">Phone or email <span class="req" aria-hidden="true">*</span></label>
-        <input id="pr-contact" name="contact" autocomplete="email" inputmode="email" autocapitalize="none" required />
-      </div>
+    <div class="field">
+      <label for="pr-name">Name <span class="req" aria-hidden="true">*</span></label>
+      <input id="pr-name" name="name" autocomplete="name" required />
     </div>
+
+    <fieldset class="field reach" id="pr-reach" data-reach>
+      <legend>Email or phone <span class="req" aria-hidden="true">*</span></legend>
+      <p class="reach__hint" id="pr-reach-hint">Fill in at least one, so we can reply.</p>
+      <div class="field-row">
+        <div class="field">
+          <label for="pr-email">Email</label>
+          <input id="pr-email" name="email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" aria-describedby="pr-reach-hint" />
+        </div>
+        <div class="field">
+          <label for="pr-phone">Phone</label>
+          <input id="pr-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" aria-describedby="pr-reach-hint" />
+        </div>
+      </div>
+    </fieldset>
 
     <button class="btn btn--block" type="submit" data-submit>Send part request →</button>
     <p class="pr__status" role="status" aria-live="polite" data-form-status></p>

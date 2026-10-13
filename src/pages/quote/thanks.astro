@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import { site } from '../../config/site';
 ---
 
-<Base title="Request Received" description={`Your request reached ${site.name}. We email you a detailed quote.`} noindex hideMobileBar>
+<Base title="Request Received" description={`Your request reached ${site.name}. We send you a detailed quote.`} noindex hideMobileBar>
   <section class="section thanks">
     <div class="container">
       <p class="eyebrow">C&amp;M MACHINE SHOP</p>
@@ -15,7 +15,7 @@ import { site } from '../../config/site';
           <h2 id="next-title" class="tcard__title">What happens next</h2>
           <ol class="steps">
             <li>We review your {site.store.enabled ? 'list' : 'request'} and any notes you sent.</li>
-            <li>We email you a detailed quote.</li>
+            <li>We send you a detailed quote.</li>
             <li>
               Questions in the meantime? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a> or email{' '}
               <a href={`mailto:${site.email}`}>{site.email}</a>.

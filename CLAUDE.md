@@ -28,6 +28,7 @@ npm run check:dist       # validates dist/ without dependencies (links, SEO tags
 npm run check            # type-check .astro, .ts and .mjs files (astro check)
 npm run test:e2e         # Playwright smoke tests against `astro preview`; build first
 npm run prelaunch        # lists TODO/CONFIRM left before go-live
+npm run indexnow         # tells IndexNow (Bing etc.) the sitemap URLs; deploy-time only, see "IndexNow"
 ```
 
 - `tests/redirects.spec.ts` checks `public/_redirects` as data (astro preview does not apply redirects);
@@ -51,6 +52,11 @@ npm run prelaunch        # lists TODO/CONFIRM left before go-live
 - `src/scripts/`: browser code (quote store, search, forms). `public/*-early.js`: tiny classic
   scripts that run before first paint.
 - `astro.config.mjs`: sitemap filter and the `shopSwitch` hook that prunes `dist/` when the shop is off.
+- `src/lib/catalog.ts` (`getCatalogRows`, `catalogCsv`) feeds `/shop/part-numbers/` (the OEM part number index) and
+  `/shop/catalog.csv`; both exist only with the shop on. Only public part fields go in: never `flags` or `nameRaw`.
+- `src/pages/how-to-order.astro`: quote-only ordering guide and FAQ, in both shop states; every fact comes from
+  `src/config/site.ts` (reply time, pickup, shipping, hours, phone, email). Do not add a fact there that is not in the config
+  or on the quote and part request forms.
 
 ## Catalog data (`src/content/parts.json`)
 
@@ -101,6 +107,14 @@ hides the whole shop: no `/shop/` pages, search index, part photos or shop links
 to `/quote/` (302), and the quote page adds `?part=` numbers as plain lines. It is currently ON.
 Everything you add to a shared page (nav, footer, home, quote, 404, llms.txt) must respect it.
 Details: README "Parts shop on/off".
+
+## IndexNow
+
+`site.indexNowKey` (`src/config/site.ts`) is also the name and content of `public/<key>.txt`; `check:dist` fails if they
+disagree. `scripts/indexnow.mjs` POSTs the sitemap URLs to `https://api.indexnow.org/indexnow`. It runs only in the CI
+`deploy` job (after `wrangler deploy`, `continue-on-error`) or by hand. **Never run it in a test or from an agent session
+without `--dry-run`**: no test, npm test script or build step may call it (`tests/indexnow.spec.ts` checks the wiring as data).
+It exits 0 with a message when offline or when the site is not live yet.
 
 ## CSP
 

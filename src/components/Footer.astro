@@ -15,9 +15,6 @@ const sections = shopOn ? await getSections(MAIN_MACHINE) : [];
 const hours = hoursRows();
 const year = new Date().getFullYear();
 const social = Object.entries(site.social).filter(([, url]) => url);
-const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-  `${site.legalName}, ${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}`,
-)}`;
 
 const company = [
   { label: 'About', href: '/about/' },
@@ -25,6 +22,7 @@ const company = [
   { label: 'Our Machinery', href: '/our-machinery/' },
   { label: 'Food Processing & Ag', href: '/industries/food-processing-agriculture/' },
   { label: 'Service Areas', href: '/service-areas/' },
+  { label: 'How to Order', href: '/how-to-order/' },
   { label: 'Contact', href: '/contact/' },
 ];
 ---
@@ -50,8 +48,8 @@ const company = [
           <Image src={logo} alt={`${site.name} logo`} height={48} densities={[1, 2]} loading="lazy" />
         </a>
         <p class="about">
-          Family-owned machine shop in {site.address.city}, CA. Founded in {site.founded}, with 30+ years of industry
-          experience in machining, cutting, fabrication and replacement parts.
+          Family-owned machine shop in {site.address.city}, CA, since {site.founded}. Machining, cutting, fabrication and
+          replacement parts.
         </p>
         <address>
           <a class="icon-link" href={`tel:${site.phoneE164}`}>
@@ -62,7 +60,7 @@ const company = [
             <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
             {site.email}
           </a>
-          <a class="icon-link" href={mapUrl} rel="noopener">
+          <a class="icon-link" href={site.maps} rel="noopener">
             <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             <span>{site.address.street}, {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}</span>
           </a>
@@ -81,6 +79,7 @@ const company = [
           <ul>
             <li><a href="/shop/">Parts catalog</a></li>
             {sections.map((s) => <li><a href={sectionUrl(s)}>{s.data.title}</a></li>)}
+            <li><a href="/shop/part-numbers/">OEM part number index</a></li>
             <li><a href="/quote/#bulk">Paste a part list</a></li>
           </ul>
         </nav>

@@ -71,9 +71,9 @@ const shopSwitch = {
             '',
           ].join('\n'),
       );
-      // The search index is gone, so its cache rule goes too.
+      // The search index and the catalog CSV are gone, so their header rules go too.
       const headers = await readFile(join(out, '_headers'), 'utf8').catch(() => '');
-      if (headers) await writeFile(join(out, '_headers'), headers.replace(/^\/shop\/search-index\.json\n(?:[ \t]+.*\n?)*/m, ''));
+      if (headers) await writeFile(join(out, '_headers'), headers.replace(/^\/shop\/(?:search-index\.json|catalog\.csv)\n(?:[ \t]+.*\n?)*/gm, ''));
     },
   },
 };

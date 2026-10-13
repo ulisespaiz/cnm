@@ -21,8 +21,18 @@
 //     scripts, event-handler attributes, inline <style>, off-site resources)
 //   - shop ON: a part page without a Product JSON-LD with a sku, a part page that
 //     does not match src/content/parts.json, a bad shop/search-index.json
+//   - shop ON: /shop/part-numbers/ (the OEM part number index) with one row per part, in order, each
+//     linking to its part page; /shop/catalog.csv (UTF-8 with a BOM, RFC 4180, a header and one record
+//     per part, absolute URLs that resolve, no owner-only text, no cell a spreadsheet would run as a
+//     formula) and its _headers rule
 //   - shop OFF: anything left of /shop/, a link that still points there, or a /shop rule in
 //     _redirects that is not a 302 to /quote/
+//   - two pages with the same meta description; a title over 65 characters on the pages added for
+//     search (/how-to-order/, /shop/part-numbers/); the IndexNow key file (site.indexNowKey in
+//     src/config/site.ts) missing from dist or not holding the key
+//   - facts that must not drift from src/config/site.ts: JSON-LD `geo` while site.ts has no pin, a LocalBusiness
+//     hasMap or any Google Maps link that is not site.maps, a stated number of years ("20 years") in a page or in
+//     llms.txt, and a FAQPage question or answer that is not also on the page as visible text
 //   - the old machine manufacturer's name (owner request, Oct 2026) in any file visitors are
 //     served: every file in dist (text, scripts, styles, images and fonts as raw bytes) and every
 //     file name, also when spelled with entities, escapes or markup in the middle. _redirects and
@@ -133,6 +143,14 @@ try {
 
 const configText = existsSync('src/config/site.ts') ? readFileSync('src/config/site.ts', 'utf8') : '';
 const configShop = /store:\s*\{[^}]*?\benabled:\s*(true|false)/s.exec(configText)?.[1];
+// Facts the pages must keep in step with the config (checked per page below).
+const configMaps = /^\s*maps:\s*'([^']*)'/m.exec(configText)?.[1];
+const configHasGeo = /^\s*geo:\s*\{/m.test(configText); // a real pin was added to site.ts: JSON-LD may then carry it
+const MAPS_LINK = /^(?:https?:)?\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps|(?:www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)/i;
+const YEARS = /\b\d+\+?\s?years\b/i; // "20 years", "20+ years": goes stale, nothing in the config backs it
+const squash = (t) => decode(String(t)).replace(/\s+/g, ' ').trim();
+const hasGeo = (v) =>
+  Array.isArray(v) ? v.some(hasGeo) : v && typeof v === 'object' ? 'geo' in v || v['@type'] === 'GeoCoordinates' || Object.values(v).some(hasGeo) : false;
 const wantShop = flag('shop') ?? (configShop ? (configShop === 'true' ? 'on' : 'off') : 'auto');
 const builtShop = files.has('shop/index.html');
 // The switch decides what the build should contain; without a switch, the build decides.
@@ -259,7 +277,7 @@ const CSP_FOR = {
   form: ['form-action'],
 };
 
-const pages = []; // { rel, url, noindex, stub, ids, jsonld }
+const pages = []; // { rel, url, noindex, stub, ids, jsonld, title, description }
 const fragments = []; // { from, path, hash }
 const brokenRefs = new Map(); // "ref (reason)" -> pages that use it
 let refsChecked = 0;
@@ -313,7 +331,7 @@ function checkRef(page, raw, kind, tagName) {
 for (const rel of htmlFiles) {
   const url = pageUrl(rel);
   const html = read(rel);
-  const page = { rel, url, noindex: false, stub: false, ids: new Set(), jsonld: [] };
+  const page = { rel, url, noindex: false, stub: false, ids: new Set(), jsonld: [], title: '', description: '' };
   pages.push(page);
 
   // Scripts first (their bodies are code or JSON, not markup), then take bodies and comments out.
@@ -339,6 +357,7 @@ for (const rel of htmlFiles) {
     const titles = [...noSvg.matchAll(/<title\b[^>]*>([\s\S]*?)<\/title>/gi)];
     if (titles.length !== 1) error(url, `${titles.length} <title> elements (need exactly 1)`);
     else if (!decode(titles[0][1]).trim()) error(url, 'the <title> is empty');
+    else page.title = decode(titles[0][1]).trim();
 
     const descriptions = metas.filter((t) => t.attrs.name?.toLowerCase() === 'description');
     if (descriptions.length !== 1) error(url, `${descriptions.length} meta descriptions (need exactly 1)`);
@@ -346,13 +365,23 @@ for (const rel of htmlFiles) {
       const text = (descriptions[0].attrs.content ?? '').trim();
       if (!text) error(url, 'the meta description is empty');
       else if (chars(text) > 160) error(url, `meta description is ${chars(text)} characters (max 160)`);
+      else page.description = text;
     }
   }
 
-  // Text that should never be rendered
-  const text = decode(noSvg.replace(TAG, ' '));
+  // Text that should never be rendered. Every tag counts as a word break, except <span class="nowrap">: it only
+  // keeps a phrase ("1–2 business days") on one line, so "within <span>1–2 business days</span>." reads as one sentence.
+  const text = decode(noSvg.replace(/<span class="nowrap">([^<]*)<\/span>/g, '$1').replace(TAG, ' '));
   const seen = WORD.exec(text);
   if (seen) error(url, `renders "${seen[0]}": …${snippet(text, seen.index, seen[0].length)}…`);
+  const years = YEARS.exec(text);
+  if (years) error(url, `states a number of years ("${years[0]}"), which goes stale; the site gives the founding year only: …${snippet(text, years.index, years[0].length)}…`);
+  if (configMaps) {
+    for (const t of tags) {
+      const href = t.attrs.href;
+      if (t.name === 'a' && href && MAPS_LINK.test(href) && decode(href) !== configMaps) error(url, `a map link (${href}) is not site.maps (${configMaps})`);
+    }
+  }
   for (const t of tags) {
     for (const [name, value] of Object.entries(t.attrs)) {
       const bad = WORD.exec(value);
@@ -381,6 +410,26 @@ for (const rel of htmlFiles) {
     walkLd(data, '$');
     const nodes = [data].flat().flatMap((d) => (Array.isArray(d?.['@graph']) ? d['@graph'] : [d]));
     if (!nodes.length || nodes.some((d) => !d || typeof d !== 'object' || !d['@type'])) error(url, `JSON-LD block ${n + 1} has an entry without @type`);
+
+    // Facts that come from the config
+    if (!configHasGeo && hasGeo(data)) error(url, 'JSON-LD has `geo` / GeoCoordinates, but site.ts has no pin (coordinates are never guessed)');
+    for (const d of nodes) {
+      if (!d || typeof d !== 'object') continue;
+      if (configMaps && typeof d['@id'] === 'string' && d['@id'].endsWith('/#business') && d.hasMap !== configMaps) {
+        error(url, `the LocalBusiness hasMap (${JSON.stringify(d.hasMap)}) is not site.maps (${configMaps})`);
+      }
+      // A FAQPage may only say what the page also shows, word for word.
+      if (d['@type'] === 'FAQPage') {
+        const visible = squash(text);
+        for (const q of Array.isArray(d.mainEntity) ? d.mainEntity : []) {
+          const name = squash(q?.name ?? '');
+          const answer = squash(q?.acceptedAnswer?.text ?? '');
+          if (!name || !answer) error(url, 'FAQPage JSON-LD has a question or an answer with no text');
+          else if (!visible.includes(name)) error(url, `FAQPage question is not on the page as visible text: "${snippet(name, 0)}"`);
+          else if (!visible.includes(answer)) error(url, `FAQPage answer to "${snippet(name, 0)}" is not on the page as visible text`);
+        }
+      }
+    }
   });
 
   // Content-Security-Policy: what the browser would refuse to run
@@ -532,6 +581,34 @@ if (files.has('robots.txt')) {
   }
 } else error('robots.txt', 'missing');
 
+// ---------- Titles and descriptions ----------
+
+// Every indexable page needs its own meta description: the same text on two pages tells a search engine
+// nothing about either.
+const byDescription = new Map();
+for (const p of indexable) if (p.description) note(byDescription, p.description, p.url);
+for (const [text, urls] of byDescription) {
+  if (urls.size > 1) error([...urls][0], `the same meta description is on ${urls.size} pages (${[...urls].slice(0, 3).join(' ')}${urls.size > 3 ? ' …' : ''}): "${snippet(text, 0)}"`);
+}
+// Search results cut a title off after about 65 characters. The pages added for search keep to it.
+for (const url of ['/how-to-order/', '/shop/part-numbers/']) {
+  const p = pageByUrl.get(url);
+  if (p?.title && chars(p.title) > 65) error(url, `the <title> is ${chars(p.title)} characters (max 65): ${p.title}`);
+}
+
+// ---------- IndexNow key ----------
+// public/<key>.txt holds the key and nothing else, and site.indexNowKey in src/config/site.ts is that key,
+// so https://<site>/<key>.txt proves the site's owner sent the list (scripts/indexnow.mjs, README "IndexNow").
+
+const indexNowKey = /^\s*indexNowKey:\s*'([^']*)'/m.exec(configText)?.[1];
+let indexNowChecked = false;
+if (indexNowKey !== undefined) {
+  indexNowChecked = true;
+  if (!/^[0-9a-f]{32}$/.test(indexNowKey)) error('src/config/site.ts', `indexNowKey must be 32 hex characters, got "${indexNowKey}"`);
+  else if (!files.has(`${indexNowKey}.txt`)) error(`/${indexNowKey}.txt`, 'the IndexNow key file is missing from dist (put it in public/)');
+  else if (read(`${indexNowKey}.txt`).trim() !== indexNowKey) error(`/${indexNowKey}.txt`, 'the IndexNow key file does not contain the key');
+}
+
 // ---------- Parts shop ----------
 
 let partPages = 0;
@@ -583,7 +660,113 @@ if (shopOn) {
       }
     }
   }
+
+  // The expected order of the index and the CSV: OEM number (as text) then C&M number, parts with no OEM number last.
+  const sectionTitles = new Map(
+    (existsSync('src/content/sections.json') ? JSON.parse(readFileSync('src/content/sections.json', 'utf8')) : []).map((x) => [x.id, x.title]),
+  );
+  const ordered = [...(parts ?? [])].sort((a, b) => {
+    const ka = a.oemKey ?? '';
+    const kb = b.oemKey ?? '';
+    if (!ka !== !kb) return ka ? -1 : 1;
+    return ka < kb ? -1 : ka > kb ? 1 : a.cm < b.cm ? -1 : a.cm > b.cm ? 1 : 0;
+  });
+  const partPath = (p) => `/shop/${p.machine}/${p.section}/${p.id}/`;
+
+  // /shop/part-numbers/: one table row per part, in that order, each row linking to its part page.
+  const indexHtml = files.has('shop/part-numbers/index.html') ? read('shop/part-numbers/index.html') : null;
+  if (indexHtml === null) error('/shop/part-numbers/', 'the OEM part number index is missing from dist');
+  else {
+    const body = /<tbody\b[^>]*>([\s\S]*?)<\/tbody>/i.exec(indexHtml)?.[1] ?? '';
+    const rows = [...body.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((m) => m[1]);
+    const hrefs = rows.map((r) => /<a\b[^>]*\bhref="([^"]+)"/i.exec(r)?.[1]);
+    if (!/<table\b/i.test(indexHtml) || !/<caption\b/i.test(indexHtml)) error('/shop/part-numbers/', 'needs a <table> with a <caption>');
+    if ([...indexHtml.matchAll(/<th\b[^>]*\bscope="col"/gi)].length !== 4) error('/shop/part-numbers/', 'the table needs exactly 4 column headers (th scope="col"): OEM #, C&M #, Part name, Section');
+    if (parts) {
+      if (rows.length !== parts.length) error('/shop/part-numbers/', `${rows.length} table rows, the catalog has ${parts.length} parts`);
+      const wrong = ordered.findIndex((p, i) => hrefs[i] !== partPath(p));
+      if (rows.length === parts.length && wrong >= 0) error('/shop/part-numbers/', `row ${wrong + 1} links ${hrefs[wrong]}, expected ${partPath(ordered[wrong])} (rows must be sorted by OEM number, then parts without one by C&M number, each linking its part page)`);
+    }
+    if (!/href="\/shop\/catalog\.csv"/.test(indexHtml)) error('/shop/part-numbers/', 'has no link to /shop/catalog.csv');
+  }
+
+  // /shop/catalog.csv
+  if (!files.has('shop/catalog.csv')) error('/shop/catalog.csv', 'missing');
+  else {
+    const bytes = readFileSync(join(root, 'shop', 'catalog.csv'));
+    if (!(bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf)) error('/shop/catalog.csv', 'does not start with a UTF-8 byte order mark (Excel then reads it as a legacy code page)');
+    const text = bytes.toString('utf8').replace(/^\uFEFF/, '');
+    // RFC 4180: records end in CRLF, a field with a comma, quote or line break is quoted, a quote inside is doubled.
+    const records = [];
+    let record = [];
+    let field = '';
+    let quoted = false;
+    let wasQuoted = false;
+    let broken = '';
+    for (let i = 0; i < text.length && !broken; i++) {
+      const c = text[i];
+      if (quoted) {
+        if (c === '"' && text[i + 1] === '"') (field += '"'), i++;
+        else if (c === '"') quoted = false;
+        else field += c;
+      } else if (c === '"') {
+        if (field || wasQuoted) broken = `a quote in the middle of a field (record ${records.length + 1})`;
+        quoted = wasQuoted = true;
+      } else if (c === ',') {
+        record.push(field);
+        field = '';
+        wasQuoted = false;
+      } else if (c === '\r' && text[i + 1] === '\n') {
+        record.push(field);
+        records.push(record);
+        record = [];
+        field = '';
+        wasQuoted = false;
+        i++;
+      } else if (c === '\n' || c === '\r') broken = `a bare line break outside quotes (record ${records.length + 1}): records must end in CRLF`;
+      else field += c;
+    }
+    if (!broken && quoted) broken = 'a quoted field is never closed';
+    if (!broken && (field || record.length)) broken = 'the last record does not end in CRLF';
+    if (broken) error('/shop/catalog.csv', broken);
+    else if (parts) {
+      const header = ['OEM part number', 'C&M number', 'Part name', 'Section', 'URL'];
+      if (records[0]?.join('\t') !== header.join('\t')) error('/shop/catalog.csv', `the header must be ${header.map((h) => `"${h}"`).join(',')}`);
+      if (records.length !== parts.length + 1) error('/shop/catalog.csv', `${records.length} lines (header + records), expected ${parts.length + 1}`);
+      const byCm = new Map(parts.map((p) => [p.cm, p]));
+      const seen = new Set();
+      records.slice(1).forEach((r, n) => {
+        const where = `record ${n + 2}`;
+        if (r.length !== 5) return error('/shop/catalog.csv', `${where} has ${r.length} fields, expected 5`);
+        const [oem, cm, name, section, url] = r;
+        const part = byCm.get(cm);
+        if (!part) return error('/shop/catalog.csv', `${where}: C&M number ${cm} is not in parts.json`);
+        if (seen.has(cm)) error('/shop/catalog.csv', `${where}: ${cm} is listed twice`);
+        seen.add(cm);
+        if (oem !== (part.oem ?? '')) error('/shop/catalog.csv', `${where} (${cm}): OEM part number "${oem}", the catalog says "${part.oem ?? ''}"`);
+        if (name !== part.name) error('/shop/catalog.csv', `${where} (${cm}): part name "${name}", the catalog says "${part.name}"`);
+        if (section !== (sectionTitles.get(part.section) ?? part.section)) error('/shop/catalog.csv', `${where} (${cm}): section "${section}"`);
+        if (url !== `${origin}${partPath(part)}`) error('/shop/catalog.csv', `${where} (${cm}): URL ${url} is not the absolute URL of the part page ${origin}${partPath(part)}`);
+        else if (!pageByUrl.has(partPath(part))) error('/shop/catalog.csv', `${where} (${cm}): ${url} is not a page in dist`);
+        // A cell that starts with = + - @ is run as a formula by a spreadsheet.
+        for (const cell of r) if (/^[=+\-@\t\r]/.test(cell)) error('/shop/catalog.csv', `${where} (${cm}): "${cell}" starts with a character a spreadsheet reads as a formula`);
+      });
+      // Owner-only data never goes in: the notes in `flags`, and `nameRaw` (the name as written in the source catalog).
+      const cells = new Set(records.flat());
+      for (const p of parts) {
+        for (const flag of p.flags ?? []) if (flag.trim().length >= 8 && text.includes(flag)) error('/shop/catalog.csv', `contains an owner note from parts.json (flags of ${p.cm}): "${snippet(flag, 0)}"`);
+        if (p.nameRaw && p.nameRaw !== p.name && cells.has(p.nameRaw)) error('/shop/catalog.csv', `contains nameRaw of ${p.cm} ("${p.nameRaw}"), which is owner-only`);
+      }
+    }
+  }
+  const headerRule = files.has('_headers') ? /^\/shop\/catalog\.csv\n((?:[ \t]+.*\n?)*)/m.exec(read('_headers'))?.[1] : undefined;
+  if (headerRule === undefined) error('_headers', 'no rule for /shop/catalog.csv (its Content-Type text/csv; charset=utf-8 and a short cache)');
+  else {
+    if (!/^\s*Content-Type:\s*text\/csv;\s*charset=utf-8\s*$/im.test(headerRule)) error('_headers', 'the /shop/catalog.csv rule must set Content-Type: text/csv; charset=utf-8');
+    if (!/^\s*Cache-Control:/im.test(headerRule)) error('_headers', 'the /shop/catalog.csv rule must set a Cache-Control');
+  }
 } else {
+  if (files.has('_headers') && /^\/shop\//m.test(read('_headers'))) error('_headers', 'a /shop/ header rule is left in dist/_headers while the shop is OFF');
   for (const f of files) {
     if (f.startsWith('shop/') || f === 'shop-early.js') error(`/${f}`, 'left in dist while the shop is OFF');
   }
@@ -596,6 +779,13 @@ if (shopOn) {
       error('_redirects', `${r.from} -> ${r.to} (${r.status}): while the shop is OFF a /shop rule must be "/quote/ 302"`);
     else if (r.to.startsWith('/shop')) error('_redirects', `${r.from} -> ${r.to} still points at the hidden shop (expected "/quote/ 302")`);
   }
+}
+
+// ---------- llms.txt: no stated number of years ----------
+if (files.has('llms.txt')) {
+  const llms = read('llms.txt');
+  const years = YEARS.exec(llms);
+  if (years) error('/llms.txt', `states a number of years ("${years[0]}"), which goes stale; the site gives the founding year only: …${snippet(llms, years.index, years[0].length)}…`);
 }
 
 // ---------- The manufacturer's name (owner request, Oct 2026) ----------
@@ -635,8 +825,10 @@ for (const f of [...files].sort()) {
   let hit = BRAND.exec(content);
   if (!hit && !bytes.subarray(0, 8192).includes(0)) {
     content = unmask(bytes.toString('utf8'));
+    // A CSV cell's quotes are only quoting: take them out too, so a name cut into two quoted pieces is still found.
+    if (f.endsWith('.csv')) content = content.replace(/"/g, '');
     hit = BRAND.exec(content);
-    how = ' (hidden by entities, escapes or markup)';
+    how = ' (hidden by entities, escapes, markup or CSV quoting)';
   }
   if (hit) {
     brandFiles++;
@@ -652,7 +844,8 @@ console.log(`check-dist  ${distArg}/  (shop ${shopLabel}, ${origin})`);
 console.log(`  pages      ${pages.length} HTML (${indexable.length} indexable, ${noindexCount} noindex)${shopOn ? `, ${partPages} part pages` : ''}`);
 console.log(`  references ${refsChecked} internal checked, ${viaRedirect} via redirects, ${rules.length} redirect rules`);
 console.log(`  sitemap    ${sitemapUrls.size} URLs in ${sitemapFiles} file(s)`);
-console.log(`  brand name ${brandFiles ? `FOUND in ${brandFiles} file(s)` : `none in ${brandScanned} served files`}`);
+console.log(`  brand name ${brandFiles ? `FOUND in ${brandFiles} file(s)` : `none in ${brandScanned} served files${files.has('shop/catalog.csv') ? ' (shop/catalog.csv included)' : ''}`}`);
+if (indexNowChecked) console.log(`  indexnow   key file ${indexNowKey}.txt present`);
 
 const limit = showAll ? Infinity : 40;
 const print = (label, list) => {

@@ -12,7 +12,7 @@ const crumbs = [
 ];
 
 const highlights = [
-  { label: 'Experience', value: '30+ Years', text: 'Of precision machining expertise trusted by businesses across multiple industries.' },
+  { label: 'Founded', value: String(site.founded), text: 'Precision machining expertise trusted by businesses across multiple industries.' },
   { label: 'Quality', value: 'Exact Specs', text: 'Precision machining to exact specifications — no compromises, every time.' },
   { label: 'Innovation', value: 'Advanced Tech', text: 'Advanced machinery and techniques that keep us ahead of industry standards.' },
 ];
@@ -26,20 +26,20 @@ const values = [
 
 <Base
   title={`About ${site.name} | Family-Owned in ${site.address.city}, CA`}
-  description={`${site.legalName} is a family-owned machine shop in ${site.address.city}, CA, founded in 2002, serving food processing, agriculture and industry in Monterey County.`}
+  description={`${site.legalName} is a family-owned machine shop in ${site.address.city}, CA, founded in ${site.founded}, serving food processing, agriculture and industry in Monterey County.`}
   jsonLd={[breadcrumbs(crumbs)]}
 >
   <section class="section">
     <div class="container">
       <Breadcrumbs items={crumbs} />
       <p class="eyebrow">About Us</p>
-      <h1>Precision built on 30+ years of <span class="mark">craftsmanship</span></h1>
+      <h1>Precision built on <span class="mark">craftsmanship</span> since {site.founded}</h1>
       <div class="intro">
         <div>
           <p class="lead">
-            {site.legalName} was founded in 2002 with a simple vision: to provide quality craftsmanship with integrity
-            and hard work. With over 30 years of industry experience, we remain a family-oriented business dedicated to
-            delivering precise, reliable, and honest service for every project.
+            {site.legalName} was founded in {site.founded} with a simple vision: to provide quality craftsmanship with integrity
+            and hard work. We remain a family-oriented business dedicated to delivering precise, reliable, and honest
+            service for every project.
           </p>
           <p>
             Our team of professionals works closely with clients to ensure personalized solutions that exceed
@@ -68,7 +68,7 @@ const values = [
         <p class="eyebrow">Our Mission</p>
         <h2>Why we do what we do</h2>
         <p>
-          At {site.legalName}, with more than 30 years of industry experience, we specialize in providing
+          At {site.legalName}, in business since {site.founded}, we specialize in providing
           precision-engineered solutions for the food processing and agriculture industries. Our capabilities extend far
           beyond standard machining and metalworking services to include custom fabrication and blueprint-based
           fabrication. Whether it's water-jet cutting, laser cutting, or shearing, as well as machining such as milling

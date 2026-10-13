@@ -43,6 +43,8 @@ export const GET: APIRoute = async () => {
     ? `## Parts catalog: VFFS packaging machine replacement parts
 
 - [Parts store](${abs('/shop/')}): search by OEM part number or C&M number
+- [OEM part number index](${abs('/shop/part-numbers/')}): every part in one table, sorted by OEM part number
+- [Parts catalog as a spreadsheet (CSV)](${abs('/shop/catalog.csv')}): OEM part number, C&M number, part name, section and page URL for every part
 - [VFFS packaging machine parts](${abs(machineUrl(MAIN_MACHINE))}): how to find your part number
 ${sectionLinks}
 
@@ -62,13 +64,14 @@ ${partsBySection}
 
   const body = `# ${site.legalName}
 
-> Family-owned machine shop in ${site.address.city}, California, founded in ${site.founded}. Custom CNC machining, water-jet and laser cutting, welding, metal work and custom fabrication${catalogPitch}. Pricing is by quote.
+> Family-owned machine shop in ${site.address.city}, California, since ${site.founded}. Custom CNC machining, water-jet and laser cutting, welding, metal work and custom fabrication${catalogPitch}. Pricing is by quote.
 
 - Address: ${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}
 - Phone: ${site.phone}
 - Email: ${site.email}
 - Hours (Pacific Time): ${hoursSentence()}
 - Request a quote: ${abs('/quote/')}
+- How to order (quote-only, what to send, pickup and shipping): ${abs('/how-to-order/')}
 - Reply time: ${site.replyTime}
 - Service area: ${serviceAreas.join(', ')}
 

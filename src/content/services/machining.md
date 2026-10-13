@@ -5,14 +5,15 @@ image: ../../assets/equipment/CNC-Vertical-Milling-Machine.jpg
 imageAlt: "CNC vertical machining center in the C&M shop"
 capabilities:
   - name: "Milling"
-    text: "Multi-axis CNC milling for complex geometries and tight tolerances."
+    text: "CNC milling for complex geometries and tight tolerances."
   - name: "Turning"
     text: "Precision CNC turning for cylindrical components at production scale."
 materialsLabel: "Materials We Machine"
 materials: ["Steel", "Aluminum", "Stainless Steel", "Titanium", "High-Performance Polymers"]
+# CONFIRM: Titanium and High-Performance Polymers (and "titanium" in the home page FAQ) are the old site's copy; nothing in the repo records them. Confirm with the owner, then delete this note.
 order: 2
 seoTitle: "CNC Machining in Salinas, CA"
-seoDescription: "Precision CNC milling and turning in Salinas, CA, from prototypes to production runs, with tolerances as tight as ±0.001″. Request a quote."
+seoDescription: "Precision CNC milling and turning in Salinas, CA, from prototypes to production runs. Request a quote."
 draft: false
 faqs:
   - q: "What machining services do you offer?"
@@ -22,4 +23,4 @@ faqs:
   - q: "Can you make a part without a drawing?"
     a: "Yes. We work directly from technical drawings, and when there is no blueprint we can help engineer the part from a sample or your description."
 ---
-Our machining services include precision milling and turning, allowing us to create complex parts with high accuracy and consistency — ideal for both prototyping and large production runs. We operate state-of-the-art CNC mills and lathes with multi-axis capability, achieving tolerances as tight as ±0.001″.
+Our machining services include precision milling and turning, allowing us to create complex parts with high accuracy and consistency — ideal for both prototyping and large production runs. We operate CNC mills and lathes.

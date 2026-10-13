@@ -13,9 +13,6 @@ const crumbs = [
   { name: 'Contact', path: '/contact/' },
 ];
 const hours = hoursRows();
-const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-  `${site.legalName}, ${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}`,
-)}`;
 ---
 
 <Base
@@ -48,7 +45,7 @@ const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURICompo
             <div>
               <dt>Address</dt>
               <dd>
-                <a href={mapUrl} rel="noopener">{site.address.street}, {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}</a>
+                <a href={site.maps} rel="noopener">{site.address.street}, {`${site.address.city}, ${site.address.region} ${site.address.postalCode}`}</a>
               </dd>
             </div>
             <div>
@@ -62,7 +59,7 @@ const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURICompo
               </dd>
             </div>
           </dl>
-          <a class="btn btn--outline btn--block" href={mapUrl} rel="noopener">Get directions</a>
+          <a class="btn btn--outline btn--block" href={site.maps} rel="noopener">Get directions</a>
         </div>
         <div class="contact__form">
           <h2 class="h3">Send us a message</h2>
