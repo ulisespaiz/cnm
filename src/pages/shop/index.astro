@@ -20,7 +20,8 @@ const sections = await getSections();
 const parts = await getParts();
 const machineId = sections[0]?.data.machine.id ?? MAIN_MACHINE;
 
-const description = `Search ${parts.length} replacement parts for VFFS packaging machines by OEM or C&M part number. Add parts to a quote request. ${site.replyTime}.`;
+// The store home: search the whole catalog and build a quote list. (The machine hub, /shop/vffs/, describes how to find a part number.)
+const description = `Search all ${parts.length} replacement parts for VFFS packaging machines by OEM # or C&M #, add them to a quote list and send it. ${site.replyTime}.`;
 const jsonLd = [
   breadcrumbs([
     { name: 'Home', path: '/' },
@@ -55,12 +56,12 @@ const jsonLd = [
 
     <div class="shop__cant" data-ps-under>
       <a class="shop__cant-main" href="#request">Can't find it? <strong>Send us the part number</strong></a>
-      <a class="shop__cant-list" href="/quote/#bulk">Paste a list</a>
+      <a class="shop__cant-list" href="/quote/#bulk">Paste a list of part numbers</a>
     </div>
 
     <p class="shop__more" data-ps-under>
       <a href="/shop/part-numbers/">OEM part number index</a>
-      <a href="/how-to-order/">How ordering works</a>
+      <a href="/how-to-order/">How to Order</a>
     </p>
 
     <div class="shop__trust" data-ps-under>
@@ -68,6 +69,7 @@ const jsonLd = [
     </div>
 
     <section class="shop__list" id="all-parts" data-ps-under aria-labelledby="all-title">
+      <a class="shop__skip" href="#request">Skip the parts list</a>
       <h2 id="all-title" class="shop__h2 shop__h2--list">All parts <span class="muted">· <a href={machineUrl(machineId)}>How to find your part number</a></span></h2>
       <PartTable parts={parts} sections={sections} grouped />
     </section>
@@ -141,6 +143,25 @@ const jsonLd = [
     font-weight: 600;
   }
 
+  /* The list holds every part, hundreds of Tab stops: this link is hidden until it has keyboard focus, then jumps to the part request form after the list */
+  .shop__skip:not(:focus) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .shop__skip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
   .shop__h2 {
     margin: 0 0 10px;
     font-size: 1.2rem;
@@ -210,7 +231,7 @@ const jsonLd = [
     font-weight: 600;
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .shop {
       gap: 20px;
       padding-block: 32px 16px;

@@ -2,7 +2,6 @@
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
-import CtaBand from '../components/CtaBand.astro';
 import { site } from '../config/site';
 import { getEquipment } from '../lib/content';
 import { breadcrumbs } from '../lib/schema';
@@ -15,18 +14,19 @@ const crumbs = [
 ---
 
 <Base
-  title="Our Machinery: Lathes, CNC, Waterjet & Laser"
-  description={`The lathes, CNC mill and turning center, Flow waterjet and fiber laser ${site.legalName} uses for precision parts in ${site.address.city}, CA.`}
+  title="Machinery: CNC, Lathe, Waterjet & Laser"
+  description={`Our ${site.address.city}, CA shop runs a CNC vertical machining center, an engine lathe, a Flow waterjet, a fiber laser and a wide-belt finishing machine.`}
   jsonLd={[breadcrumbs(crumbs)]}
 >
   <section class="section">
     <div class="container">
       <Breadcrumbs items={crumbs} />
       <p class="eyebrow">Our Machinery</p>
-      <h1>Built on the best tools <span class="mark">in the trade</span></h1>
+      <h1>The machines in our <span class="mark">{site.address.city} shop</span></h1>
       <p class="lead">
-        At {site.name}, we take great pride in the state-of-the-art machinery we use to deliver high-quality,
-        precision-crafted products. Every machine in our shop is chosen for its reliability, accuracy, and capability.
+        The machines in our {site.address.city} shop include a CNC vertical machining center and an engine lathe for
+        machining, a waterjet and a fiber laser for cutting, and a wide-belt machine for deburring and finishing.
+        Tell us your part size and material when you request a quote.
       </p>
       <p><a class="btn btn--red" href="/quote/">Request a Quote</a></p>
 
@@ -34,7 +34,7 @@ const crumbs = [
         {equipment.map((m, i) => (
           <article class="machine" id={m.id}>
             {m.data.image && (
-              <Image src={m.data.image} alt={m.data.name} widths={[480, 800, 1100]} sizes="(min-width: 900px) 540px, 100vw" loading={i === 0 ? 'eager' : 'lazy'} />
+              <Image src={m.data.image} alt={m.data.imageAlt ?? m.data.name} widths={[480, 800, 1100]} sizes="(min-width: 900px) 540px, 100vw" loading={i === 0 ? 'eager' : 'lazy'} />
             )}
             <div class="machine__body">
               <span class="num">{String(i + 1).padStart(2, '0')}</span>
@@ -59,7 +59,6 @@ const crumbs = [
       </div>
     </div>
   </section>
-  <CtaBand heading="Need a part made?" text="Send us your drawing or sample part and we will quote it." />
 </Base>
 
 <style>
@@ -77,7 +76,7 @@ const crumbs = [
     scroll-margin-top: 96px;
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .machine {
       grid-template-columns: 1fr 1fr;
     }
@@ -126,7 +125,7 @@ const crumbs = [
     list-style: none;
   }
 
-  @media (min-width: 640px) {
+  @media (min-width: 40em) {
     .features {
       grid-template-columns: 1fr 1fr;
     }

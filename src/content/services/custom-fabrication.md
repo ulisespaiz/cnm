@@ -1,8 +1,9 @@
 ---
 title: "Custom Fabrication"
 summary: "Whether you provide detailed blueprints or just a vision, we turn your ideas into reality through custom metal fabrication tailored to your exact specifications."
-image: ../../assets/equipment/Flow-Mach-500-Waterjet-Cutting-Machine.jpg
-imageAlt: "Flow waterjet cutting table in the C&M shop"
+teaser: "Fabrication from your drawings, or from an idea when you have no blueprint."
+image: ../../assets/equipment/flow-mach-3-4020b-waterjet.jpg
+imageAlt: "Flow Mach 3 4020b waterjet cutting table in the C&M shop"
 capabilities:
   - name: "With Blueprints"
     text: "We work directly from your technical drawings with precision tolerances."

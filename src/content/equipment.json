@@ -1,72 +1,80 @@
 [
   {
-    "id": "sharp-22120b-lathe",
-    "name": "Sharp 22120B Lathe",
-    "text": "A versatile and indispensable metalworking machine that enables us to shape, cut, and craft custom cylindrical components with exceptional precision. As a cornerstone of precision machining, this lathe is designed to handle a wide range of tasks, making it a crucial part of our manufacturing capabilities.",
-    "image": "./../assets/equipment/Sharp-22120B-Lathe.jpg",
-    "featuresLabel": "Applications",
+    "id": "akira-seiki-performa-vmc",
+    "name": "Akira-Seiki Performa CNC Vertical Machining Center",
+    "blurb": "CNC milling and drilling, with Kurt vises on the table.",
+    "text": "Akira-Seiki Performa CNC vertical machining center. It mills and drills parts under CNC control, with Kurt vises on the table to hold the work.",
+    "image": "./../assets/equipment/akira-seiki-performa-vmc.jpg",
+    "imageAlt": "White and gray CNC machine with double doors, a control panel with a screen and a handwheel, and a blue Kurt vise visible through the window",
+    "featuresLabel": "Key Features",
     "features": [
-      { "name": "Turning", "text": "Shaping materials to achieve exact diameters and contours." },
-      { "name": "Boring", "text": "Enlarging or refining existing holes with accuracy." },
-      { "name": "Knurling", "text": "Adding texture or grip to components." },
-      { "name": "Facing", "text": "Creating smooth, flat surfaces on workpieces." },
-      { "name": "Drilling", "text": "Producing precise holes with consistent depth and diameter." }
+      { "name": "Milling", "text": "Cutting flats, slots, pockets and contours in a part." },
+      { "name": "Drilling", "text": "Making holes at the positions set in the CNC program." },
+      { "name": "CNC control", "text": "A screen, keypad and handwheel at the front of the machine." },
+      { "name": "Workholding", "text": "Kurt vises on the table clamp the workpiece." },
+      { "name": "Enclosed work area", "text": "Double doors with windows close off the cutting area." }
     ],
     "order": 1
   },
   {
-    "id": "cnc-vertical-milling-machine",
-    "name": "CNC Vertical Milling Machine",
-    "text": "A cornerstone of our manufacturing operations, delivering unmatched precision and reliability in cutting, drilling, and shaping a variety of materials. This advanced machine seamlessly integrates powerful cutting tools with state-of-the-art computer technology, enabling us to craft complex parts with exceptional accuracy and efficiency.",
-    "image": "./../assets/equipment/CNC-Vertical-Milling-Machine.jpg",
-    "featuresLabel": "Key Features",
+    "id": "sharp-22120b-lathe",
+    "name": "Sharp 22120B Engine Lathe",
+    "blurb": "Engine lathe with a digital readout for turning, boring, facing, knurling and drilling.",
+    "text": "Sharp 22120B engine lathe with a Newall digital readout. It turns, bores, faces, knurls and drills cylindrical parts.",
+    "image": "./../assets/equipment/Sharp-22120B-Lathe.jpg",
+    "imageAlt": "Long lathe bed with a chuck, a tailstock and a digital readout, bar stock racked behind",
+    "featuresLabel": "Operations",
     "features": [
-      { "name": "High Precision", "text": "Ensures accurate and consistent machining for even the most intricate designs." },
-      { "name": "Material Compatibility", "text": "Capable of handling metals, plastics, and other materials with ease." },
-      { "name": "Advanced CNC Control", "text": "Intuitive interface for precise control over cutting paths and speeds." },
-      { "name": "Enhanced Productivity", "text": "Performs multiple operations efficiently, reducing production time." }
+      { "name": "Turning", "text": "Cutting a rotating workpiece to a diameter or contour." },
+      { "name": "Boring", "text": "Enlarging or finishing an existing hole." },
+      { "name": "Facing", "text": "Cutting the end of a workpiece flat." },
+      { "name": "Knurling", "text": "Pressing a pattern into the surface for grip." },
+      { "name": "Drilling", "text": "Making holes along the axis of the workpiece." }
     ],
     "order": 2
   },
   {
-    "id": "flow-mach-500-waterjet",
-    "name": "Flow Mach 500 Waterjet Cutter",
-    "text": "A high-performance solution for precision cutting, designed to handle even the toughest materials with ease. Operating at pressures exceeding 60,000 PSI, the waterjet stream removes material efficiently and precisely — delivering flawless results without thermal distortion. Ideal for prototyping, small batch runs, and large-scale production.",
-    "image": "./../assets/equipment/Flow-Mach-500-Waterjet-Cutting-Machine.jpg",
+    "id": "flow-mach-3-4020b-waterjet",
+    "name": "Flow Mach 3 4020b Waterjet",
+    "blurb": "Cold cutting of sheet and plate, with no heat-affected zone.",
+    "text": "Flow Mach 3 4020b waterjet cutting machine. A waterjet cuts sheet and plate with a high-pressure stream of water, a cold process that does not heat the material.",
+    "image": "./../assets/equipment/flow-mach-3-4020b-waterjet.jpg",
+    "imageAlt": "Large cutting table with a gantry carrying the C&M shop sign, in a corrugated-steel shop",
     "featuresLabel": "Key Features",
     "features": [
-      { "name": "High Precision", "text": "Exceptional accuracy for intricate designs and complex geometries." },
-      { "name": "Versatility", "text": "Cuts metals, composites, stone, and more across diverse industries." },
-      { "name": "Cold Cutting Process", "text": "Eliminates heat-affected zones, preserving the structural integrity of materials." },
-      { "name": "Eco-Friendly", "text": "A clean and sustainable cutting method with minimal waste." }
+      { "name": "Cold cutting", "text": "The cut adds no heat, so there is no heat-affected zone." },
+      { "name": "Sheet and plate", "text": "Cuts flat sheet and plate to the outline in your drawing." },
+      { "name": "Heat-sensitive materials", "text": "Suits materials that should not be heated." }
     ],
     "order": 3
   },
   {
-    "id": "tb-2060vs-cnc-turning",
-    "name": "TB-2060VS CNC Turning Machine",
-    "text": "An integral part of our manufacturing process, offering high-precision machining with exceptional efficiency. This robust CNC lathe is engineered to handle complex turning operations seamlessly, enabling us to produce custom components that meet stringent standards across a variety of industries.",
-    "image": "./../assets/equipment/TB-2060VSCNC-CNC-Turning-Machine.jpg",
+    "id": "fiber-laser-cutting-system",
+    "name": "Fiber Laser Cutting System",
+    "blurb": "Cutting sheet metal such as stainless steel, aluminum, brass and mild steel.",
+    "text": "Enclosed fiber laser cutting system with a long slatted cutting table in front of the enclosure. It cuts sheet metal such as stainless steel, aluminum, brass and mild steel.",
+    "image": "./../assets/equipment/Laser-Cutting-Services.jpg",
+    "imageAlt": "Black enclosure with a long slatted cutting table and a dust collector with six round filters",
     "featuresLabel": "Key Features",
     "features": [
-      { "name": "High Torque Spindle", "text": "Superior power and performance on even the toughest materials." },
-      { "name": "Large Work Capacity", "text": "Accommodates a wide range of workpiece sizes for small and large-scale projects." },
-      { "name": "Material Flexibility", "text": "Works with metals and alloys, offering flexibility for diverse applications." },
-      { "name": "FANUC CNC System", "text": "Intuitive and precise control ensuring reliable performance and efficient operation." }
+      { "name": "Sheet metal cutting", "text": "Stainless steel, aluminum, brass and mild steel." },
+      { "name": "Slatted cutting table", "text": "A long slatted table extends in front of the black enclosure." },
+      { "name": "Dust collection", "text": "A six-filter dust collector stands beside the machine." }
     ],
     "order": 4
   },
   {
-    "id": "fiber-laser-cutting-system",
-    "name": "Fiber Laser Cutting System",
-    "text": "Utilizing state-of-the-art fiber laser cutting technology, we deliver exceptional precision and efficiency for a wide range of projects. From intricate designs to large-scale production, our laser system handles stainless steel, aluminum, brass, and mild steel to your exact specifications — with clean, smooth cuts every time.",
-    "image": "./../assets/equipment/Laser-Cutting-Services.jpg",
-    "featuresLabel": "Our Services",
+    "id": "timesavers-32-rb-series",
+    "name": "Timesavers 32 RB Series Wide-Belt Finishing Machine",
+    "blurb": "Deburring and finishing metal parts with abrasive belts.",
+    "text": "Timesavers 32 RB Series wide-belt finishing machine. It deburrs and finishes metal parts with abrasive belts.",
+    "image": "./../assets/equipment/timesavers-32-rb-series.jpg",
+    "imageAlt": "White wide-belt machine with a dark safety door, a touch-screen control panel and a conveyor table extending to the right",
+    "featuresLabel": "Key Features",
     "features": [
-      { "name": "Custom Metal Cutting", "text": "Stainless steel, aluminum, brass, and mild steel to exact specifications." },
-      { "name": "High-Precision Work", "text": "Perfect for detailed designs and complex geometries with exceptional accuracy." },
-      { "name": "Material Versatility", "text": "Works with various metals and thicknesses, accommodating both small and large projects." },
-      { "name": "Lead Time", "text": "Lead time is confirmed on your quote." }
+      { "name": "Deburring", "text": "Removes burrs and sharp edges left by cutting." },
+      { "name": "Finishing", "text": "Smooths the surface of metal parts with abrasive belts." },
+      { "name": "Enclosed work area", "text": "A safety door and a touch-screen control panel." }
     ],
     "order": 5
   }

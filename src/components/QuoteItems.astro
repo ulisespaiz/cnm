@@ -35,7 +35,7 @@ const shopOn = site.store.enabled;
         {shopOn ? (
           <>
             <a class="btn" href="/shop/">Browse the catalog</a>
-            <a class="btn btn--outline" href="#bulk">Paste a list</a>
+            <a class="btn btn--outline" href="#bulk">Paste a list of part numbers</a>
           </>
         ) : (
           <a class="btn" href="/services/">See our services</a>
@@ -55,7 +55,7 @@ const shopOn = site.store.enabled;
     <div class="qdrop">
       <h3>Have a drawing or photo of the part?</h3>
       <p>
-        Email it to <a href={`mailto:${site.email}`} data-ref-mailto={site.email}>{site.email}</a> and put your quote reference{' '}<strong data-quote-ref>above</strong> in the subject. We'll attach it to your quote.
+        Email it to <a href={`mailto:${site.email}`} data-ref-mailto={site.email}>{site.email}</a> and put your quote reference (<strong data-quote-ref>your reference number</strong>) in the subject. We'll attach it to your quote.
       </p>
     </div>
 
@@ -164,13 +164,13 @@ const shopOn = site.store.enabled;
     min-height: calc(var(--quote-rows, 0) * var(--qi-row));
   }
 
-  @media (min-width: 480px) {
+  @media (min-width: 30em) {
     .qi-list {
       --qi-row: 143px;
     }
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .qi-list {
       --qi-row: 150px;
     }
@@ -348,7 +348,7 @@ const shopOn = site.store.enabled;
     margin: 0;
   }
 
-  @media (min-width: 480px) {
+  @media (min-width: 30em) {
     .qi-list :global(.qi) {
       grid-template-columns: 56px 1fr auto;
       grid-template-areas: 'thumb main controls';
@@ -366,7 +366,7 @@ const shopOn = site.store.enabled;
     margin-top: 12px;
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     /* Two columns from here: the form is beside the list, not far below it */
     .qcontinue {
       display: none;

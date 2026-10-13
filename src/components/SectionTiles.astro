@@ -107,7 +107,7 @@ const tiles = await Promise.all(
   }
 
   /* Phones: stack the thumb above the text so a long title like "Registration Parts" keeps whole words. */
-  @media (max-width: 479px) {
+  @media (max-width: 29.9375em) {
     .stiles--tiles .stile {
       flex-direction: column;
       align-items: flex-start;
@@ -117,7 +117,7 @@ const tiles = await Promise.all(
   }
 
   /* Tiles are 2 columns up to 899px and 4 from 900px, so the 8 sections make a clean 2x4 / 4x2 grid. */
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .stiles--tiles {
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
@@ -168,7 +168,7 @@ const tiles = await Promise.all(
     align-self: center;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48em) {
     .stiles--cards {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

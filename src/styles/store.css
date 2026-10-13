@@ -127,6 +127,13 @@
   border-color: var(--color-success);
 }
 
+/* The small copy buttons have no border; in forced-colors mode (Windows High Contrast) they would read as plain text. */
+@media (forced-colors: active) {
+  .copybtn:not(.copybtn--text) {
+    border: 1px solid ButtonText;
+  }
+}
+
 /* ---------- quantity stepper + Add ---------- */
 .padd {
   display: flex;
@@ -155,7 +162,8 @@
 
 .qty__btn {
   width: 44px;
-  height: 48px;
+  height: auto; /* the box grows with the text, so a larger + or - is never cut off by the box (WCAG 1.4.4) */
+  min-height: 48px;
   padding: 0;
   border: 0;
   background: #f1f1f1;
@@ -170,7 +178,8 @@
 
 .qty__input {
   width: 48px;
-  height: 48px;
+  height: auto;
+  min-height: 48px;
   padding: 0;
   border: 0;
   background: #fff;
@@ -182,7 +191,7 @@
 .padd__add {
   flex: 1;
   min-width: 132px;
-  height: 48px;
+  height: auto;
   min-height: 48px;
   white-space: nowrap;
 }
@@ -341,11 +350,11 @@
 /* mobile row: [thumb] name / number + copy + C&M # / stepper + Add */
 .prow {
   display: grid;
-  grid-template-columns: 60px minmax(0, 1fr) auto;
+  grid-template-columns: 60px minmax(0, 1fr);
   grid-template-areas:
-    'thumb main main'
-    'thumb oem cm'
-    'add add add';
+    'thumb main'
+    'thumb nums'
+    'add add';
   align-items: center;
   gap: 0 12px;
   padding: 12px 14px;
@@ -372,6 +381,18 @@
   min-width: 0;
 }
 
+/* The OEM # (with its Copy button) and the C&M # share a line, the C&M # at the right. When they do not fit side by
+   side (a 320px screen, wider letter spacing, larger text) the C&M # drops to the next line instead of overprinting. */
+.prow__nums {
+  grid-area: nums;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 12px;
+  min-width: 0;
+}
+
 .prow__name {
   display: flex;
   align-items: center;
@@ -379,13 +400,23 @@
   color: #111;
   font-weight: 700;
   line-height: 1.25;
-  text-decoration: none;
   overflow-wrap: anywhere;
+  /* the name is the link into the part page: a thin underline at rest says so (it is bold black, like a title) */
+  text-decoration: underline;
+  text-decoration-color: rgb(17 17 17 / 0.4);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 .prow__name:hover {
   color: var(--color-primary);
-  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
+/* The Copy button sits a few pixels over the name's lower edge on a phone: when the name has focus, raise it above the button so its ring is not cut off */
+.prow__name:focus-visible {
+  position: relative;
+  z-index: 1;
 }
 
 .prow__meta {
@@ -395,7 +426,6 @@
 }
 
 .prow__oem {
-  grid-area: oem;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -407,7 +437,7 @@
 }
 
 .prow__cm {
-  grid-area: cm;
+  margin-left: auto;
   color: var(--color-muted);
   font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
@@ -423,7 +453,25 @@
 
 .prow .padd {
   grid-area: add;
+  flex-wrap: wrap; /* with larger text or wider spacing, Add drops under the quantity box instead of being cut off */
   margin-top: 4px;
+}
+
+/* Under 340px (320px is the smallest width WCAG asks for) the stepper and Add have to fit in 258px: a narrower stepper
+   and a button that is only as wide as its label need, so the row keeps its single line. */
+@media (max-width: 21.1875em) {
+  .prow .qty__btn {
+    width: 38px;
+  }
+
+  .prow .qty__input {
+    width: 42px;
+  }
+
+  .prow .padd__add {
+    min-width: min-content;
+    padding-inline: 8px;
+  }
 }
 
 .prow__label {
@@ -432,7 +480,7 @@
 
 /* The five-column table needs about 1200px with the filter sidebar beside it: below that the name
    column shrinks to nothing, so tablets and small laptops keep the compact row above. */
-@media (min-width: 1200px) {
+@media (min-width: 75em) {
   .plist__rows,
   .plist__head {
     --cols: 72px minmax(0, 1fr) 196px 88px 300px;
@@ -479,6 +527,20 @@
 
   .prow:hover {
     background: #f8faff;
+  }
+
+  /* The table layout: the two numbers are columns of their own again. */
+  .prow__nums {
+    display: contents;
+  }
+
+  .prow__oem {
+    grid-area: oem;
+  }
+
+  .prow__cm {
+    grid-area: cm;
+    margin-left: 0;
   }
 
   .prow__thumb {
@@ -701,7 +763,7 @@ body:has(dialog[open]) {
 }
 
 /* Part pages on phones: the bar scrolls away with the page and does not take sticky height. */
-@media (max-width: 767px) {
+@media (max-width: 47.9375em) {
   .storebar--static {
     position: static;
   }
@@ -716,7 +778,7 @@ html:has(.storebar) {
   scroll-padding-top: calc(var(--store-stick) + 16px);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 47.9375em) {
   html:has(.storebar--static) {
     --store-stick: var(--store-header);
   }
@@ -726,7 +788,7 @@ html:has([data-plist] .phead) {
   scroll-padding-top: calc(var(--store-stick) + 44px + 16px);
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 75em) {
   html:has([data-plist] .plist__head) {
     scroll-padding-top: calc(var(--store-stick) + 38px + 16px);
   }
@@ -807,7 +869,8 @@ html[data-q]:not([data-q-ready]) .site-footer {
 
 .psearch__input:focus-visible {
   border-color: var(--color-primary);
-  outline: 3px solid rgb(25 60 184 / 0.25);
+  /* a solid ring: the old 25% blue was 1.5:1 on white, so the ring alone was nearly invisible (WCAG 1.4.11) */
+  outline: 3px solid var(--color-primary);
   outline-offset: 0;
 }
 
@@ -923,9 +986,9 @@ html[data-ps-open] [data-ps-under] {
 }
 
 .ps-hit__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* The whole name is shown, on two lines if it has to be: cutting it off with "..." hides the part's name from a
+     reader who uses large text or a narrow screen (WCAG 1.4.4, 1.4.10). */
+  overflow-wrap: anywhere;
 }
 
 .ps-hit__sec {
@@ -992,11 +1055,17 @@ html[data-ps-open] [data-ps-under] {
   text-decoration: none;
 }
 
+/* the title below overlaps its lower edge by a pixel on a phone: keep the focused link on top */
+.back-link:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
 .crumbs-desktop {
   display: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 48em) {
   .crumbs-desktop {
     display: block;
   }
@@ -1022,4 +1091,19 @@ html[data-ps-open] [data-ps-under] {
 /* the sticky bars are already cleared by scroll-padding on <html> */
 #request {
   scroll-margin-top: 8px;
+}
+
+/* Very short window (a page zoomed to 400%, a phone on its side): the search bar and the list headers scroll away with
+   the page instead of covering most of it (WCAG 1.4.10). The site header does the same (Header.astro). */
+@media (max-height: 32.5em) {
+  .storebar,
+  .phead,
+  .plist__head {
+    position: static;
+  }
+
+  html:has(.storebar),
+  html:has(.storebar--static) {
+    --store-stick: 0px;
+  }
 }

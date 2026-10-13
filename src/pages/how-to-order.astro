@@ -84,7 +84,7 @@ const ways = [
     ? [
         {
           title: 'Your quote list',
-          text: 'Add parts from the catalog with Add to Quote, change the quantities, then send the list from the quote page. The quote button in the header shows how many lines you have.',
+          text: 'Add parts from the catalog with Add to Quote, change the quantities, then send the list from the quote page. The Quote list button in the header shows how many lines you have.',
           href: '/shop/',
           cta: 'Browse the parts store',
         },
@@ -92,7 +92,7 @@ const ways = [
           title: 'Paste a list of part numbers',
           text: 'Put one part per line, with an optional quantity, like 03187A0897 x2 or 2 x CM-0002. OEM part numbers can be typed with spaces or dashes, and C&M numbers work too. Up to 200 lines. Check the list, then add the matched lines to your quote.',
           href: '/quote/#bulk',
-          cta: 'Paste a list',
+          cta: 'Paste a list of part numbers',
         },
       ]
     : []),
@@ -139,7 +139,7 @@ const faqs = [
   shopOn
     ? {
         q: 'Can I send a long list of part numbers at once?',
-        a: 'Yes. Paste one part per line, with an optional quantity, into bulk paste on the quote page (up to 200 lines). It matches OEM part numbers and C&M numbers against the catalog, then you check the matches and add them to your quote.',
+        a: 'Yes. Use Paste a list of part numbers on the quote page: put one part per line, with an optional quantity (up to 200 lines). It matches OEM part numbers and C&M numbers against the catalog, then you check the matches and add them to your quote.',
       }
     : {
         q: 'Do you quote custom machining and fabrication jobs too?',
@@ -149,15 +149,14 @@ const faqs = [
 ---
 
 <Base
-  title="How to Order: Get a Part or Job Quoted"
-  description={`Every part and job is quoted individually: no online checkout and no prices. Send a part number, sample, photo or drawing. ${site.replyTime}.`}
+  title="How to Order"
+  description={`Every part and job is quoted individually: no checkout and no prices. Send a part number, sample, photo or drawing. ${site.replyTime}.`}
   jsonLd={[breadcrumbs(crumbs), faqPage(faqs)]}
 >
   <section class="section">
     <div class="container">
       <Breadcrumbs items={crumbs} />
-      <p class="eyebrow">How to Order</p>
-      <h1>How to get a part or job <span class="mark">quoted</span></h1>
+      <h1>How to <span class="mark">Order</span></h1>
       <p class="lead">
         Every part and job is quoted individually: there is no online checkout and there are no prices on this site. Tell us what
         you need and we'll quote it. <span set:html={noBreak(site.replyTime)} />.
@@ -285,7 +284,7 @@ const faqs = [
     margin: 4px 0 0;
   }
 
-  @media (max-width: 479px) {
+  @media (max-width: 29.9375em) {
     .ho__actions .btn {
       flex: 1 1 100%;
     }
@@ -310,7 +309,7 @@ const faqs = [
   }
 
   /* Steps: one column on phones; three steps go side by side from 700px, four make two rows until 1100px. */
-  @media (min-width: 700px) {
+  @media (min-width: 43.75em) {
     .ho__steps--3,
     .ho__ways {
       grid-template-columns: repeat(var(--ho-cols, 2), minmax(0, 1fr));
@@ -325,7 +324,7 @@ const faqs = [
     }
   }
 
-  @media (min-width: 1100px) {
+  @media (min-width: 68.75em) {
     .ho__steps--4 {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
@@ -382,7 +381,7 @@ const faqs = [
     gap: 28px;
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .ho__two {
       grid-template-columns: 1fr 1.3fr;
       align-items: start;
@@ -414,7 +413,7 @@ const faqs = [
 
   /* Two columns from 700px. Local pickup (address + hours) is the tall card: it takes the right column
      for two rows, so Reply time and Shipping stack beside it and Phone and Email share the last row. */
-  @media (min-width: 700px) {
+  @media (min-width: 43.75em) {
     .ho__facts {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

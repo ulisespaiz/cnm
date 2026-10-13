@@ -48,6 +48,14 @@ function labelText(form: HTMLFormElement, field: HTMLElement) {
   return (copy.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
+// What a field says about itself. A field can carry its own wording for "left empty" in
+// data-required-message ("Enter your name"), which replaces the browser's "Please fill out this field."
+// (that text is not tied to the field, and varies by browser and language). Every other problem, such as an
+// email without an @, keeps the browser's own message.
+function messageOf(field: Field) {
+  return (field.validity.valueMissing && field.dataset.requiredMessage) || field.validationMessage;
+}
+
 // Scroll only when the element is under the sticky header or too close to the bottom edge.
 function inView(el: HTMLElement) {
   const r = el.getBoundingClientRect();
@@ -147,11 +155,11 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
 
   // True when something was reported (and focused).
   const report = () => {
-    const problems = flagged.map((field) => ({ field, name: labelText(form, field), message: field.validationMessage, reach: false }));
+    const problems = flagged.map((field) => ({ field, name: labelText(form, field), message: messageOf(field), reach: false, own: messageOf(field) !== field.validationMessage }));
     flagged = [];
     if (reachEmpty()) {
       showReachError();
-      problems.push({ field: reachFields[0], name: REACH_NAME, message: REACH_MESSAGE, reach: true });
+      problems.push({ field: reachFields[0], name: REACH_NAME, message: REACH_MESSAGE, reach: true, own: true });
       // Document order, so the first problem on the page takes focus.
       problems.sort((a, b) => (a.field.compareDocumentPosition(b.field) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
     }
@@ -159,7 +167,9 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
     const first = problems[0];
     const names = problems.map((p) => p.name).filter(Boolean);
     let message: string;
-    if (problems.length === 1) message = first.reach || !first.name ? first.message : `${first.name}: ${first.message}`;
+    // The browser's wording does not say which field it means, so the name goes in front; a message the field
+    // wrote itself ("Enter your name") already does.
+    if (problems.length === 1) message = first.own || !first.name ? first.message : `${first.name}: ${first.message}`;
     else message = `Please fix ${problems.length} fields${names.length === problems.length ? `: ${names.join(', ')}` : ''}.`;
     setStatus(status, 'error', message);
     summary = true;
@@ -175,7 +185,7 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
     (event) => {
       event.preventDefault();
       const field = event.target as Field;
-      showFieldError(field, field.validationMessage);
+      showFieldError(field, messageOf(field));
       if (!flagged.length) window.setTimeout(report, 0);
       flagged.push(field);
     },
@@ -200,7 +210,7 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
     if (field.getAttribute?.('aria-invalid') !== 'true') return;
     if (!field.validity?.valid) {
       const err = fieldError(field);
-      if (err) err.textContent = field.validationMessage; // e.g. "fill out" has become "include an @"
+      if (err) err.textContent = messageOf(field); // e.g. "fill out" has become "include an @"
       return;
     }
     clearFieldError(field);

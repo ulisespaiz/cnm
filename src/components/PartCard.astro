@@ -6,6 +6,7 @@
 import { Image } from 'astro:assets';
 import { getEntry } from 'astro:content';
 import { partUrl, type Part } from '../lib/parts';
+import { displayName } from '../lib/partmeta';
 
 interface Props {
   part: Part;
@@ -14,6 +15,8 @@ interface Props {
 
 const { part, eager = false } = Astro.props;
 const { data } = part;
+// The photo has an empty alt on purpose: the whole card is one link, and its text already gives the part's name and
+// number. A description in the alt would make a screen reader read the name and number twice (the part page has it).
 const photo = data.images[0];
 const section = await getEntry(data.section);
 ---
@@ -24,7 +27,7 @@ const section = await getEntry(data.section);
       photo ? (
         <Image
           src={photo}
-          alt={data.imageAlt}
+          alt=""
           widths={[160, 250]}
           sizes="(min-width: 900px) 250px, 45vw"
           loading={eager ? 'eager' : 'lazy'}
@@ -36,7 +39,7 @@ const section = await getEntry(data.section);
   </span>
   <span class="part-card__body">
     {section && <span class="part-card__section">{section.data.title}</span>}
-    <span class="part-card__name">{data.name}</span>
+    <span class="part-card__name">{displayName(data)}</span>
     <span class="part-card__nums">
       <span class="part-card__label">{data.oem ? 'OEM #' : 'C&M part #'}</span>
       <span class="part-card__oem">{data.oem ?? data.cm}</span>

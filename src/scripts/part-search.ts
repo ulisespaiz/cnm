@@ -219,6 +219,15 @@ function initBox(root: HTMLElement) {
   const extra = root.querySelector<HTMLElement>('[data-ps-extra]')!;
   let hits: Hit[] = [];
 
+  // The list on screen updates on every key; the spoken count waits until typing pauses, so a screen reader says
+  // "4 results", not "4 results", "No match for 03", "9 results", "8 results" for four keystrokes (WCAG 4.1.3).
+  let statusTimer: number | undefined;
+  const say = (text: string) => {
+    window.clearTimeout(statusTimer);
+    if (!text) status.textContent = '';
+    else statusTimer = window.setTimeout(() => (status.textContent = text), 600);
+  };
+
   const phone = { label: root.dataset.phone ?? '', tel: root.dataset.tel ?? '' };
   const reply = root.dataset.reply ?? '';
 
@@ -259,7 +268,7 @@ function initBox(root: HTMLElement) {
       list.innerHTML = '';
       list.hidden = true;
       extra.innerHTML = '';
-      status.textContent = '';
+      say('');
       return show(false);
     }
     if (!entries.length) {
@@ -271,7 +280,7 @@ function initBox(root: HTMLElement) {
     if (!hits.length) {
       list.innerHTML = '';
       if (q.length < 2) return show(false);
-      status.textContent = `No match for ${q}`;
+      say(`No match for ${q}`);
       extra.innerHTML = `<div class="ps-empty"><p class="ps-empty__title">No match for “${esc(q)}”</p>
         <p>Request this part by number. ${esc(reply)}</p>
         <div class="ps-empty__actions"><button type="button" class="btn btn--red" data-request-part data-query="${esc(q)}">Request this part</button>
@@ -295,7 +304,7 @@ function initBox(root: HTMLElement) {
       hits.length > MAX
         ? `<button type="button" class="ps-more" data-ps-all>See all ${hits.length} results</button>`
         : '';
-    status.textContent = `${hits.length} ${hits.length === 1 ? 'result' : 'results'}`;
+    say(`${hits.length} ${hits.length === 1 ? 'result' : 'results'}`);
     show(true);
   }
 

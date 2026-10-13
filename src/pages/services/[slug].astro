@@ -102,7 +102,9 @@ const serviceSchema = {
           <h2 class="h3">Request a quote</h2>
           <p class="muted">Add this service to your quote list, then send the details.</p>
           <AddToQuote id={`service:${service.id}`} title={data.title} url={url} label="Add to Quote" />
-          <p class="muted service__call">Or call <a href={`tel:${site.phoneE164}`}>{site.phone}</a></p>
+          <p class="muted service__call">
+            Or call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>, or email your drawings to <a href={`mailto:${site.email}`}>{site.email}</a>.
+          </p>
           <p class="muted service__areas">Based in {site.address.city}. <a href="/service-areas/">See the areas we serve</a></p>
         </aside>
       </div>
@@ -132,7 +134,7 @@ const serviceSchema = {
             <a class="card" href={serviceUrl(s)}>
               <div class="card__body">
                 <h3>{s.data.title}</h3>
-                <p class="muted">{s.data.summary}</p>
+                <p class="muted">{s.data.teaser ?? s.data.summary}</p>
               </div>
             </a>
           ))}
@@ -171,7 +173,7 @@ const serviceSchema = {
     gap: 32px;
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .service {
       grid-template-columns: 1.6fr 1fr;
       align-items: start;
@@ -219,7 +221,7 @@ const serviceSchema = {
     list-style: none;
   }
 
-  @media (min-width: 640px) {
+  @media (min-width: 40em) {
     .capabilities {
       grid-template-columns: 1fr 1fr;
     }

@@ -1,15 +1,19 @@
 ---
 // "Add to Quote" form shared by product and service pages. The id must be
 // unique across both (services are prefixed with "service:").
+// A service has no quantity (you do not ask for "2 of" welding), so the Quantity field is left out for a
+// "service:" id and the line is added once; pass `qty` to override either way.
 interface Props {
   id: string;
   title: string;
   url: string;
   options?: { name: string; values: string[] }[];
   label?: string;
+  /** Show the Quantity field. Default: yes, except for a service. */
+  qty?: boolean;
 }
 
-const { id, title, url, options = [], label = 'Add to Quote' } = Astro.props;
+const { id, title, url, options = [], label = 'Add to Quote', qty: showQty = !id.startsWith('service:') } = Astro.props;
 ---
 
 <form class="add-form" data-add-to-quote data-id={id} data-title={title} data-url={url}>
@@ -21,10 +25,12 @@ const { id, title, url, options = [], label = 'Add to Quote' } = Astro.props;
       </select>
     </div>
   ))}
-  <div class="field qty-field">
-    <label for="qty">Quantity</label>
-    <input id="qty" name="__qty" type="number" min="1" max="999" value="1" inputmode="numeric" />
-  </div>
+  {showQty && (
+    <div class="field qty-field">
+      <label for="qty">Quantity</label>
+      <input id="qty" name="__qty" type="number" min="1" max="999" value="1" inputmode="numeric" />
+    </div>
+  )}
   <button class="btn btn--block" type="submit">{label}</button>
   <!-- Always in the page, empty (and so unstyled) until an add: a live region announces text put into one that was already there. -->
   <p class="add-form__status" role="status" aria-live="polite"></p>
@@ -40,7 +46,7 @@ const { id, title, url, options = [], label = 'Add to Quote' } = Astro.props;
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       const data = new FormData(form);
-      const qty = Number(data.get('__qty')) || 1;
+      const qty = Number(data.get('__qty')) || 1; // no field (a service): one
       data.delete('__qty');
       const options = Object.fromEntries([...data.entries()].map(([k, v]) => [k, String(v)]));
       addItem({

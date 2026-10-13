@@ -1,0 +1,210 @@
+---
+// /accessibility/: the accessibility statement. Every claim was checked in the code or by the review dated below;
+// keep it that way. When a review is repeated, change REVIEWED and REVIEWED_ISO together and update "How we test"
+// and "Known limitations" to match what the review found. Say what each check covered (every page, or a sample) and
+// no more: a claim without a record behind it does not belong here.
+//   - skip link, lang="en", landmarks, pinch-zoom allowed: src/layouts/Base.astro.
+//   - form labels, required-field messages, live regions: QuoteForm.astro, PartRequestForm.astro and
+//     src/scripts/web3forms-submit.ts.
+//   - photo enlarge dialog: src/components/Lightbox.astro (native <dialog>, Esc closes it).
+//   - part photos are no more than 333 pixels on the long side (src/assets/parts/: 250 x 333 for nearly all, two are 333 x 250);
+//     the enlarged view shows them at up to twice that.
+//   - reduced motion: src/styles/global.css (prefers-reduced-motion) and scrollBehavior() in src/scripts/scroll-to.ts.
+//   - "Known limitations" lists what the review found and the site does not fix yet: part-name abbreviations and inch marks
+//     (src/content/parts.json, owner to confirm), the toast link order (src/scripts/toast.ts), the long parts list on /shop/ (it has
+//     a "Skip the parts list" link, src/pages/shop/index.astro), no screen reader pass, Chromium only.
+//   - The statement is a goal, never a claim of conformance (tests/smoke.spec.ts forbids "compliant" wording). The ADA names no technical
+//     standard for a private business website; WCAG 2.1/2.2 AA is what courts and demand letters use. Nobody can certify a pass:
+//     keep "Our goal" worded as a goal.
+// The parts shop switch (site.store.enabled): with the shop off this page does not mention the parts store or its photos.
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { site } from '../config/site';
+import { hoursSentence } from '../lib/hours';
+import { breadcrumbs } from '../lib/schema';
+
+const shopOn = site.store.enabled;
+
+// The date of the review this statement describes.
+const REVIEWED = 'October 13, 2026';
+const REVIEWED_ISO = '2026-10-13';
+
+const host = new URL(site.url).host;
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Accessibility', path: '/accessibility/' },
+];
+---
+
+<Base
+  title="Accessibility Statement"
+  description={`Our goal is to meet WCAG 2.2 Level AA on ${host}. How we test, what we know is not perfect yet, and how to ask for help. Reviewed ${REVIEWED}.`}
+  jsonLd={[breadcrumbs(crumbs)]}
+>
+  <section class="section">
+    <div class="container">
+      <div class="prose statement">
+        <Breadcrumbs items={crumbs} />
+        <h1>Accessibility Statement</h1>
+        <p class="statement__date"><strong>Last reviewed: <time datetime={REVIEWED_ISO}>{REVIEWED}</time></strong></p>
+        <p class="lead">
+          {site.legalName} wants everyone to be able to use this website, including people who use a keyboard, a screen reader, voice control,
+          magnification or other assistive technology.
+        </p>
+
+        <h2 id="goal">Our goal</h2>
+        <p>
+          We aim for this website ({host}) to meet the Web Content Accessibility Guidelines (WCAG) 2.2, Level AA. That is our goal. We do not
+          claim that every page meets it, and the sections below say how we check and what we know is not perfect yet.
+        </p>
+
+        <h2 id="what-we-do">What we do</h2>
+        <ul>
+          <li>Every page starts with a “Skip to content” link, which is the first thing the Tab key reaches.</li>
+          <li>Every page has its own title, one main heading, headings in order, and the standard page regions (header, navigation, main content and footer).</li>
+          <li>The page language is set to English.</li>
+          <li>
+            Every field in the quote, contact and part request forms has a visible label.{' '}
+            {shopOn ? 'The search boxes, the quantity boxes and the note boxes in the lists' : 'The quantity boxes and the note boxes in your request'} have no visible label of their own, but each has a name that screen readers announce. Required fields are marked with an asterisk, and each form says what the
+            asterisk means. When a required field is missing, the form says which field in words, puts the message next to the field and moves focus to it. Other problems,
+            such as an empty quote, are announced in the form's status message.
+          </li>
+          <li>Messages such as “Sending…” and the result of a form are announced to screen readers.</li>
+          <li>You can zoom in and enlarge text: the site does not block pinch-zoom, and pages reflow to a narrow screen without sideways scrolling. If you raise your browser's default text size, the site switches to its phone layout sooner, so the page keeps fitting the screen.</li>
+          <li>Links, buttons, menus and forms can be used with the keyboard alone, and the item that has focus is outlined.</li>
+          <li>Text and its background meet the WCAG contrast ratios: 4.5 to 1 for normal text and 3 to 1 for large text.</li>
+          <li>The site has no autoplaying video or audio, and nothing on it flashes. If your device is set to reduce motion, small animations are switched off and the page jumps instead of gliding.</li>
+          <li>The page you are on is marked in the menu with an underline as well as a color. While the phone menu is open, the page behind it cannot be reached by Tab or by tapping, so a tap outside the menu only closes it.</li>
+          {shopOn && (
+            <li>
+              Photos on part pages have text descriptions. The small photos in parts lists, featured parts and section tiles are decorative: the text beside each one names it and is
+              the link. The photo viewer is a standard dialog: it opens from a button and closes with the Esc key or its Close button.
+            </li>
+          )}
+        </ul>
+
+        <h2 id="testing">How we test</h2>
+        <p>The most recent review was on <time datetime={REVIEWED_ISO}>{REVIEWED}</time>. It had these parts.</p>
+        <ul>
+          <li>
+            <strong>Automated checks.</strong> We ran axe-core, an open-source accessibility checker, on every page of the site, at a phone width
+            (390 pixels) and a desktop width (1280 pixels), against the WCAG 2.2 Level A and AA rules. It reported no failures of those rules. We also ran it
+            with the phone menu open on a sample of pages, and on the pages' working states: search results, the filters, the forms after an empty
+            send and after a mistyped email{shopOn ? ', the photo viewer and a quote list with items in it' : ''}. Automated checks find only part of what can go wrong, so the checks below go further.
+          </li>
+          <li>
+            <strong>Narrow screens and zoom.</strong> We loaded every page at a width of 320 pixels, which is what 400% zoom on a desktop screen
+            comes to, and checked that none needs sideways scrolling and that no text or control is pushed off the screen. We repeated the check on every page
+            with the browser's default text size doubled, at 390 and 1280 pixels wide.
+          </li>
+          <li>
+            <strong>Text contrast.</strong> axe cannot judge text that sits on the page's textured background. So we ran its contrast check again on every page
+            with the texture replaced by the darkest shade it can reach, the worst case for text, and checked the text that axe still left open by hand.
+            We measured the white title over the photo on the home page pixel by pixel, at four widths.
+            The measured contrast met the WCAG ratios.
+          </li>
+          <li>
+            <strong>Text spacing.</strong> On a sample of {shopOn ? 'eleven' : 'seven'} pages (the home page, About, a service page, Our Machinery, Contact, the quote page, How to order{shopOn ? ', the shop home, the part number index, a section list and a part page' : ''}),
+            at 320, 390 and 1280 pixels, we increased line, letter and word spacing as WCAG 1.4.12 describes and checked that no text is cut off or pushes the page sideways.
+            We did not do this on every page.
+          </li>
+          <li>
+            <strong>Keyboard testing.</strong> On the home page, the quote page{shopOn ? ', the parts store home page and a part page' : ''}, at phone and desktop width, we pressed Tab
+            through every control from the top of the page to the bottom. We checked that focus is always visible and never hidden behind the header or a bar, and that nothing
+            traps it. We also used Enter and Esc on the phone menu{shopOn ? ', the photo viewer and the filters' : ''}. We did not press Space on every kind of control, and we did not walk through
+            the Tab order of every page. On the other pages in the sample we checked the skip link and ran the automated checks.
+          </li>
+          <li>
+            <strong>Build checks.</strong> Each time the site is built, automated checks look for broken links, a missing page title or description and
+            markup that the site's security rules would block, and browser tests run through the forms using their labels.
+          </li>
+        </ul>
+        <p>We ran the checks in Chromium, the browser engine behind Google Chrome and Microsoft Edge. We have not tested in Safari or Firefox.</p>
+
+        <h2 id="limitations">Known limitations</h2>
+        <ul>
+          {shopOn && (
+            <li>
+              Part photos are small, no more than 333 pixels on the long side, so the enlarged view is soft and fine detail may be hard to see. Each part's name and
+              numbers are also given as text. If you need more detail about a part, <a href="#report">ask us</a> and we will help by phone or email.
+            </li>
+          )}
+          {shopOn && (
+            <li>
+              Many part names use short codes from the original parts list, such as CR, OD or SII, and are not spelled out on the page, so a screen reader may
+              read them letter by letter. Sizes are often written with an inch mark (for example 16″), which some screen readers do not read aloud, and a few names give a
+              size without a unit. We have not changed the names ourselves, because a part name has to stay exactly as it is in the catalog until we confirm what each code and unit means.
+              If you are not sure what a part is, <a href="#report">ask us</a>.
+            </li>
+          )}
+          {shopOn && (
+            <li>
+              VFFS (vertical form fill seal) is spelled out on the home page, the parts store home page and the VFFS page. The section lists, the OEM part number index and
+              the part pages use the short form, which a screen reader may spell out letter by letter.
+            </li>
+          )}
+          {shopOn && (
+            <li>
+              The parts store home page lists every part, with several controls on each row, so reaching the end of the page with the Tab key takes hundreds of key
+              presses. A “Skip the parts list” link appears at the start of the list when it receives focus, and the section pages are shorter.
+            </li>
+          )}
+          {shopOn && (
+            <li>
+              After you add a part to your quote, the message with the “View quote” link appears at the end of the page. If you use the keyboard, the “Quote list”
+              link in the page header takes you to the same place sooner.
+            </li>
+          )}
+          <li>
+            We have not yet tested with screen readers such as NVDA, JAWS or VoiceOver. Automated checks and keyboard testing do not find every problem, so
+            something may still be hard to use.
+          </li>
+          <li>
+            This site links to other websites, such as our Google Maps listing and our Yelp page. We do not control them, and they may not be accessible.
+          </li>
+        </ul>
+
+        <h2 id="report">Report a barrier or ask for help</h2>
+        <p>
+          If something on this website is hard to use, or you would like information in another way, tell us. You do not need the website to
+          reach us: we will help by phone or email.
+        </p>
+        <ul>
+          <li>Email: <a href={`mailto:${site.email}`}>{site.email}</a></li>
+          <li>Phone: <a href={`tel:${site.phoneE164}`}>{site.phone}</a></li>
+          <li>Hours (Pacific Time): {hoursSentence()}</li>
+        </ul>
+        <p>
+          It helps if you tell us the page address, what went wrong, and the browser or assistive technology you use. {site.replyTime}. We will
+          work with you to get you the information or service you need, and we will fix the problem when we can.
+        </p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .statement h1 {
+    margin-bottom: 8px;
+    font-size: clamp(2rem, 5vw + 0.5rem, 3rem);
+  }
+
+  .statement__date {
+    margin-bottom: 16px;
+  }
+
+  .statement h2 {
+    margin-top: 2em;
+    font-size: clamp(1.4rem, 1.5vw + 1rem, 1.75rem);
+    letter-spacing: -0.02em;
+  }
+
+  .statement ul {
+    margin: 0 0 1em;
+    padding-left: 1.4em;
+  }
+
+  .statement li + li {
+    margin-top: 0.35em;
+  }
+</style>

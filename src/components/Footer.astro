@@ -9,7 +9,7 @@ import { getServices, serviceUrl } from '../lib/content';
 const shopOn = site.store.enabled;
 // The blue "Need a quote?" band repeats what the page already is on the quote and contact pages.
 const path = Astro.url.pathname.replace(/\/?$/, '/');
-const showCta = !['/quote/', '/quote/thanks/', '/contact/'].includes(path);
+const showCta = !['/quote/', '/quote/thanks/', '/contact/', '/contact/thanks/'].includes(path);
 const services = await getServices();
 const sections = shopOn ? await getSections(MAIN_MACHINE) : [];
 const hours = hoursRows();
@@ -20,7 +20,7 @@ const company = [
   { label: 'About', href: '/about/' },
   { label: 'Services', href: '/services/' },
   { label: 'Our Machinery', href: '/our-machinery/' },
-  { label: 'Food Processing & Ag', href: '/industries/food-processing-agriculture/' },
+  { label: 'Food Processing & Agriculture', href: '/industries/food-processing-agriculture/' },
   { label: 'Service Areas', href: '/service-areas/' },
   { label: 'How to Order', href: '/how-to-order/' },
   { label: 'Contact', href: '/contact/' },
@@ -80,7 +80,7 @@ const company = [
             <li><a href="/shop/">Parts catalog</a></li>
             {sections.map((s) => <li><a href={sectionUrl(s)}>{s.data.title}</a></li>)}
             <li><a href="/shop/part-numbers/">OEM part number index</a></li>
-            <li><a href="/quote/#bulk">Paste a part list</a></li>
+            <li><a href="/quote/#bulk">Paste a list of part numbers</a></li>
           </ul>
         </nav>
       )}
@@ -116,6 +116,8 @@ const company = [
       <p>© {year} {site.legalName} All rights reserved.</p>
       <p class="legal__links">
         <a href="/privacy/">Privacy Policy</a>
+        <span aria-hidden="true">·</span>
+        <a href="/accessibility/">Accessibility</a>
         <span aria-hidden="true">·</span>
         <a href="https://ghosxt.com/" rel="noopener nofollow">Website by Ghosxt</a>
       </p>
@@ -199,13 +201,13 @@ const company = [
     text-decoration: none;
   }
 
-  @media (max-width: 479px) {
+  @media (max-width: 29.9375em) {
     .cta__actions .btn {
       flex: 1 1 100%;
     }
   }
 
-  @media (min-width: 800px) {
+  @media (min-width: 50em) {
     .cta {
       grid-template-columns: 1fr auto;
       align-items: center;
@@ -236,7 +238,7 @@ const company = [
   /* From 700px, three columns. Parts shop on: the brand takes the top row, Shop stands in the
      left column (two rows tall) and Hours sits under Services and Company. Parts shop off: the
      brand stands in the left column instead. No cell is left empty. */
-  @media (min-width: 700px) {
+  @media (min-width: 43.75em) {
     .cols {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -258,7 +260,7 @@ const company = [
 
   /* Parts shop off, desktop: brand, Services, Company and Hours in one row. The Hours column
      never gets narrower than its two-column rows need (13.5rem). */
-  @media (min-width: 1050px) {
+  @media (min-width: 65.625em) {
     .cols--no-shop {
       grid-template-columns: 1.5fr 1fr 1fr minmax(13.5rem, 1.1fr);
       gap: 32px 40px;
@@ -275,7 +277,7 @@ const company = [
   }
 
   /* Parts shop on, desktop: five columns need the full 1200px container for the Hours column. */
-  @media (min-width: 1200px) {
+  @media (min-width: 75em) {
     .cols:not(.cols--no-shop) {
       grid-template-columns: 1.4fr 1fr 1fr 1fr minmax(13.5rem, 1.2fr);
       gap: 32px;
@@ -359,11 +361,14 @@ const company = [
     margin: 0;
   }
 
+  /* Day on the left, time on the right. When the column is too narrow for both (wider letter spacing, larger text) the
+     time wraps under the day instead of printing over it (WCAG 1.4.12). */
   .hours > div {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 16px;
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
+    gap: 0 8px; /* 8px, not 16px: at 1280px the longest row (Saturday) has 14px to spare, and it must stay on one line */
     min-height: 44px;
     border-bottom: 1px solid #2e3237;
   }
@@ -378,7 +383,7 @@ const company = [
   }
 
   .hours dd {
-    margin: 0;
+    margin: 0 0 0 auto;
     text-align: right;
     font-variant-numeric: tabular-nums;
   }

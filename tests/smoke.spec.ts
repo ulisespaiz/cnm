@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect, test as base, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 
@@ -205,7 +205,7 @@ test.describe('parts shop', () => {
     await expect(page.locator('.store-disclaimer')).toContainText('not affiliated with or endorsed by any machine manufacturer');
 
     await page.goto('/shop/vffs/');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('VFFS Packaging Machines');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('VFFS packaging machines');
 
     await page.goto(part.u);
     await expect(page.locator('.ident__label')).toHaveText('OEM #');
@@ -580,11 +580,42 @@ test('an empty contact form lists every problem at once, including the missing e
   await expect(form.locator('fieldset[data-reach] .field-error')).toHaveText(REACH_ERROR);
   await expect(form.locator('[data-form-status]')).toHaveText('Please fix 3 fields: Name, Email or phone, Message.');
   await expect(form.getByLabel(/^Name/)).toBeFocused();
+  // Each empty field says what to enter, not the browser's "Please fill out this field."
+  await expect(form.locator('#contact-name-err')).toHaveText('Enter your name');
+  await expect(form.locator('#contact-message-err')).toHaveText('Enter your message');
   expect(web3forms).toHaveLength(0);
 });
 
+test('an empty name on the quote form says "Enter your name" under the field, and is the only message when it is the only problem', async ({ page, web3forms }) => {
+  await page.goto('/quote/');
+  const form = page.locator('form[data-kind="quote"]');
+  const name = form.getByLabel(/Full Name/);
+
+  // Nothing filled in: the name and the missing email or phone are reported together
+  await form.getByRole('button', { name: /Send Quote Request/ }).click();
+  await expect(form.locator('#quote-name-err')).toHaveText('Enter your name');
+  await expect(name).toHaveAttribute('aria-invalid', 'true');
+  expect(((await name.getAttribute('aria-describedby')) ?? '').split(/\s+/)).toContain('quote-name-err');
+  await expect(form.locator('[data-form-status]')).toHaveText('Please fix 2 fields: Full Name, Email or phone.');
+  await expect(name).toBeFocused();
+
+  // Only the name is missing: the status line is the same words, not "Full Name: Please fill out this field."
+  await form.getByLabel(/Email Address/).fill(CUSTOMER_EMAIL);
+  await form.getByLabel(/Additional Notes/).fill('Smoke test, please ignore.');
+  await form.getByRole('button', { name: /Send Quote Request/ }).click();
+  await expect(form.locator('.field-error')).toHaveCount(1);
+  await expect(form.locator('#quote-name-err')).toHaveText('Enter your name');
+  await expect(form.locator('[data-form-status]')).toHaveText('Enter your name');
+  expect(web3forms, 'nothing is sent').toHaveLength(0);
+
+  // Typing a name answers it
+  await name.fill('Test Customer');
+  await expect(form.locator('.field-error')).toHaveCount(0);
+  await expect(form.locator('[data-form-status]')).toHaveText('');
+});
+
 test('pages load without console errors', async ({ page, request, problems }) => {
-  const urls = ['/', '/services/', '/contact/', '/quote/', '/quote/thanks/', '/how-to-order/'];
+  const urls = ['/', '/services/', '/contact/', '/contact/thanks/', '/quote/', '/quote/thanks/', '/how-to-order/'];
   if (shopOn) {
     const part = await findPart(request);
     urls.push('/shop/', '/shop/part-numbers/', part.u.replace(/[^/]+\/$/, ''), part.u);
@@ -607,7 +638,11 @@ interface CatalogPart {
   oem?: string;
   cm: string;
   name: string;
+  shortName?: string;
   nameRaw?: string;
+  oemKey?: string;
+  oemVerify?: boolean;
+  description?: string;
   flags?: string[];
 }
 const catalog: CatalogPart[] = JSON.parse(readFileSync('src/content/parts.json', 'utf8'));
@@ -659,6 +694,20 @@ function parseCsv(text: string): string[][] {
   }
   return records;
 }
+
+// Parts that carry the same OEM number as another part, computed from the catalog (never listed by hand).
+const sharedGroups = (() => {
+  const byKey = new Map<string, CatalogPart[]>();
+  for (const p of catalog) if (p.oemKey) byKey.set(p.oemKey, [...(byKey.get(p.oemKey) ?? []), p]);
+  return [...byKey.values()].filter((list) => list.length > 1);
+})();
+const sharedCms = new Set(sharedGroups.flat().map((p) => p.cm));
+// A part whose description says its OEM number is being confirmed.
+const confirmingParts = catalog.filter((p) => p.oem && p.oemVerify && /confirm/i.test(p.description ?? ''));
+
+// Text of an HTML attribute or element as the browser reads it (the few entities Astro writes).
+const unescapeHtml = (text: string) =>
+  text.replace(/&(?:amp|quot|lt|gt|#39|#34|#x27);|&#(\d+);/g, (m, dec) => (dec ? String.fromCodePoint(Number(dec)) : ({ '&amp;': '&', '&quot;': '"', '&lt;': '<', '&gt;': '>', '&#39;': "'", '&#34;': '"', '&#x27;': "'" } as Record<string, string>)[m]));
 
 async function jsonLd(page: Page) {
   const blocks = (await page.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t));
@@ -763,7 +812,7 @@ test.describe('OEM part number index', () => {
 
   test('points to bulk paste, the part request form and the CSV, and is linked from the shop', async ({ page }) => {
     await page.goto('/shop/part-numbers/');
-    await expect(page.getByRole('link', { name: 'Paste it on the quote page' })).toHaveAttribute('href', '/quote/#bulk');
+    await expect(page.locator('main').getByRole('link', { name: 'Paste a list of part numbers' })).toHaveAttribute('href', '/quote/#bulk');
     await expect(page.getByRole('link', { name: 'Send us the part number' }).first()).toHaveAttribute('href', '#request');
     await expect(page.locator('#request form[data-part-request]')).toHaveCount(1);
     await expect(page.locator('.store-disclaimer')).toContainText('not affiliated with or endorsed by any machine manufacturer');
@@ -775,6 +824,218 @@ test.describe('OEM part number index', () => {
     }
     await page.goto('/');
     await expect(page.locator('footer').getByRole('navigation', { name: 'Shop' }).getByRole('link', { name: 'OEM part number index' })).toHaveAttribute('href', '/shop/part-numbers/');
+  });
+
+  test('shows a filter field that narrows the rows as you type, reading numbers the way the shop search does', async ({ page }) => {
+    await page.goto('/shop/part-numbers/');
+    const filter = page.getByLabel('Filter by OEM #, C&M # or name');
+    await expect(filter).toBeVisible();
+    const visible = page.locator('table tbody tr:visible');
+    const status = page.locator('[data-pn-status]');
+    await expect(visible).toHaveCount(146);
+
+    // A number that two parts share finds both, however it is typed
+    const [pair] = sharedGroups;
+    expect(pair?.length).toBe(2);
+    const pairCms = pair.map((p) => p.cm).sort();
+    for (const typed of [pair[0].oem!, `OEM # ${pair[0].oem}`, `acmeco ${pair[0].oem!.replace(/^(\d{5})/, '$1-')}`, pair[0].oem!.replace(/^0/, ''), pair[0].oem!.replace(/^0/, 'O').toLowerCase()]) {
+      await filter.fill(typed);
+      await expect(visible, typed).toHaveCount(2);
+      expect((await visible.locator('.pn__cm').allTextContents()).map((t) => t.trim()).sort(), typed).toEqual(pairCms);
+    }
+    await expect(status).toHaveText('Showing 2 of 146 parts');
+
+    // A C&M number is read as a C&M number
+    await filter.fill('cm 2');
+    await expect(visible).toHaveCount(1);
+    await expect(visible.locator('.pn__cm')).toHaveText('CM-0002');
+    await filter.fill('acmeco CM-0111');
+    await expect(visible.locator('.pn__cm')).toHaveText('CM-0111');
+
+    // Words match the start of a word in the name
+    const pulleys = catalog.filter((p) => /(^|[^a-z0-9])pulley/i.test(p.name)).length;
+    expect(pulleys).toBeGreaterThan(1);
+    await filter.fill('pulley');
+    await expect(visible).toHaveCount(pulleys);
+
+    // Nothing matches: say so, and offer the request form
+    await filter.fill('zzqx');
+    await expect(visible).toHaveCount(0);
+    await expect(page.getByText('No part in the list matches that.')).toBeVisible();
+    await expect(page.locator('[data-pn-empty]').getByRole('link', { name: 'Send us the part number' })).toHaveAttribute('href', '#request');
+
+    // Escape clears the filter and brings every row back
+    await filter.press('Escape');
+    await expect(filter).toHaveValue('');
+    await expect(visible).toHaveCount(146);
+    await expect(status).toHaveText('');
+  });
+
+  test('the filter works with the phone card layout', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto('/shop/part-numbers/');
+    const filter = page.getByLabel('Filter by OEM #, C&M # or name');
+    await expect(filter).toBeVisible();
+    expect((await filter.boundingBox())!.width, 'the field uses the width of the phone').toBeGreaterThan(300);
+    const [pair] = sharedGroups;
+    await filter.fill(pair[0].oem!);
+    const visible = page.locator('table tbody tr:visible');
+    await expect(visible).toHaveCount(2);
+    expect(await visible.first().evaluate((tr) => getComputedStyle(tr).display), 'a visible row is still a card').toBe('grid');
+    expect(await page.locator('table tbody tr').first().evaluate((tr) => getComputedStyle(tr).display), 'a hidden row takes no space').toBe('none');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 'no horizontal scroll').toBeLessThanOrEqual(0);
+  });
+
+  test('without JavaScript the filter field is not shown and the whole table is', async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto(new URL('/shop/part-numbers/', LOCAL_ORIGIN).href);
+    await expect(page.locator('[data-pn-filter]')).toBeHidden();
+    await expect(page.locator('table tbody tr:visible')).toHaveCount(146);
+    await context.close();
+  });
+
+  test('marks every row that shares its OEM number with another part, and no other row', async ({ page }) => {
+    await page.goto('/shop/part-numbers/');
+    expect(sharedGroups.length).toBeGreaterThan(0);
+    const marked = page.locator('table tbody tr:has(.pn__shared)');
+    await expect(marked).toHaveCount(sharedCms.size);
+    const cms = (await marked.locator('.pn__cm').allTextContents()).map((t) => t.trim()).sort();
+    expect(cms).toEqual([...sharedCms].sort());
+    await expect(marked.first().locator('.pn__shared')).toHaveText('Shared OEM #, see both');
+    // the OEM number in the row is still the first thing in its cell
+    await expect(marked.first().locator('.pn__oem .oem')).toHaveText(/^\d{5}[A-Z]\d{4}$/);
+  });
+
+  test('phone cards give the OEM # the larger type and the C&M # the smaller', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto('/shop/part-numbers/');
+    const size = (selector: string) => page.locator(selector).first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+    const oem = await size('tbody tr .pn__oem .oem');
+    const cm = await size('tbody tr .pn__cm');
+    expect(oem, 'OEM # is larger than C&M #').toBeGreaterThan(cm);
+  });
+});
+
+test.describe('part pages: titles, descriptions, shared and unconfirmed numbers', () => {
+  test.skip(!shopOn, 'the parts shop is off in this build');
+
+  test('every title keeps the whole part name within 65 characters, and every meta description is one sentence with the numbers', async ({ request }) => {
+    const titles = new Map<string, string>();
+    const metas = new Map<string, string>();
+    for (let i = 0; i < catalog.length; i += 25) {
+      await Promise.all(
+        catalog.slice(i, i + 25).map(async (p) => {
+          const html = await (await request.get(partPath(p))).text();
+          const title = unescapeHtml(/<title>([\s\S]*?)<\/title>/.exec(html)![1]);
+          const meta = unescapeHtml(/<meta name="description" content="([^"]*)"/.exec(html)![1]);
+          const names = [p.name, p.shortName].filter(Boolean) as string[];
+
+          expect([...title].length, title).toBeLessThanOrEqual(65);
+          // one template for every part: the OEM number (the C&M number when there is none) first, the shop name last
+          expect(title.startsWith(`${p.oem ?? p.cm} `), `${title} starts with the part number`).toBe(true);
+          expect(title.endsWith(' | C&M Machine Shop'), `${title} ends with the shop name`).toBe(true);
+          expect(title, 'no "VFFS Part" suffix').not.toContain('VFFS Part');
+          expect(title, 'the name is never cut').not.toMatch(/…|\.\.\./);
+          expect(names.some((n) => title.includes(n)), `${title} holds the whole name`).toBe(true);
+          expect(titles.get(title), `title ${title} is unique`).toBeUndefined();
+          titles.set(title, p.cm);
+
+          expect([...meta].length, meta).toBeLessThanOrEqual(155);
+          expect(meta, p.cm).toContain(`C&M number ${p.cm}`);
+          if (p.oem && !confirmingParts.some((c) => c.cm === p.cm)) {
+            // never a bare "replacement part for VFFS packaging machines": the OEM number says what it replaces
+            expect(meta).toContain(`a replacement for OEM part number ${p.oem}`);
+          } else if (p.oem) expect(meta).toContain(p.oem);
+          else expect(meta, 'a part with no OEM number says so').toContain('No OEM part number is listed');
+          expect(names.some((n) => meta.includes(n)), `${meta} holds the name`).toBe(true);
+          expect(meta, 'a sentence').toMatch(/[.!?]$/);
+          expect(meta).not.toMatch(/made to replace|replaced by|in place of|is the pattern|\bon (?:a )?VFFS|filed under/i);
+          expect(metas.get(meta), 'meta description is unique').toBeUndefined();
+          metas.set(meta, p.cm);
+        }),
+      );
+    }
+    expect(titles.size).toBe(catalog.length);
+  });
+
+  test('a name too long for a title uses its shortName there and keeps the full name in the heading', async ({ page }) => {
+    const long = catalog.filter((p) => p.shortName);
+    expect(long.length).toBeGreaterThan(0);
+    for (const p of long) {
+      await page.goto(partPath(p));
+      expect([...(await page.title())].length).toBeLessThanOrEqual(65);
+      expect(await page.title()).toContain(p.shortName!);
+      await expect(page.getByRole('heading', { level: 1 })).toContainText(p.name);
+      await expect(page.locator('.specs')).toContainText(p.oem ?? p.cm);
+    }
+  });
+
+  test('a part whose OEM number is being confirmed says so in its meta description and JSON-LD, and claims no match', async ({ page, request }) => {
+    expect(confirmingParts.length).toBeGreaterThan(0);
+    for (const p of confirmingParts) {
+      const html = await (await request.get(partPath(p))).text();
+      const meta = unescapeHtml(/<meta name="description" content="([^"]*)"/.exec(html)![1]);
+      expect(meta, p.cm).toContain(`OEM # ${p.oem}`);
+      expect(meta, p.cm).toContain('being confirmed');
+      expect(meta, p.cm).not.toMatch(/replacement|replaces|matched by|made to match|fits/i);
+
+      await page.goto(partPath(p));
+      const product = (await jsonLd(page)).find((d) => d['@type'] === 'Product');
+      expect(product.description, p.cm).toMatch(/confirm/i);
+      expect(product.description, p.cm).not.toMatch(/\breplac\w*|matched by|\bfits\b/i);
+    }
+  });
+
+  test('two parts that share an OEM number each say so, link the other part, and tell the buyer what to do', async ({ page }) => {
+    expect(sharedGroups.length).toBeGreaterThan(0);
+    for (const list of sharedGroups) {
+      expect(list.length, 'the note is written for a pair').toBe(2);
+      for (const p of list) {
+        const other = list.find((o) => o.cm !== p.cm)!;
+        await page.goto(partPath(p));
+        const note = page.locator('[data-shared-oem]');
+        await expect(note).toHaveCount(1);
+        await expect(note).toBeVisible();
+        expect(squash(await note.textContent())).toBe(
+          `Two parts in our catalog use OEM # ${p.oem}: ${other.name} and this one. Check the name and photo, or send a photo of your part with your quote.`,
+        );
+        await expect(note.getByRole('link', { name: other.name })).toHaveAttribute('href', partPath(other));
+      }
+      // the link goes to the other part
+      await page.goto(partPath(list[0]));
+      await page.locator('[data-shared-oem]').getByRole('link').click();
+      await expect(page).toHaveURL(new RegExp(`${partPath(list[1])}$`));
+    }
+    // a part with its own number has no such note
+    const own = catalog.find((p) => p.oem && !sharedCms.has(p.cm))!;
+    await page.goto(partPath(own));
+    await expect(page.locator('[data-shared-oem]')).toHaveCount(0);
+  });
+
+  test('the store home and the machine hub describe themselves, and bulk paste has one name', async ({ page }) => {
+    const descriptions: string[] = [];
+    for (const url of ['/shop/', '/shop/vffs/']) {
+      await page.goto(url);
+      const meta = (await page.locator('meta[name="description"]').getAttribute('content'))!;
+      expect([...meta].length, url).toBeLessThanOrEqual(160);
+      descriptions.push(meta);
+    }
+    expect(descriptions[0]).not.toBe(descriptions[1]);
+    expect(descriptions[0], 'the store home is about searching the whole store').toMatch(/Search all \d+ replacement parts/);
+    expect(descriptions[1], 'the machine hub is about finding the part number').toMatch(/How to find the part number/);
+
+    for (const url of ['/', '/shop/', '/shop/vffs/', '/shop/part-numbers/', '/how-to-order/']) {
+      await page.goto(url);
+      const links = page.getByRole('link', { name: /paste a (part )?list/i });
+      expect(await links.count(), url).toBeGreaterThan(0);
+      for (const text of await links.allTextContents()) expect(squash(text), url).toBe('Paste a list of part numbers');
+    }
+    // the footer link (every page) and the panel on the quote page use the same name
+    await expect(page.locator('footer').getByRole('link', { name: /paste a/i })).toHaveText('Paste a list of part numbers');
+    await page.goto('/quote/');
+    await expect(page.locator('summary', { hasText: /paste a/i })).toHaveText('Paste a list of part numbers');
+    for (const text of await page.locator('main').getByRole('link', { name: /paste a/i }).allTextContents()) expect(squash(text)).toBe('Paste a list of part numbers'); // the empty-list button
   });
 });
 
@@ -832,9 +1093,12 @@ test.describe('catalog CSV', () => {
 test.describe('how to order', () => {
   test('renders the steps, the facts from the site config, and a visible FAQ that matches its FAQPage JSON-LD', async ({ page }) => {
     await page.goto('/how-to-order/');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('How to get a part or job quoted');
+    // One name for the page: the title, the h1, the breadcrumb (checked below) and the footer link all say "How to Order"
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('How to Order');
+    await expect(page).toHaveTitle(/^How to Order \| /);
+    await expect(page.locator('main .eyebrow', { hasText: /^How to Order$/ }), 'the name is not repeated as a chip above the h1').toHaveCount(0);
     expect((await page.title()).length).toBeLessThanOrEqual(65);
-    expect((await page.locator('meta[name="description"]').getAttribute('content'))!.length).toBeLessThanOrEqual(160);
+    expect((await page.locator('meta[name="description"]').getAttribute('content'))!.length).toBeLessThanOrEqual(150);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${SITE_ORIGIN}/how-to-order/`);
 
     const main = page.getByRole('main');
@@ -929,14 +1193,14 @@ test.describe('how to order', () => {
     await expect(page.locator('footer').getByRole('navigation', { name: 'Company' }).getByRole('link', { name: 'How to Order' })).toHaveAttribute('href', '/how-to-order/');
 
     await page.goto('/quote/');
-    const how = page.getByRole('link', { name: 'How ordering works' });
+    const how = page.getByRole('main').getByRole('link', { name: 'How to Order', exact: true });
     await expect(how).toHaveAttribute('href', '/how-to-order/');
     await expect(how, 'near the top of the quote page').toBeVisible();
     expect((await how.boundingBox())!.y).toBeLessThan(450);
 
     if (shopOn) {
       await page.goto('/shop/');
-      await expect(page.getByRole('link', { name: 'How ordering works' })).toHaveAttribute('href', '/how-to-order/');
+      await expect(page.getByRole('main').getByRole('link', { name: 'How to Order', exact: true })).toHaveAttribute('href', '/how-to-order/');
     }
 
     const llms = await (await request.get('/llms.txt')).text();
@@ -964,6 +1228,15 @@ test.describe('stated facts', () => {
     await expect(main).not.toContainText(/template|before launch/i);
     for (const field of ['company', 'PO or reference number', 'ZIP code', 'machine model or serial number']) await expect(main).toContainText(field);
     await expect(main).not.toContainText('city,');
+  });
+
+  test('every form that collects personal information links to the privacy policy', async ({ page }) => {
+    await page.goto('/contact/');
+    await expect(page.locator('form[data-kind="contact"] .form-note a[href="/privacy/"]')).toHaveText('Privacy Policy');
+    await page.goto('/quote/');
+    await expect(page.locator('form[data-kind="quote"] .form-note a[href="/privacy/"]')).toHaveText('Privacy Policy');
+    // the part request form (a closed panel on the quote page; its text is in the page either way)
+    await expect(page.locator('[data-part-request-box] .pr__privacy a[href="/privacy/"]')).toHaveCount(1);
   });
 
   test('quote copy does not promise an email to a visitor who gave a phone number', async ({ page }) => {
@@ -1012,5 +1285,365 @@ test.describe('parts shop off: the index and the CSV do not exist', () => {
     const redirects = readFileSync('dist/_redirects', 'utf8');
     expect(redirects).toMatch(/^\/shop\/\*\s+\/quote\/\s+302\s*$/m);
     expect(readFileSync('dist/_headers', 'utf8')).not.toContain('/shop/');
+  });
+});
+
+// ---------- Ordering and contact pages ----------
+
+test.describe('quote page copy', () => {
+  test('says the reply time once, under the send button, and its reassurances are plain bullets, not tick boxes', async ({ page }) => {
+    await page.goto('/quote/');
+    const reply = configString('replyTime');
+    // textContent also counts text inside the closed "send us the part number" panel
+    const text = squash(await page.getByRole('main').textContent());
+    expect(text.split(reply).length - 1, `"${reply}" on /quote/: once, under the send button`).toBe(1);
+    await expect(page.locator('.quote-page > .container > .lead')).not.toContainText(reply);
+    await expect(page.locator('form[data-kind="quote"] .form-note')).toContainText(reply);
+
+    const checks = page.locator('.qs__checks');
+    await expect(checks.locator('li')).toHaveText(['No payment required: quote only', "We'll send you a detailed quote"]);
+    await expect(checks).toHaveCSS('list-style-type', 'disc');
+    // no box, no tick: nothing that looks like a checked form control
+    await expect(page.locator('.qs__tick, .qs__checks svg')).toHaveCount(0);
+  });
+});
+
+test.describe('contact page', () => {
+  test('sends a part or job quote to the quote page and everything else to the form', async ({ page }) => {
+    await page.goto('/contact/');
+    const lead = page.locator('main .lead').first();
+    await expect(lead).not.toContainText('Reach out for quotes');
+    await expect(lead.getByRole('link', { name: 'quote page' })).toHaveAttribute('href', '/quote/');
+    await expect(lead).toContainText('send us a message');
+    await expect(lead).toContainText(configString('replyTime'));
+  });
+
+  test('the form posts to /contact/thanks/ without JavaScript; the quote form keeps /quote/thanks/', async ({ page }) => {
+    await page.goto('/contact/');
+    const contact = await page.locator('form[data-kind="contact"] input[name="redirect"]').getAttribute('value');
+    expect(contact).toBe(`${SITE_ORIGIN}/contact/thanks/`);
+    await page.goto('/quote/');
+    const quote = await page.locator('form[data-kind="quote"] input[name="redirect"]').getAttribute('value');
+    expect(quote).toBe(`${SITE_ORIGIN}/quote/thanks/`);
+  });
+
+  test('/contact/thanks/ is a neutral thank-you: noindex, not in the sitemap, no quote talk, same layout as /quote/thanks/', async ({ page, request }) => {
+    await page.goto('/contact/thanks/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Thanks, we got your message.');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+    const main = page.getByRole('main');
+    await expect(main).toContainText(configString('replyTime'));
+    await expect(main).not.toContainText(/detailed quote|your list|your reference/i);
+    await expect(main.getByRole('link', { name: 'Request a quote' })).toHaveAttribute('href', '/quote/');
+    await expect(main.getByRole('link', { name: configString('phone') })).toHaveAttribute('href', `tel:${configString('phoneE164')}`);
+    // the same two cards as /quote/thanks/
+    await expect(main.locator('.tcard')).toHaveCount(2);
+    await expect(main.getByRole('heading', { level: 2 })).toHaveText(['What happens next', 'Need anything else?']);
+    await expect(page.locator('footer .cta'), 'no "Need a part or a quote?" band on a thank-you page').toHaveCount(0);
+
+    await page.goto('/quote/thanks/');
+    await expect(page.locator('main .tcard')).toHaveCount(2);
+
+    const sitemap = await (await request.get('/sitemap-0.xml')).text();
+    expect(sitemap).not.toContain('/contact/thanks/');
+    expect(sitemap).not.toContain('/quote/thanks/');
+    expect(sitemap).toContain(`<loc>${SITE_ORIGIN}/contact/</loc>`);
+  });
+});
+
+test.describe('quote thank-you page', () => {
+  test('"Search by part number" goes to the number index, not to the same page as "Browse the catalog" (and no shop links with the shop off)', async ({ page }) => {
+    await page.goto('/quote/thanks/');
+    const more = page.locator('main .thanks__links');
+    if (shopOn) {
+      await expect(more.getByRole('link', { name: 'Browse the catalog' })).toHaveAttribute('href', '/shop/');
+      await expect(more.getByRole('link', { name: 'Search by part number' })).toHaveAttribute('href', '/shop/part-numbers/');
+    } else {
+      await expect(page.locator('main a[href^="/shop"]')).toHaveCount(0);
+      await expect(more.getByRole('link', { name: 'Search by part number' })).toHaveCount(0);
+      await expect(more.getByRole('link', { name: 'Browse the catalog' })).toHaveCount(0);
+    }
+  });
+
+  test('tells the visitor to keep the reference only when the reference is shown', async ({ page }) => {
+    const hint = page.getByText('Keep your reference handy');
+    // Opened directly (or after a send without JavaScript): no reference, so no line about it
+    await page.goto('/quote/thanks/');
+    await expect(page.locator('[data-ref-box]')).toBeHidden();
+    await expect(hint).toBeHidden();
+
+    // After a send the quote form saved the reference in this tab
+    await page.evaluate(() => sessionStorage.setItem('last-quote-ref', 'Q-260101-TEST'));
+    await page.reload();
+    await expect(page.locator('[data-ref-box]')).toContainText('Q-260101-TEST');
+    await expect(hint).toBeVisible();
+  });
+});
+
+test.describe('food processing and agriculture page', () => {
+  test('has a short title, one wording for shipping, and a first FAQ answer that does not repeat the hero', async ({ page }) => {
+    await page.goto('/industries/food-processing-agriculture/');
+    const title = await page.title();
+    expect(title.length).toBeLessThanOrEqual(60);
+    expect(title).not.toMatch(/\bAg\b/);
+    expect(title).toContain('Food Processing & Agriculture');
+
+    const main = page.getByRole('main');
+    const text = squash(await main.textContent());
+    const shipping = configString('shipping');
+    expect(text.split(shipping).length - 1, 'the confirmed shipping wording: in the list and in the FAQ').toBeGreaterThanOrEqual(2);
+    expect(text).not.toMatch(/ask about shipping/i);
+
+    // The hero says "precision-engineered solutions"; the first answer answers the question instead
+    await expect(main.locator('.lead')).toContainText('precision-engineered solutions');
+    await expect(main.locator('details.faq').first().locator('p')).not.toContainText('precision-engineered');
+
+    // visible FAQ and FAQPage JSON-LD say the same
+    const visible = await main.locator('details.faq').evaluateAll((els) => els.map((el) => ({ q: el.querySelector('summary')?.textContent ?? '', a: el.querySelector('p')?.textContent ?? '' })));
+    const faq = (await jsonLd(page)).find((d) => d['@type'] === 'FAQPage');
+    expect(faq.mainEntity.map((e: { name: string; acceptedAnswer: { text: string } }) => ({ q: squash(e.name), a: squash(e.acceptedAnswer.text) }))).toEqual(
+      visible.map((v) => ({ q: squash(v.q), a: squash(v.a) })),
+    );
+  });
+});
+
+test.describe('service quote box', () => {
+  test('has no Quantity field for a service, and adding it makes one line', async ({ page }) => {
+    await page.goto('/services/machining/');
+    const box = page.locator('form[data-add-to-quote]');
+    await expect(box.getByLabel('Quantity')).toHaveCount(0);
+    await box.getByRole('button', { name: 'Add to Quote' }).click();
+    await expect(box.locator('.add-form__status')).toContainText('Added.');
+
+    await page.goto('/quote/');
+    await expect(quoteRows(page)).toHaveCount(1);
+    await expect(quoteRows(page).first().locator('.qi__qty')).toHaveValue('1');
+  });
+});
+
+// ---------- Privacy policy and accessibility statement ----------
+// The policy describes what the site does: these tests tie it to the code, so a change that adds a cookie, a
+// stored value, a form field or a third party fails here until /privacy/ (and its date) is updated.
+
+// What each form may send to Web3Forms. Keep in step with the field lists on /privacy/ (src/pages/privacy.astro).
+const FORM_FIELDS = {
+  quote: ['access_key', 'subject', 'from_name', 'products', 'quote_ref', 'name', 'company', 'email', 'phone', 'po', 'needed_by', 'delivery', 'zip', 'message'],
+  contact: ['access_key', 'subject', 'from_name', 'products', 'quote_ref', 'name', 'company', 'email', 'phone', 'message'],
+  partRequest: ['access_key', 'subject', 'from_name', 'searched_for', 'page', 'part_number', 'qty', 'description', 'machine', 'name', 'email', 'phone'],
+};
+
+test.describe('privacy policy', () => {
+  test('is complete: date, contact details, providers, rights, Do Not Track, Global Privacy Control', async ({ page }) => {
+    await page.goto('/privacy/');
+    const main = page.getByRole('main');
+    await expect(main.getByRole('heading', { level: 1 })).toHaveText('Privacy Policy');
+    await expect(main).toContainText('Last updated: October 13, 2026');
+    await expect(main).not.toContainText(/template|before launch|CONFIRM|TODO/i);
+    const text = squash(await main.textContent());
+
+    // how to reach us about privacy: the config's email, phone and mailing address
+    await expect(main.getByRole('link', { name: configString('email'), exact: true }).first()).toHaveAttribute('href', `mailto:${configString('email')}`);
+    await expect(main.getByRole('link', { name: configString('phone'), exact: true }).first()).toHaveAttribute('href', /^tel:\+1\d{10}$/);
+    for (const part of [configString('street'), configString('postalCode')]) expect(text).toContain(part);
+
+    // the service providers, each with its own privacy policy
+    await expect(main.getByRole('link', { name: /Cloudflare's privacy policy/ })).toHaveAttribute('href', 'https://www.cloudflare.com/privacypolicy/');
+    await expect(main.getByRole('link', { name: /Web3Forms' privacy policy/ })).toHaveAttribute('href', 'https://web3forms.com/privacy');
+    expect(text).toContain('Our email provider');
+
+    for (const phrase of [
+      'We do not sell your personal information',
+      'we do not share it for advertising',
+      'automated decisions',
+      'strictly necessary security cookies',
+      'Do Not Track',
+      'Global Privacy Control',
+      'not directed to children under 13',
+      'HTTPS',
+      'No method of sending or storing information is 100% secure',
+      'If we make a material change, we will say so in a notice at the top of this page',
+      'show you the personal information you sent us, to correct it or to delete it',
+      // the fields the forms collect, in the words of the forms
+      'company',
+      'PO or reference number',
+      'ZIP code',
+      'machine model or serial number',
+    ]) {
+      expect(text, phrase).toContain(phrase);
+    }
+    // no invented retention period: none of these is in the code or the config
+    expect(text).not.toMatch(/\b\d+ (days|months|years)\b/i);
+    // no promise the shop has not confirmed (a wrong promise is worse than a missing one): a deletion routine, who can read the
+    // inbox, "no other third party", a response deadline. The owner's open questions are CONFIRM lines in privacy.astro.
+    for (const claim of ['After that we delete them', 'Only people at the shop', 'No other third party', 'within a reasonable time', 'Cookies from this site: none', 'cross-context']) {
+      expect(text, claim).not.toContain(claim);
+    }
+    expect(text).toContain('We do not have a fixed deletion schedule');
+    // no notice is up while nothing has changed (the NOTICE constant is empty)
+    await expect(main.locator('.policy__notice')).toHaveCount(0);
+    // the table of contents reaches every section
+    for (const href of await main.locator('.policy__toc a').evaluateAll((els) => els.map((a) => a.getAttribute('href')!))) {
+      await expect(main.locator(href), href).toHaveCount(1);
+    }
+  });
+
+  test('has one h1, headings in order, and a title and description that fit', async ({ page }) => {
+    for (const url of ['/privacy/', '/accessibility/']) {
+      await page.goto(url);
+      const levels = await page.getByRole('main').locator('h1, h2, h3, h4, h5, h6').evaluateAll((els) => els.map((el) => Number(el.tagName[1])));
+      expect(levels[0], `${url}: starts with the h1`).toBe(1);
+      expect(levels.filter((l) => l === 1), `${url}: one h1`).toHaveLength(1);
+      levels.forEach((level, i) => {
+        if (i) expect(level, `${url}: heading ${i + 1} follows level ${levels[i - 1]}`).toBeLessThanOrEqual(levels[i - 1] + 1);
+      });
+      expect((await page.title()).length, `${url}: title length`).toBeLessThanOrEqual(65);
+      expect((await page.locator('meta[name="description"]').getAttribute('content'))!.length, `${url}: description length`).toBeLessThanOrEqual(160);
+    }
+  });
+
+  test('says nothing about the parts store or the quote list when the shop is off, and covers them when it is on', async ({ page }) => {
+    await page.goto('/privacy/');
+    const main = page.getByRole('main');
+    const text = squash(await main.textContent());
+    if (shopOn) {
+      expect(text).toContain('Your quote list and quote reference, kept in your browser');
+      expect(text).toContain('the parts search box');
+    } else {
+      expect(text).not.toMatch(/parts store|parts search|catalog|quote list|OEM|VFFS/i);
+      await expect(main.locator('a[href^="/shop"]')).toHaveCount(0);
+      // the browser storage the site still uses with the shop off is still described
+      expect(text).toContain('Your request and quote reference, kept in your browser');
+    }
+    expect(text).toContain('A quote reference');
+    expect(text).toContain('Clear all items');
+  });
+
+  test('what it says about cookies, browser storage, third parties and form fields is true of the site', async ({ page, context, web3forms }) => {
+    const keys = (kind: 'localStorage' | 'sessionStorage') => page.evaluate((k) => Object.keys(window[k]).sort(), kind);
+    const storageOnly = async (local: string[], session: string[], when: string) => {
+      expect(await context.cookies(), `${when}: no cookies`).toEqual([]);
+      expect(await page.evaluate(() => document.cookie), `${when}: document.cookie`).toBe('');
+      expect(await keys('localStorage'), `${when}: local storage`).toEqual(local);
+      expect(await keys('sessionStorage'), `${when}: session storage`).toEqual(session);
+    };
+
+    // Browsing alone: the quote reference is the only thing kept, in local storage. Every request that left the
+    // site would fail the test (see the page fixture), so this also shows no third party is contacted.
+    for (const url of ['/', '/about/', '/services/', '/contact/', '/privacy/', '/accessibility/', '/how-to-order/', ...(shopOn ? ['/shop/', '/shop/part-numbers/'] : [])]) await page.goto(url);
+    await storageOnly(['quote-list-v2'], [], 'after browsing');
+
+    // Add a service to the quote, then send a quote request: the reference also goes to session storage.
+    await page.goto('/services/machining/');
+    await page.locator('form[data-add-to-quote]').getByRole('button', { name: 'Add to Quote' }).click();
+    await page.goto('/quote/');
+    const quote = page.locator('form[data-kind="quote"]');
+    await quote.getByLabel(/Full Name/).fill('Test Customer');
+    await quote.getByLabel(/Company/).fill('Test Company');
+    await quote.getByLabel(/Email Address/).fill(CUSTOMER_EMAIL);
+    await quote.getByLabel(/PO/).fill('PO-1');
+    await quote.getByLabel(/Needed by/).selectOption('This week');
+    await quote.getByLabel('Ship to me').check();
+    await quote.getByLabel(/ZIP/).fill('93901');
+    await quote.getByLabel(/Additional Notes/).fill('Smoke test, please ignore.');
+    await quote.getByRole('button', { name: /Send Quote Request/ }).click();
+    await expect(page).toHaveURL(/\/quote\/thanks\/$/);
+    await storageOnly(['quote-list-v2'], ['last-quote-ref'], 'after a quote request');
+
+    // Contact and part request forms
+    await page.goto('/contact/');
+    const contact = page.locator('form[data-kind="contact"]');
+    await contact.getByLabel(/^Name/).fill('Test Customer');
+    await contact.getByLabel(/^Company/).fill('Test Company');
+    await contact.getByLabel(/^Phone/).fill(CUSTOMER_PHONE);
+    await contact.getByLabel(/^Message/).fill('Smoke test, please ignore.');
+    await contact.getByRole('button', { name: /Send Message/ }).click();
+    await expect(contact.locator('[data-form-status]')).toContainText('Thanks, we got your message');
+
+    await page.goto('/quote/');
+    await page.locator('#cant-find > summary').click();
+    const request = page.locator('form[data-part-request]');
+    await request.locator('.pr__more > summary').click();
+    await request.getByLabel(/^Name/).fill('Test Customer');
+    await request.locator('#pr-number').fill('10097A9999');
+    await request.locator('#pr-machine').fill('Model 1, serial 2');
+    await request.getByLabel(/^Phone/).fill(CUSTOMER_PHONE);
+    await request.getByRole('button', { name: /Send part request/ }).click();
+    await expect(page.locator('[data-pr-success]')).toBeVisible();
+    await storageOnly(['quote-list-v2'], ['last-quote-ref'], 'after all three forms');
+
+    // Each form sends only the fields the policy lists
+    expect(web3forms).toHaveLength(3);
+    const [quoteSent, contactSent, requestSent] = web3forms.map((w) => Object.keys(w.fields));
+    for (const [sent, allowed, name] of [[quoteSent, FORM_FIELDS.quote, 'quote'], [contactSent, FORM_FIELDS.contact, 'contact'], [requestSent, FORM_FIELDS.partRequest, 'part request']] as const) {
+      expect(sent.filter((k) => !allowed.includes(k)), `${name} form: fields the privacy policy does not list`).toEqual([]);
+    }
+    expect(web3forms[0].fields.zip).toBe('93901');
+    expect(web3forms[2].fields.page).toContain('/quote/');
+  });
+
+  test('the security policy allows scripts only from the site and connections only to the site and Web3Forms', () => {
+    expect(csp).toContain("script-src 'self'");
+    expect(csp).toContain("connect-src 'self' https://api.web3forms.com");
+    expect(csp).not.toMatch(/script-src[^;]*https?:/);
+    expect(csp).toContain("default-src 'self'");
+    // the policy and the build agree: no cookie is written by any script the site ships
+    const files = [...readdirSync('src', { recursive: true }).map((f) => `src/${f}`), ...readdirSync('public').map((f) => `public/${f}`)].filter((f) => /\.(ts|js|mjs|astro)$/.test(f));
+    expect(files.length, 'the source files were found').toBeGreaterThan(50);
+    expect(files.filter((f) => /document\.cookie/.test(readFileSync(f, 'utf8'))), 'files that touch the cookie jar').toEqual([]);
+  });
+});
+
+// Astro drops the line break between a text line and the tag or {expression} on the next line, so "(see" + newline + <a> prints
+// "(see<a>": the page then reads as one run-together word. This looks for that in the built pages.
+test('the privacy policy and the accessibility statement have no words run together at a tag', () => {
+  for (const page of ['dist/privacy/index.html', 'dist/accessibility/index.html']) {
+    const main = /<main[\s\S]*?<\/main>/.exec(readFileSync(page, 'utf8'))![0];
+    expect(main.match(/[A-Za-z0-9,;:)]<(?:a|strong|time|code)\b[^>]*>/g) ?? [], `${page}: text glued to the tag after it`).toEqual([]);
+    expect(main.match(/<\/(?:a|strong|time|code)>[A-Za-z0-9]/g) ?? [], `${page}: text glued to the tag before it`).toEqual([]);
+  }
+});
+
+test.describe('accessibility statement', () => {
+  test('states the goal, the review date and how to report a barrier', async ({ page }) => {
+    await page.goto('/accessibility/');
+    const main = page.getByRole('main');
+    await expect(main.getByRole('heading', { level: 1 })).toHaveText('Accessibility Statement');
+    await expect(main).toContainText('Last reviewed: October 13, 2026');
+    const text = squash(await main.textContent());
+    for (const phrase of ['WCAG', '2.2, Level AA', 'axe-core', '390 pixels', '1280 pixels', 'keyboard', 'We have not yet tested with screen readers', 'we will help by phone or email', configString('replyTime')]) {
+      expect(text, phrase).toContain(phrase);
+    }
+    await expect(main.getByRole('link', { name: configString('email'), exact: true })).toHaveAttribute('href', `mailto:${configString('email')}`);
+    await expect(main.getByRole('link', { name: configString('phone'), exact: true })).toHaveAttribute('href', /^tel:\+1\d{10}$/);
+    // no claim of full conformance
+    expect(text).not.toMatch(/fully (accessible|compliant|conform)|is (ADA|WCAG)[ -]compliant|100% accessible/i);
+    if (shopOn) expect(text).toContain('Part photos are small');
+    else expect(text).not.toMatch(/part photo|parts store|catalog/i);
+    // the sample size matches the pages listed for this build, and the label claim is limited to what the markup does
+    expect(text).toContain(`On a sample of ${shopOn ? 'eleven' : 'seven'} pages`);
+    expect(text).not.toContain('Every form field has a visible label');
+    expect(text).toContain('Every field in the quote, contact and part request forms has a visible label');
+  });
+
+  test('is linked next to the privacy policy in the footer of every page, in llms.txt and in the sitemap', async ({ page, request }) => {
+    for (const url of ['/', '/quote/', '/privacy/', '/accessibility/', '/contact/thanks/']) {
+      await page.goto(url);
+      const links = page.locator('footer .legal__links a');
+      await expect(links, url).toHaveText(['Privacy Policy', 'Accessibility', 'Website by Ghosxt']);
+      await expect(links.nth(0)).toHaveAttribute('href', '/privacy/');
+      await expect(links.nth(1)).toHaveAttribute('href', '/accessibility/');
+      // side by side: the same row, in that order
+      const [privacy, accessibility] = [await links.nth(0).boundingBox(), await links.nth(1).boundingBox()];
+      expect(Math.abs(privacy!.y - accessibility!.y), `${url}: same row`).toBeLessThan(2);
+      expect(accessibility!.x, `${url}: Accessibility after Privacy Policy`).toBeGreaterThan(privacy!.x + privacy!.width);
+    }
+    // the 404 page has the same footer (a missing address would log a console error in the browser here)
+    expect(readFileSync('dist/404.html', 'utf8')).toMatch(/<a href="\/privacy\/"[^>]*>Privacy Policy<\/a>\s*<span[^>]*>·<\/span>\s*<a href="\/accessibility\/"[^>]*>Accessibility<\/a>/);
+    const llms = await (await request.get('/llms.txt')).text();
+    expect(llms).toContain(`(${SITE_ORIGIN}/privacy/)`);
+    expect(llms).toContain(`(${SITE_ORIGIN}/accessibility/)`);
+    const sitemap = await (await request.get('/sitemap-0.xml')).text();
+    expect(sitemap).toContain(`<loc>${SITE_ORIGIN}/privacy/</loc>`);
+    expect(sitemap).toContain(`<loc>${SITE_ORIGIN}/accessibility/</loc>`);
   });
 });

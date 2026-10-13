@@ -32,10 +32,10 @@ const sections = await getSections(machine.id);
 const others = sections.filter((s) => s.id !== section.id);
 const title = section.data.title;
 
-// Titles stay within 65 characters (search results cut them off): the shop name is added when it fits and
+// Titles stay within 60 characters (search results cut them off): the shop name is added when it fits and
 // left off when it does not, never the words "Packaging Machines".
 const pageTitle = `${title} for VFFS Packaging Machines`;
-const withShopName = `${pageTitle} | ${site.name}`.length <= 65;
+const withShopName = `${pageTitle} | ${site.name}`.length <= 60;
 const description = `${title} for VFFS packaging machines: ${parts.length} replacement parts listed by OEM or C&M part number. Add parts to a quote request.`;
 const crumbs = [
   { name: 'Home', path: '/' },
@@ -62,7 +62,7 @@ const jsonLd = [
     <a class="back-link" href={machineUrl(machine.id)}>‹ {machine.data.name}</a>
 
     <header class="sec__head">
-      <p class="eyebrow">Replacement parts for {machine.data.name}</p>
+      <p class="eyebrow">Replacement parts for VFFS packaging machines</p>
       <h1>{title} for VFFS packaging machines</h1>
       <p class="lead">{section.data.blurb} Find your part by its OEM part number or C&amp;M number.</p>
     </header>
@@ -98,7 +98,7 @@ const jsonLd = [
   }
 
   /* phones: the back link above the title already names the machine */
-  @media (max-width: 767px) {
+  @media (max-width: 47.9375em) {
     .sec__head .eyebrow {
       display: none;
     }

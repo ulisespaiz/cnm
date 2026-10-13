@@ -1,15 +1,16 @@
 ---
 title: "Metal Work"
-summary: "From MIG and TIG welding to plate rolling and precision forming, we handle every aspect of metalwork with expert skill and strict quality control — ideal for both structural frameworks and decorative assemblies."
+summary: "From MIG and TIG welding to plate rolling and precision forming, for both structural frameworks and decorative assemblies."
+teaser: "MIG and TIG welding, plate, tube and pipe rolling, and forming."
 image: ../../assets/work/our-work-1.jpg
-imageAlt: "Timesavers wide-belt deburring and finishing machine in the C&M shop"
+imageAlt: "Timesavers 32 RB Series wide-belt finishing machine in the C&M shop"
 capabilities:
   - name: "Welding"
-    text: "MIG and TIG welding for structural and decorative needs."
+    text: "MIG and TIG welding for structural and decorative needs, from repairs to complete assemblies."
   - name: "Rolling"
     text: "Plate, tube, and pipe rolling to precise radii and curvatures."
   - name: "Forming"
-    text: "Metal forming and bending to exact specifications."
+    text: "Metal forming and bending: precise bends, folds and shapes made to your exact specifications."
 materialsLabel: "Materials We Work With"
 materials: ["Steel", "Stainless Steel", "Aluminum", "Specialty Alloys"]
 order: 3
@@ -24,12 +25,4 @@ faqs:
   - q: "Do you do bending and forming?"
     a: "Yes. We form, bend and fold metal to your exact specifications."
 ---
-From MIG and TIG welding to plate rolling and precision forming, we handle every aspect of metalwork with expert skill and strict quality control — ideal for both structural frameworks and decorative assemblies.
-
-## Forming
-
-Custom metal forming solutions with advanced techniques. We create precise bends, folds, and shapes to your exact specifications.
-
-## Welding
-
-Expert MIG and TIG welding services for permanent, strong joints.
+From MIG and TIG welding to plate rolling and precision forming, for both structural frameworks and decorative assemblies.

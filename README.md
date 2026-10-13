@@ -33,13 +33,14 @@ SHOW_DRAFTS=1 npm run build   # production build including drafts, for review
 | Cities offered in the form and listed on the hub | `serviceAreas` in `src/config/site.ts` |
 | Parts catalog (one object per part) | `src/content/parts.json`; its sections in `sections.json`, the machine in `machines.json` |
 | Part photos | `src/assets/parts/` (referenced from `parts.json`) |
-| Services (one file each) | `src/content/services/*.md` |
-| Machinery | `src/content/equipment.json`, images in `src/assets/equipment/` |
-| Home page sections, FAQ, work gallery | `src/pages/index.astro` |
+| Services (one file each; `summary` is the page intro, `teaser` the one-line card text on the other pages) | `src/content/services/*.md` |
+| Machinery (one list: `/our-machinery/`, the home page machine cards and "Key machines" count, the About page, `llms.txt`) | `src/content/equipment.json`, images in `src/assets/equipment/`. Only machines that are in the shop's own photos; no capacities or specs that are not visible. |
+| Home page sections and FAQ | `src/pages/index.astro` |
 | City pages (one file each) | `src/content/areas/*.md` |
 | Colors, fonts, spacing | tokens at the top of `src/styles/global.css` |
 | OEM part number index (`/shop/part-numbers/`) and catalog CSV (`/shop/catalog.csv`) | `src/pages/shop/part-numbers/index.astro`, `src/pages/shop/catalog.csv.ts`; both read `src/lib/catalog.ts` |
 | How to order page (`/how-to-order/`) and its FAQ | `src/pages/how-to-order.astro` (facts from `src/config/site.ts`) |
+| Privacy policy (`/privacy/`) and accessibility statement (`/accessibility/`) | `src/pages/privacy.astro`, `src/pages/accessibility.astro`; both linked from the footer (`src/components/Footer.astro`) and listed in `llms.txt` |
 | IndexNow key and submit script | `indexNowKey` in `src/config/site.ts`, `public/<key>.txt`, `scripts/indexnow.mjs` |
 | Old URL → new URL redirects | `public/_redirects` |
 | Security and cache headers | `public/_headers` |
@@ -91,6 +92,31 @@ machine is `vffs`, so a part is at `/shop/vffs/registration/10097a2083-gear-spur
   must contain the C&M number and the OEM number, and may only state facts
   from the catalog. Say "OEM part number" (never the manufacturer's name: see "The
   manufacturer's name" below).
+- `shortName` (optional) is a shorter display name for the case where the full name cannot fit a page
+  title (65 characters, with the number in front and " | C&M Machine Shop" behind, so a name of about 35
+  characters at most) or a card. Write it from `name` by leaving filler words out ("for" stays only if it fits);
+  never cut a size, never abbreviate to a word the site does not use ("SS"). The build checks it is shorter than
+  `name` and keeps every size. The page heading, the specifications, the index and the CSV keep the full `name`;
+  the page title, the meta description (when the name does not fit), the "More in" rows, the home page cards and
+  the previous/next links use the short one. Keep `name` itself to what a buyer needs to find the part: put
+  details such as "with 2 keyways" in `note`.
+- **Page title and meta description** are one template for every part (`src/lib/partmeta.ts`), so nothing is
+  edited by hand: the title is `<OEM # or C&M #> <name> | C&M Machine Shop` for every part (the number
+  first, so a search by number lands on the part), at most 65 characters, and the name is never cut: a name that
+  does not fit uses its `shortName`, and a part with neither stops the build. The meta description is a sentence
+  with the name, "a replacement for OEM part number X for VFFS packaging machines that use that number" and
+  "C&M number CM-NNNN" (or "No OEM part number is listed" for a part with none), at most 155 characters. A part
+  whose `oemVerify` is set and whose description says the number is being confirmed gets "<name> is listed
+  under OEM # X (being confirmed). C&M number CM-NNNN." and never a replacement or match claim; `parts.ts` and
+  `check:dist` both fail on one that states a match.
+- Descriptions use the approved wording: "a replacement for OEM part number X", "made to match your part
+  number, sample or print", "for VFFS packaging machines, matched by OEM part number X". The build fails on
+  "fits", "a OEM", "made to replace", "is replaced by", "in place of", "is the pattern", "on VFFS packaging
+  machines" (a fit claim by machine type) and database labels ("filed under", "listed under <type>",
+  "from the ... section").
+- Two parts that share an OEM number (computed from the catalog, never listed by hand) each show a note under
+  the number ("Two parts in our catalog use OEM # X: <other part> and this one. Check the name and photo, or
+  send a photo of your part with your quote.") and a "Shared OEM #, see both" mark in the OEM part number index.
 - `flags` are notes for the owner about the data ("Verify: ..."). They are never
   shown on the site.
 - The photo goes in `src/assets/parts/`, named after the part numbers.
@@ -187,9 +213,12 @@ shop public.
 **`/shop/part-numbers/`** (parts shop on only) is one accessible table of every part: OEM #, C&M #,
 part name, section. It is sorted by OEM number as text (so `03187A0897` sits with the other `0318…` numbers);
 parts that share an OEM number go by C&M number, and parts with no OEM number come last, by C&M number.
-Each row links to the part page. It is plain HTML with no script of its own, so it works with Ctrl-F and
-on a slow phone: from 640px it is a table with a sticky header, below that every row stacks into a card
-(OEM # and C&M # on one line, then the part name as the link, then the section). The ARIA table roles are
+Each row links to the part page. The whole table is plain HTML, so it works with Ctrl-F and with no
+JavaScript. A filter field above it ("Filter by OEM #, C&M # or name", `src/scripts/part-numbers-filter.ts`)
+hides the rows that do not match as you type; it reads numbers like the shop search (spaces, dashes, the
+leading zero, "OEM" or any other word in front, `CM 2`) and stays hidden with no script. A number that two
+parts share is marked "Shared OEM #, see both" on both rows. From 640px it is a table with a sticky header, below that every row stacks into a card
+(OEM # on the larger type and C&M # on the smaller, then the part name as the link, then the section). The ARIA table roles are
 repeated on purpose, so the stacked rows keep their table meaning in every browser. The page links to bulk
 paste, carries the part request form and the trademark disclaimer, and is linked from `/shop/`, the machine
 page, the footer Shop column and `llms.txt`.
@@ -210,7 +239,7 @@ list, bulk paste and the part request form, the reply time, local pickup (addres
 rendered once and feeds both the visible `<details>` and the FAQPage JSON-LD, so they always match. Every fact
 comes from `src/config/site.ts` or from what the quote and part request forms already say: when you change
 the reply time, hours, pickup or shipping there, this page follows. It is linked from the footer Company column,
-the quote page ("How ordering works"), `/shop/`, `llms.txt` and the sitemap.
+the quote page and `/shop/` (both as "How to Order", the one name of the page), `llms.txt` and the sitemap.
 
 ## Quote form (Web3Forms)
 
@@ -230,8 +259,13 @@ with Turnstile if spam gets through. File uploads are not supported
 on the Web3Forms free plan; see the plan in the PR if customers need them.
 
 If JavaScript fails, the form still posts directly to Web3Forms and redirects
-to `/quote/thanks/`. If the request fails, the customer sees a prefilled
-`mailto:` fallback.
+to `/quote/thanks/` (the contact form, `kind="contact"`, redirects to `/contact/thanks/`, whose copy is neutral:
+a message is answered, it is not a quote request). Both thank-you pages share `src/components/ThanksPage.astro`,
+are `noindex` and are left out of the sitemap (`astro.config.mjs`). If the request fails, the customer sees a
+prefilled `mailto:` fallback.
+
+A required field can word its own "left empty" error: `data-required-message="Enter your name"` on the input
+replaces the browser's "Please fill out this field." (`messageOf` in `src/scripts/web3forms-submit.ts`).
 
 The quote, contact and part request forms need a name and at least one of email or phone. Neither is
 `required` in the HTML (that would force both, and the form must still post without JavaScript). The
@@ -239,6 +273,49 @@ two inputs sit in a `<fieldset data-reach id="...">`; `src/scripts/web3forms-sub
 for the pair ("Enter an email or a phone number so we can reply.") when both are empty, tied to both
 fields with `aria-invalid` and `aria-describedby`. An email that is typed is still checked as an email,
 and an empty email is left out of the Web3Forms request (Web3Forms uses `email` as the reply-to).
+
+## Privacy policy and accessibility statement
+
+`/privacy/` (`src/pages/privacy.astro`) and `/accessibility/` (`src/pages/accessibility.astro`) describe what the site
+actually does. Each page's top comment lists where in the code a statement can be checked. The privacy policy says the site
+sets no cookies, keeps only the quote reference and quote list in the browser (local storage `quote-list-v2`, session
+storage `last-quote-ref`), runs no analytics or third-party scripts, and sends form data only to Web3Forms. The tests in
+`tests/smoke.spec.ts` ("privacy policy") fail if that stops being true or if a form sends a field the policy does not list.
+
+Update the page and its date (`UPDATED` / `UPDATED_ISO` in `privacy.astro`) when a change:
+
+- adds a cookie, an analytics, advertising or other third-party script, or an embed (this also needs a change to the CSP in `public/_headers`);
+- adds or changes a form field, or what is kept in the browser;
+- adds a service provider, or changes how long requests are kept.
+
+The policy says only what the code, the config or the owner has confirmed. It makes no promise about a deletion schedule, about who
+can read the inbox or about what Web3Forms keeps; the owner's open questions are the `CONFIRM` lines in the top comment of
+`privacy.astro`, so `npm run prelaunch` lists them. Set `UPDATED` to the day the policy goes live. When a change matters to a
+visitor, fill the `NOTICE` constant in `privacy.astro` (it shows a notice under the date; leave it empty otherwise).
+
+The accessibility statement is dated by the review it describes (`REVIEWED` / `REVIEWED_ISO` in `accessibility.astro`). After a
+new review (axe on every page at phone and desktop width, keyboard testing, and a screen reader pass if one is done), change
+the date and update "How we test" and "Known limitations" to match what the review found. The statement says the goal is
+WCAG 2.2 Level AA; it never claims full conformance. The ADA names no technical standard for a private business website,
+and nobody can certify a pass: WCAG 2.1/2.2 AA is the yardstick courts and demand letters use, and the statement is a goal
+with a record of what was checked (axe-core, keyboard, zoom, contrast; Chromium only, no screen reader pass yet).
+
+Code conventions that keep the statement true (WCAG 2.2 AA is the goal; the statement lists what was checked and what is known to fall short):
+
+- Media queries use `em`, not `px` (`@media (min-width: 48em)` is 768px at the default text size). A reader who raises the browser's
+  default text size then gets the phone layout sooner. `matchMedia` calls in the scripts follow the same rule.
+- No `overflow-x: hidden` on `body`: it hides overflow instead of letting a reader scroll to it. Long words wrap (`overflow-wrap`
+  in `global.css`), and a grid without named columns gets `minmax(0, 1fr)` columns, so enlarged text cannot push the page sideways.
+- Nothing may stay stuck to the screen on a very short window (400% zoom, a phone on its side): the header, search bar, list headers and
+  bottom bars become static under `max-height: 32.5em`.
+- The phone menu makes `main`, `footer` and the bottom bars `inert` while it is open (`Header.astro`), and `prefers-reduced-motion` is
+  honored in CSS (`global.css`) and in scripts (`scrollBehavior()` in `src/scripts/scroll-to.ts`).
+- Spoken updates (copy result, quantity) go through the `#sr-status` live region that `Base.astro` renders (`src/scripts/announce.ts`);
+  the counts under the search fields wait about 600ms after the last key before they are spoken.
+
+With the parts shop off (`site.store.enabled`), both pages leave out the parts store, the catalog, the parts search and the
+quote list wording; the quote reference and the services a visitor adds to a request are still described, because the site
+still keeps them in the browser.
 
 ## Checks
 
@@ -276,6 +353,14 @@ exits with code 1 when it finds:
   `_headers` rule; with
   the shop off: anything left of `/shop/`, a link that still points there, or a
   `/shop` rule in `_redirects` that is not a `302` to `/quote/`;
+- with the shop on, a part page whose title is cut with an ellipsis, is over 65 characters, is shared with
+  another part, lacks the whole part name or does not start with the part's number and end with the shop name;
+  a part meta description that lacks the part name, the C&M number or the OEM number, is over 155 characters,
+  is not a sentence, or uses a banned phrase ("made to replace", "is replaced by", "in place
+  of", "on VFFS packaging machines", a database label); a part whose description says its OEM number is being
+  confirmed but whose meta description or Product JSON-LD description does not say so or states a match; two
+  parts that share an OEM number without the note on both pages and the mark on both index rows; the filter
+  field missing from `/shop/part-numbers/`;
 - two indexable pages with the same meta description, a title over 65 characters on
   `/how-to-order/` or `/shop/part-numbers/`, or the IndexNow key file missing from `dist/` or not
   holding the key;
@@ -400,7 +485,7 @@ Built in:
   point, area served, services catalog, `knowsAbout`) and WebSite; plus
   Service, Product, BreadcrumbList and FAQPage where relevant.
 - Default share image `public/og.jpg` (1200x630, built from the real CNC machining center photo `src/assets/work/our-work-2.jpg`; regenerate if the brand changes).
-- Photos: real C&M shop photos only (no stock or AI images). `our-work-1` Timesavers finishing machine, `our-work-2` CNC machining center, `our-work-6` Sharp 22120B lathe, plus `src/assets/equipment/` and the storefront shots in `src/assets/site/`.
+- Photos: real C&M shop photos only (no stock or AI images). `our-work-1` Timesavers 32 RB Series finishing machine, `our-work-2` Akira-Seiki Performa CNC machining center (the home page banner), plus `src/assets/equipment/` (the five machines, including the Sharp 22120B lathe) and the storefront shots in `src/assets/site/`.
 - Q&A sections on every service page and the industry page.
 
 Do these at launch; they matter more than anything in the code:

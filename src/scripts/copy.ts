@@ -1,5 +1,6 @@
 // Copy buttons: <button data-copy="03187A0897">. Works with navigator.clipboard,
-// falls back to execCommand, and announces the result for screen readers.
+// falls back to execCommand, and announces the result for screen readers (announce.ts).
+import { announce } from './announce';
 
 async function copyText(text: string) {
   try {
@@ -23,20 +24,6 @@ async function copyText(text: string) {
   }
   ta.remove();
   return ok;
-}
-
-function announce(message: string) {
-  let el = document.getElementById('copy-status');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'copy-status';
-    el.className = 'visually-hidden';
-    el.setAttribute('role', 'status');
-    el.setAttribute('aria-live', 'polite');
-    document.body.append(el);
-  }
-  el.textContent = '';
-  window.setTimeout(() => (el!.textContent = message), 30);
 }
 
 const timers = new WeakMap<HTMLElement, number>();

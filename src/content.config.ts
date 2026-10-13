@@ -57,6 +57,9 @@ const parts = defineCollection({
       machine: reference('machines'),
       section: reference('sections'),
       name: z.string(), // cleaned display name
+      // Optional shorter display name, only for a name too long for a page title (65 characters) or a card. Written from the
+      // name by removing filler words, never by cutting a size; the page heading and specifications keep the full name.
+      shortName: z.string().optional(),
       nameRaw: z.string(), // exactly as in the source catalog
       description: z.string().max(600).optional(), // plain-text product description for the part page (shown only when present)
       oem: z.string().optional(), // display form, e.g. 03187A0897; absent when the part has no OEM number
@@ -109,6 +112,9 @@ const services = defineCollection({
     z.object({
       title: z.string(),
       summary: z.string().max(220),
+      // One line for the "More services" cards on the other service pages, written for this service alone (the summary
+      // is the page's own intro and also shows on /services/, so it must not be the card text on every page).
+      teaser: z.string().max(110).optional(),
       image: image().optional(),
       imageAlt: z.string().optional(),
       // Sub-capabilities shown as cards on the service page and bullets on the home page.
@@ -124,14 +130,17 @@ const services = defineCollection({
     }),
 });
 
-// Shop equipment shown on /our-machinery/.
+// Shop equipment: the one list behind /our-machinery/, the machine cards and the "Key machines" count
+// on the home page, the About page and llms.txt. Only machines that are in the shop's own photos.
 const equipment = defineCollection({
   loader: file('src/content/equipment.json'),
   schema: ({ image }) =>
     z.object({
       name: z.string(),
+      blurb: z.string().optional(), // one line for the home page card (what the machine does)
       text: z.string(),
       image: image().optional(),
+      imageAlt: z.string().optional(), // what the photo looks like; the heading beside it already names the machine
       featuresLabel: z.string().default('Key Features'),
       features: z.array(z.object({ name: z.string(), text: z.string() })).default([]),
       order: z.number().default(0),

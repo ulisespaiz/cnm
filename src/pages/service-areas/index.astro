@@ -1,7 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
-import CtaBand from '../../components/CtaBand.astro';
 import { site, serviceAreas } from '../../config/site';
 import { getAreas, areaUrl } from '../../lib/content';
 import { breadcrumbs } from '../../lib/schema';
@@ -43,8 +42,8 @@ const groups = counties.map((name) => ({
 ---
 
 <Base
-  title="Service Areas in Monterey Bay & Beyond"
-  description={`Machine shop in ${site.address.city} serving Monterey County, Hollister, Watsonville, Gilroy and San Jose. Machining, cutting, welding and fabrication, with local pickup.`}
+  title="Service Areas: Salinas to San Jose"
+  description={`Machine shop in ${site.address.city} serving Monterey County, Hollister, Watsonville, Gilroy and San Jose: machining, cutting, welding, fabrication.`}
   jsonLd={[breadcrumbs(crumbs)]}
 >
   <section class="section">
@@ -70,7 +69,6 @@ const groups = counties.map((name) => ({
       <p class="muted">Don't see your city? <a href="/contact/">Ask us</a>, we may still be able to help.</p>
     </div>
   </section>
-  <CtaBand />
 </Base>
 
 <style>

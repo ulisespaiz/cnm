@@ -87,13 +87,13 @@ const items = [
   }
 
   /* strip: wraps instead of scrolling. One column on phones, two from 480px, four from 900px. */
-  @media (min-width: 480px) {
+  @media (min-width: 30em) {
     .trust--strip {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .trust--strip {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }

@@ -20,6 +20,7 @@ import {
   type QuoteItem,
 } from './quote-store';
 import { showToast } from './toast';
+import { scrollBehavior } from './scroll-to';
 import { buildMatcher, parseBulk, type BulkResult, type IndexRecord, type Matcher } from './bulk-parse';
 
 type Child = Node | string | null | undefined | false;
@@ -356,7 +357,7 @@ if (bulk) {
 
   const openBulk = (scroll: boolean) => {
     bulk.open = true;
-    if (scroll) bulk.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (scroll) bulk.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
   };
   if (location.hash === '#bulk') openBulk(false);
   window.addEventListener('hashchange', () => location.hash === '#bulk' && openBulk(true));
@@ -461,7 +462,7 @@ if (bulk) {
     message.hidden = true;
     bulk.open = false; // the button that had focus is now hidden: take focus to the list it added to
     document.getElementById('items-title')?.focus({ preventScroll: true });
-    document.querySelector('[data-quote-items]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.querySelector('[data-quote-items]')?.scrollIntoView({ behavior: scrollBehavior(), block: 'center' });
   });
 }
 

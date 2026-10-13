@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import { site } from '../config/site';
+import { getEquipment, getServices } from '../lib/content';
 import { breadcrumbs } from '../lib/schema';
 import office from '../assets/site/front-office.jpeg';
 
@@ -11,14 +12,17 @@ const crumbs = [
   { name: 'About', path: '/about/' },
 ];
 
+// Facts only, each from the site's own data: the year, the equipment list and the services collection.
+const machines = await getEquipment();
+const services = await getServices();
 const highlights = [
-  { label: 'Founded', value: String(site.founded), text: 'Precision machining expertise trusted by businesses across multiple industries.' },
-  { label: 'Quality', value: 'Exact Specs', text: 'Precision machining to exact specifications — no compromises, every time.' },
-  { label: 'Innovation', value: 'Advanced Tech', text: 'Advanced machinery and techniques that keep us ahead of industry standards.' },
+  { label: 'Since', value: String(site.founded), text: `A family-owned machine shop in ${site.address.city}, ${site.address.region}.` },
+  { label: 'Key machines', value: String(machines.length), text: 'Listed on our machinery page.' },
+  { label: 'Services', value: String(services.length), text: services.map((s) => s.data.title.replace(/ Services$/, '')).join(', ') + '.' },
 ];
 
 const values = [
-  { title: 'Precision', text: 'Delivering exceptional quality with stringent standards and advanced technology — every cut, every part, every time.' },
+  { title: 'Precision', text: 'Making each part to your drawing, sample or part number, on the machines listed on our machinery page.' },
   { title: 'Integrity', text: 'Prioritizing honesty, transparency, and trust in all interactions — with clients, employees, and the community we serve.' },
   { title: 'Family-Oriented', text: 'Nurturing a positive, growth-driven work environment that fosters innovation, respect, and long-term partnerships.' },
 ];
@@ -26,7 +30,7 @@ const values = [
 
 <Base
   title={`About ${site.name} | Family-Owned in ${site.address.city}, CA`}
-  description={`${site.legalName} is a family-owned machine shop in ${site.address.city}, CA, founded in ${site.founded}, serving food processing, agriculture and industry in Monterey County.`}
+  description={`${site.legalName} is a family-owned machine shop in ${site.address.city}, CA, since ${site.founded}, serving food processing, agriculture and industry around Monterey Bay.`}
   jsonLd={[breadcrumbs(crumbs)]}
 >
   <section class="section">
@@ -37,14 +41,12 @@ const values = [
       <div class="intro">
         <div>
           <p class="lead">
-            {site.legalName} was founded in {site.founded} with a simple vision: to provide quality craftsmanship with integrity
-            and hard work. We remain a family-oriented business dedicated to delivering precise, reliable, and honest
-            service for every project.
+            {site.legalName} has been a family-owned business in {site.address.city} since {site.founded}, built on a simple vision:
+            to provide quality craftsmanship with integrity and hard work.
           </p>
           <p>
-            Our team of professionals works closely with clients to ensure personalized solutions that exceed
-            expectations. We value transparency, innovation, and customer satisfaction, making us a trusted partner in
-            your journey to success.
+            We cut, machine, weld, roll, form and fabricate metal parts from your drawing and, when you have none, from a
+            sample or an idea. {site.replyTime} to quote requests.
           </p>
         </div>
         <Image src={office} alt={`${site.name} front office in ${site.address.city}`} widths={[480, 800]} sizes="(min-width: 900px) 480px, 100vw" loading="eager" />
@@ -68,15 +70,13 @@ const values = [
         <p class="eyebrow">Our Mission</p>
         <h2>Why we do what we do</h2>
         <p>
-          At {site.legalName}, in business since {site.founded}, we specialize in providing
-          precision-engineered solutions for the food processing and agriculture industries. Our capabilities extend far
-          beyond standard machining and metalworking services to include custom fabrication and blueprint-based
-          fabrication. Whether it's water-jet cutting, laser cutting, or shearing, as well as machining such as milling
-          and turning, metal working such as rolling, forming, and welding, we are equipped to handle projects of any
-          scale and complexity. With the expertise of our skilled team, we turn your concepts into reality—delivering
-          tailored, high-quality solutions that exceed expectations.
+          We make parts for food processing, agriculture and other industry. Our work is water-jet and laser cutting and
+          shearing, milling and turning, rolling, forming and welding, and custom fabrication with or without blueprints.
         </p>
-        <p><a href="/industries/food-processing-agriculture/">How we serve food processing &amp; agriculture →</a></p>
+        <p>
+          Machines in our shop include {machines.map((m) => m.data.name).join(', ').replace(/, ([^,]*)$/, ', and $1')}. <a href="/our-machinery/">See our machinery</a>.
+        </p>
+        <p><a href="/industries/food-processing-agriculture/">How we serve food processing &amp; <span class="nowrap">agriculture →</span></a></p>
       </div>
       <div>
         <p class="eyebrow">Our Vision</p>
@@ -85,9 +85,8 @@ const values = [
           Our vision is to be a leader in precision machining and metalworking, delivering excellence through innovation
           and craftsmanship. As a family-oriented company, we prioritize building strong relationships with our clients,
           employees, and community. We believe in continuously investing in our shop, upgrading our equipment and
-          processes to enhance efficiency and simplify our work—allowing us to maintain the highest quality standards.
-          Our commitment is to foster a culture of integrity, reliability, and growth, ensuring that every project we
-          undertake is a testament to our dedication to excellence and the success of those we serve.
+          processes to enhance efficiency and simplify our work. Our commitment is to foster a culture of integrity,
+          reliability, and growth.
         </p>
       </div>
     </div>
@@ -117,7 +116,7 @@ const values = [
     align-items: center;
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .intro {
       grid-template-columns: 1.3fr 1fr;
     }
@@ -139,7 +138,7 @@ const values = [
     list-style: none;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48em) {
     .highlights,
     .values {
       grid-template-columns: repeat(3, 1fr);
@@ -179,7 +178,7 @@ const values = [
     gap: 40px;
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: 56.25em) {
     .two-col {
       grid-template-columns: 1fr 1fr;
     }
