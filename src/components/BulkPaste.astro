@@ -13,14 +13,14 @@
     <label class="bulk__label" for="bulk-text">One part per line, with an optional quantity</label>
     <textarea id="bulk-text" data-bulk-text rows="6" spellcheck="false" autocapitalize="characters" placeholder={'03187A0897 x2\n3186-D0379, 3\n2 x CM-0002'}></textarea>
     <p class="bulk__help muted">
-      Hayssen part numbers (spaces and dashes are fine) or C&amp;M numbers. Quantity can come before or after,
+      OEM part numbers (spaces and dashes are fine) or C&amp;M numbers. Quantity can come before or after,
       like <code>x2</code>, <code>2 pcs</code> or a number from a spreadsheet column. Up to 200 lines.
     </p>
     <button type="button" class="btn btn--outline" data-bulk-check>Check list</button>
     <p class="bulk__error" role="alert" data-bulk-message hidden></p>
 
     <div class="bk" data-bulk-preview hidden>
-      <p class="bk__summary" data-bulk-summary aria-live="polite"></p>
+      <p class="bk__summary" data-bulk-summary tabindex="-1"></p>
       <ul class="bk__rows" data-bulk-rows></ul>
       <button type="button" class="btn btn--red btn--block" data-bulk-add>Add lines to quote</button>
     </div>
@@ -75,7 +75,7 @@
     width: 100%;
     min-height: 140px;
     padding: 10px 12px;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-field-border);
     border-radius: var(--radius);
     background: #fff;
     font: 400 1rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -174,8 +174,10 @@
     color: var(--color-muted);
   }
 
-  .bk__rows :global(.bk__dup) {
+  .bk__rows :global(.bk__dup),
+  .bk__rows :global(.bk__note) {
     font-size: 0.875rem;
+    overflow-wrap: anywhere;
   }
 
   .bk__rows :global(.bk__state),
@@ -205,7 +207,7 @@
     width: 64px;
     min-height: 44px;
     padding: 0 8px;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-field-border);
     border-radius: 10px;
     font: inherit;
     text-align: center;

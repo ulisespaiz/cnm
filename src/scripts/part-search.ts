@@ -1,15 +1,19 @@
 // Instant parts search: part numbers (typed any way), C&M numbers, and words.
 // The index is /shop/search-index.json (see src/pages/shop/search-index.json.ts).
-// Matching rules: exact / prefix / substring on the Hayssen number (k, z, extra
+// Matching rules: exact / prefix / substring on the OEM number (k, z, extra
 // keys), C&M numbers via cmKey, and word-prefix matching on names, section and
-// part type with a one-edit tolerance for typos ("pully").
-import { cmKey, oemKey, queryVariants } from '../lib/partkey';
+// part type with a one-edit tolerance for typos ("pully"). When nothing matches,
+// the query is tried again without the words that no part uses and around the
+// part-number-shaped run of words, so "OEM # 03187A0897", "<maker> 03187A0897" or
+// "03187A0897 pulley" still find the part, whatever the extra word is. No brand
+// name is listed anywhere.
+import { cmKey, oemKey, queryVariants, SYNONYMS } from '../lib/partkey';
 import { addPart } from './part-add';
 import { scrollToEl } from './scroll-to';
 
 export interface Rec {
   i: string;
-  o: string; // Hayssen number; "" for a part that has none (k and z are then "" too)
+  o: string; // OEM number; "" for a part that has none (k and z are then "" too)
   k: string;
   z: string;
   a: string[];
@@ -43,19 +47,6 @@ let types: Record<string, string> = {};
 let entries: Entry[] = [];
 let loading: Promise<Entry[]> | null = null;
 
-const SYN: Record<string, string[]> = {
-  lh: ['left'],
-  left: ['lh'],
-  rh: ['right'],
-  right: ['rh'],
-  ss: ['stainless'],
-  stainless: ['ss'],
-  assy: ['assembly'],
-  mtg: ['mounting'],
-  comp: ['compression'],
-  adj: ['adjustable'],
-};
-
 const words = (s: string) => s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
 
 export function loadIndex(): Promise<Entry[]> {
@@ -68,7 +59,7 @@ export function loadIndex(): Promise<Entry[]> {
       entries = recs.map((rec, idx) => ({
         rec,
         idx,
-        keys: rec.k ? [rec.k, rec.z, ...rec.a.map(oemKey)] : [], // a part with no Hayssen number has no number keys; its C&M number is matched separately
+        keys: rec.k ? [rec.k, rec.z, ...rec.a.map(oemKey)] : [], // a part with no OEM number has no number keys; its C&M number is matched separately
         words: words(`${rec.n} ${rec.w.join(' ')} ${rec.st} ${types[rec.y] ?? rec.y}`),
         nameWords: words(`${rec.n} ${rec.w.join(' ')}`),
       }));
@@ -92,9 +83,15 @@ function within1(a: string, b: string) {
   return short.slice(i) === long.slice(i + 1);
 }
 
-export function search(q: string): Hit[] {
-  const query = q.trim();
-  if (!query || !entries.length) return [];
+// How a query word relates to a list of part words: 0 none, 1 word-prefix (or synonym), 2 one typo away.
+function wordMatch(t: string, list: string[]): 0 | 1 | 2 {
+  const alts = [t, ...(SYNONYMS[t] ?? [])];
+  if (list.some((w) => alts.some((a) => w.startsWith(a)))) return 1;
+  if (t.length >= 5 && list.some((w) => w.length >= 5 && (within1(t, w) || within1(t, w.slice(0, t.length))))) return 2;
+  return 0;
+}
+
+function run(query: string): Hit[] {
   const k = oemKey(query);
   const digits = (k.match(/\d/g) ?? []).length;
   const numeric = k.length >= 3 && digits >= 3;
@@ -130,25 +127,62 @@ export function search(q: string): Hit[] {
       let matched = 0;
       let fuzzy = false;
       for (const t of tokens) {
-        const alts = [t, ...(SYN[t] ?? [])];
-        if (e.words.some((w) => alts.some((a) => w.startsWith(a)))) matched++;
-        else if (t.length >= 5 && e.words.some((w) => w.length >= 5 && (within1(t, w) || within1(t, w.slice(0, t.length))))) {
-          matched++;
-          fuzzy = true;
-        }
+        const m = wordMatch(t, e.words);
+        if (m) matched++;
+        if (m === 2) fuzzy = true;
       }
       // Parts named for the query rank above parts that only match on
       // their section or type ("plate" vs the Platen section).
-      const inName = tokens.every((t) => {
-        const alts = [t, ...(SYN[t] ?? [])];
-        return e.nameWords.some((w) => alts.some((a) => w.startsWith(a)));
-      });
+      const inName = tokens.every((t) => wordMatch(t, e.nameWords) === 1);
       if (matched === tokens.length) score = fuzzy ? 20 : 40 + matched + (inName ? 10 : 0);
     }
 
     if (score) hits.push({ rec: e.rec, score, at, len, idx: e.idx });
   }
   return hits.sort((a, b) => b.score - a.score || a.idx - b.idx);
+}
+
+// Other ways to read a query that found nothing: the run of words that has the shape of a part number
+// on its own, and the query without the words that no part uses (a maker's name, "OEM", a stray word).
+function otherReadings(query: string): string[] {
+  const out: string[] = [];
+  // A C&M number inside a longer query ("acme CM-0111", "cm 111 pulley") is read as that exact key and
+  // nothing else: its digits must never be tried as a part-number run, where "0111" would match another
+  // part by prefix. (A C&M number that is not in the catalog finds nothing, which is the right answer.)
+  const cmRun = /\bcm[\s#-]*\d{1,4}\b/i.exec(query);
+  if (cmRun && cmKey(cmRun[0])) return [cmRun[0]].filter((t) => t !== query);
+  const tokens = query.split(/[^A-Za-z0-9]+/).filter(Boolean);
+  // "acme 03187 A0897 pulley" -> "03187 A0897": consecutive words with digits in them (a lone letter
+  // between two of them belongs to the number), at least three digits in all.
+  const digit = tokens.map((t) => /\d/.test(t));
+  const inNumber = tokens.map((t, i) => digit[i] || (t.length === 1 && !!digit[i - 1] && !!digit[i + 1]));
+  for (let i = 0; i < tokens.length; i++) {
+    if (!inNumber[i]) continue;
+    let end = i;
+    while (inNumber[end + 1]) end++;
+    const text = tokens.slice(i, end + 1).join(' ');
+    if ((text.match(/\d/g) ?? []).length >= 3) out.push(text);
+    i = end;
+  }
+  // A word with digits in it is never dropped: a number that is not in the catalog must not be
+  // swapped for the other words ("acme 10097A9999" must not list the parts that have "acme" in their name).
+  const all = words(query);
+  const known = all.filter((t) => entries.some((e) => wordMatch(t, e.words)));
+  const dropped = all.filter((t) => !known.includes(t));
+  if (known.length && dropped.length && !dropped.some((t) => /\d/.test(t))) out.push(known.join(' '));
+  return out.filter((text) => text !== query);
+}
+
+export function search(q: string): Hit[] {
+  const query = q.replace(/\s+/g, ' ').trim();
+  if (!query || !entries.length) return [];
+  const hits = run(query);
+  if (hits.length) return hits;
+  for (const other of otherReadings(query)) {
+    const found = run(other);
+    if (found.length) return found;
+  }
+  return [];
 }
 
 export const esc = (s: string) =>
@@ -174,34 +208,21 @@ document.addEventListener('click', (event) => {
 /* ---------- search box ---------- */
 
 const MAX = 8;
-let uid = 0;
 
 function initBox(root: HTMLElement) {
   const input = root.querySelector<HTMLInputElement>('input')!;
   const form = root.querySelector<HTMLFormElement>('form')!;
   const clear = root.querySelector<HTMLButtonElement>('[data-ps-clear]')!;
   const panel = root.querySelector<HTMLElement>('[data-ps-panel]')!;
-  const list = root.querySelector<HTMLElement>('[role="listbox"]')!;
+  const list = root.querySelector<HTMLElement>('[data-ps-list]')!;
   const status = root.querySelector<HTMLElement>('[data-ps-status]')!;
   const extra = root.querySelector<HTMLElement>('[data-ps-extra]')!;
-  const id = `ps${++uid}`;
   let hits: Hit[] = [];
-  let active = -1;
 
   const phone = { label: root.dataset.phone ?? '', tel: root.dataset.tel ?? '' };
   const reply = root.dataset.reply ?? '';
 
-  const options = () => [...list.querySelectorAll<HTMLElement>('[role="option"]')];
-
-  function setActive(n: number) {
-    const opts = options();
-    active = n >= 0 && n < opts.length ? n : -1;
-    opts.forEach((o, i) => o.setAttribute('aria-selected', String(i === active)));
-    if (active >= 0) {
-      input.setAttribute('aria-activedescendant', opts[active].id);
-      opts[active].scrollIntoView({ block: 'nearest' });
-    } else input.removeAttribute('aria-activedescendant');
-  }
+  const links = () => [...list.querySelectorAll<HTMLElement>('.ps-hit__link')];
 
   // Phones: a fixed bottom bar (call/quote) covers the page bottom, so cap the
   // panel to the space between its top edge and that bar.
@@ -219,13 +240,14 @@ function initBox(root: HTMLElement) {
 
   function show(open: boolean) {
     panel.hidden = !open;
-    input.setAttribute('aria-expanded', String(open));
-    if (!open) setActive(-1);
-    else fit();
+    if (open) fit();
+    // The panel floats over the page under the search box: while any panel is open, the page regions marked
+    // data-ps-under are hidden (store.css), so no sliver of a link shows below the panel's bottom edge.
+    document.documentElement.toggleAttribute('data-ps-open', !!document.querySelector('[data-ps-panel]:not([hidden])'));
   }
 
   function oemHtml(h: Hit) {
-    const o = h.rec.o || h.rec.c; // a part with no Hayssen number shows its C&M number
+    const o = h.rec.o || h.rec.c; // a part with no OEM number shows its C&M number
     if (h.at < 0 || o !== h.rec.k) return esc(o);
     return `${esc(o.slice(0, h.at))}<mark>${esc(o.slice(h.at, h.at + h.len))}</mark>${esc(o.slice(h.at + h.len))}`;
   }
@@ -235,6 +257,7 @@ function initBox(root: HTMLElement) {
     clear.hidden = !input.value;
     if (!q) {
       list.innerHTML = '';
+      list.hidden = true;
       extra.innerHTML = '';
       status.textContent = '';
       return show(false);
@@ -244,6 +267,7 @@ function initBox(root: HTMLElement) {
       return;
     }
     hits = search(q);
+    list.hidden = !hits.length;
     if (!hits.length) {
       list.innerHTML = '';
       if (q.length < 2) return show(false);
@@ -254,11 +278,13 @@ function initBox(root: HTMLElement) {
         <a class="btn btn--outline" href="tel:${esc(phone.tel)}">Call ${esc(phone.label)}</a></div></div>`;
       return show(true);
     }
+    // A plain list: each result is a link plus its own Add button, both reached with Tab;
+    // Arrow Down / Arrow Up move between the links.
     list.innerHTML = hits
       .slice(0, MAX)
       .map(
-        (h, n) => `<li role="option" id="${id}-${n}" aria-selected="false" class="ps-hit">
-        <a class="ps-hit__link" href="${esc(h.rec.u)}" tabindex="-1">
+        (h, n) => `<li class="ps-hit">
+        <a class="ps-hit__link" href="${esc(h.rec.u)}">
           <span class="ps-hit__thumb">${h.rec.p ? `<img src="${esc(h.rec.p)}" width="36" height="48" alt="" loading="lazy" decoding="async">` : ''}</span>
           <span class="ps-hit__text"><span class="ps-hit__oem">${oemHtml(h)}</span><span class="ps-hit__name">${esc(h.rec.n)}</span><span class="ps-hit__sec">${esc(h.rec.st)}</span></span>
         </a>
@@ -271,7 +297,6 @@ function initBox(root: HTMLElement) {
         : '';
     status.textContent = `${hits.length} ${hits.length === 1 ? 'result' : 'results'}`;
     show(true);
-    setActive(-1);
   }
 
   function go(url: string) {
@@ -289,14 +314,14 @@ function initBox(root: HTMLElement) {
   function commit() {
     const value = input.value.trim();
     if (!value) return;
-    const opts = options();
-    if (active >= 0 && opts[active]) return go(hits[active].rec.u);
     if (!entries.length) {
       void loadIndex().then(commit).catch(() => apply(value));
       return;
     }
-    const top = search(value)[0];
-    if (top && top.score >= 100) return go(top.rec.u);
+    // Go straight to a part only when exactly one part has that number: a number
+    // that two parts share lists both. A focused result link navigates by itself.
+    const exact = search(value).filter((h) => h.score >= 100);
+    if (exact.length === 1) return go(exact[0].rec.u);
     apply(value);
   }
 
@@ -330,19 +355,38 @@ function initBox(root: HTMLElement) {
     document.dispatchEvent(new CustomEvent('partsearch:apply', { detail: { query: '', fromInput: true } }));
   });
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      if (panel.hidden && input.value.trim()) render();
-      if (!options().length) return;
-      e.preventDefault();
-      const len = options().length;
-      const down = e.key === 'ArrowDown';
-      setActive(active < 0 ? (down ? 0 : len - 1) : (active + (down ? 1 : -1) + len) % len);
-    } else if (e.key === 'Escape') {
-      if (!panel.hidden) {
-        e.preventDefault();
-        show(false);
-      }
-    }
+    if (e.key !== 'ArrowDown') return;
+    if (panel.hidden && input.value.trim()) render();
+    const first = links()[0];
+    if (!first || panel.hidden) return;
+    e.preventDefault();
+    first.focus();
+  });
+  // Arrow keys walk the result links (also from an Add button); Arrow Up on the first goes back to the field.
+  panel.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const hit = (e.target as Element).closest('.ps-hit');
+    if (!hit) return;
+    e.preventDefault();
+    const all = links();
+    const at = all.indexOf(hit.querySelector<HTMLElement>('.ps-hit__link')!);
+    const to = all[at + (e.key === 'ArrowDown' ? 1 : -1)];
+    if (to) to.focus();
+    else if (e.key === 'ArrowUp') input.focus();
+  });
+  // Tab out of the last control leaves the box. Close the panel first, so the page behind it is back in
+  // the tab order before the browser picks the next stop (it would skip the hidden regions).
+  root.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab' || e.shiftKey || panel.hidden) return;
+    const stops = [...root.querySelectorAll<HTMLElement>('input, button, a[href]')].filter((el) => !el.hidden && !el.closest('[hidden]'));
+    if (e.target === stops[stops.length - 1]) show(false);
+  });
+  // Escape closes the panel from anywhere inside it and puts focus back in the field.
+  root.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || panel.hidden) return;
+    e.preventDefault();
+    input.focus(); // its focus handler redraws the list, so close afterwards
+    show(false);
   });
   root.addEventListener('focusout', (e) => {
     if (!root.contains(e.relatedTarget as Node)) show(false);
@@ -350,6 +394,9 @@ function initBox(root: HTMLElement) {
   document.addEventListener('click', (e) => {
     if (!root.contains(e.target as Node)) show(false);
   });
+  // Safari and Firefox on macOS do not focus a button when it is clicked: without this the field
+  // would lose focus, the panel would close on focusout, and the click would never land.
+  panel.addEventListener('mousedown', (e) => e.preventDefault());
   panel.addEventListener('click', (e) => {
     const t = e.target as Element;
     const add = t.closest<HTMLElement>('[data-ps-add]');
@@ -362,13 +409,7 @@ function initBox(root: HTMLElement) {
     }
     if (t.closest('[data-ps-all]')) apply(input.value.trim());
   });
-  // Hover keeps the highlight in sync with the pointer
-  list.addEventListener('mousemove', (e) => {
-    const opt = (e.target as Element).closest<HTMLElement>('[role="option"]');
-    if (opt) setActive(options().indexOf(opt));
-  });
 
-  input.setAttribute('aria-controls', list.id || (list.id = `${id}-list`));
   // exposed so the list filter can mirror a deep link into the field
   root.addEventListener('partsearch:set', ((e: CustomEvent<string>) => {
     input.value = e.detail;
@@ -380,18 +421,12 @@ export function initSearch() {
   const first = document.querySelector<HTMLElement>('[data-part-search]');
   if (first?.dataset.types) types = JSON.parse(first.dataset.types);
   document.querySelectorAll<HTMLElement>('[data-part-search]').forEach(initBox);
-  // "/" jumps to the search field
-  document.addEventListener('keydown', (e) => {
-    const t = e.target as HTMLElement;
-    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
-    if (t.closest('input, textarea, select, [contenteditable="true"]')) return;
-    e.preventDefault();
-    document.querySelector<HTMLInputElement>('[data-part-search] input')?.focus();
-  });
-  // The store home loads the index when the browser is idle
+  // The store home loads the index when the browser is idle, after the page has loaded
   if (location.pathname === '/shop/' || new URLSearchParams(location.search).has('q')) {
     const idle = (window as unknown as { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 600));
-    idle(() => void loadIndex().catch(() => {}));
+    const warm = () => idle(() => void loadIndex().catch(() => {}));
+    if (document.readyState === 'complete') warm();
+    else window.addEventListener('load', warm, { once: true });
   }
 }
 

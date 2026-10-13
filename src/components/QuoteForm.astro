@@ -164,6 +164,8 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
         if (data.get('delivery') !== 'Ship to me') data.delete('zip');
       },
       fallbackBody(data) {
+        // The mailto: link is length-limited, so the item list goes without its page links.
+        const items = isQuote ? summarize(getItems(), { links: false }) : '';
         const lines = [
           isQuote ? `Quote reference: ${data.get('quote_ref') ?? ''}` : '',
           `Name: ${data.get('name') ?? ''}`,
@@ -173,11 +175,13 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
           data.get('po') ? `PO: ${data.get('po')}` : '',
           data.get('needed_by') ? `Needed by: ${data.get('needed_by')}` : '',
           data.get('delivery') ? `Delivery: ${data.get('delivery')}${data.get('zip') ? ` (${data.get('zip')})` : ''}` : '',
-          data.get('products') ? `\nItems:\n${data.get('products')}` : '',
+          items ? `\nItems:\n${items}` : '',
           `\n${data.get('message') ?? ''}`,
         ];
         return lines.filter(Boolean).join('\n');
       },
+      // A quote leaves for the thank-you page, so its button stays locked after the send.
+      lockOnSuccess: isQuote,
       onSuccess() {
         if (isQuote) {
           try {

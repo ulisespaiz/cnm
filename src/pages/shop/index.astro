@@ -8,8 +8,8 @@ import TrustStrip from '../../components/TrustStrip.astro';
 import PartTable from '../../components/PartTable.astro';
 import PartRequestForm from '../../components/PartRequestForm.astro';
 import StoreDisclaimer from '../../components/StoreDisclaimer.astro';
-import { getParts, getSections, machineUrl, sectionUrl } from '../../lib/parts';
-import { itemList } from '../../lib/schema';
+import { getParts, getSections, machineUrl, MAIN_MACHINE, sectionUrl } from '../../lib/parts';
+import { breadcrumbs, itemList } from '../../lib/schema';
 import { site } from '../../config/site';
 import '../../styles/store.css';
 
@@ -18,24 +18,29 @@ if (!site.store.enabled) return Astro.redirect('/quote/', 302);
 
 const sections = await getSections();
 const parts = await getParts();
-const machineId = sections[0]?.data.machine.id ?? 'hayssen-vffs';
+const machineId = sections[0]?.data.machine.id ?? MAIN_MACHINE;
 
-const description = `Search ${parts.length} replacement parts for Hayssen VFFS machines by Hayssen or C&M part number. Add parts to a quote request. ${site.replyTime}.`;
+const description = `Search ${parts.length} replacement parts for VFFS packaging machines by OEM or C&M part number. Add parts to a quote request. ${site.replyTime}.`;
 const jsonLd = [
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Parts Store', path: '/shop/' },
+  ]),
   itemList(
     sections.map((s) => ({ name: s.data.title, path: sectionUrl(s) })),
-    'Hayssen VFFS replacement parts by section',
+    'VFFS replacement parts by section',
   ),
 ];
 ---
 
-<Base title="Hayssen VFFS Replacement Parts" description={description} jsonLd={jsonLd}>
+<Base title="VFFS Replacement Parts" description={description} jsonLd={jsonLd}>
+  <script is:inline src="/shop-early.js" slot="head"></script>
   <div class="container container--wide shop">
     <section class="shop__hero" aria-labelledby="shop-title">
       <p class="eyebrow">Parts Store</p>
-      <h1 id="shop-title">Replacement parts for <span class="mark">Hayssen VFFS</span> machines</h1>
+      <h1 id="shop-title">Replacement parts for <span class="mark">VFFS packaging</span> machines</h1>
       <p class="shop__sub">
-        {parts.length} parts in {sections.length} sections. Search by Hayssen part number, name or C&amp;M number.
+        {parts.length} parts for vertical form fill seal (VFFS) packaging machines, in {sections.length} sections. Search by OEM part number, name or C&amp;M number.
       </p>
       <div class="shop__search">
         <PartSearch variant="hero" />
@@ -43,21 +48,21 @@ const jsonLd = [
       </div>
     </section>
 
-    <section class="shop__tiles" aria-labelledby="tiles-title">
+    <section class="shop__tiles" data-ps-under aria-labelledby="tiles-title">
       <h2 id="tiles-title" class="shop__h2">Shop by section</h2>
       <SectionTiles sections={sections} parts={parts} />
     </section>
 
-    <div class="shop__cant">
+    <div class="shop__cant" data-ps-under>
       <a class="shop__cant-main" href="#request">Can't find it? <strong>Send us the part number</strong></a>
       <a class="shop__cant-list" href="/quote/#bulk">Paste a list</a>
     </div>
 
-    <div class="shop__trust">
+    <div class="shop__trust" data-ps-under>
       <TrustStrip />
     </div>
 
-    <section class="shop__list" id="all-parts" aria-labelledby="all-title">
+    <section class="shop__list" id="all-parts" data-ps-under aria-labelledby="all-title">
       <h2 id="all-title" class="shop__h2 shop__h2--list">All parts <span class="muted">· <a href={machineUrl(machineId)}>How to find your part number</a></span></h2>
       <PartTable parts={parts} sections={sections} grouped />
     </section>

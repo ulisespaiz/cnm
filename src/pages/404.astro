@@ -3,7 +3,12 @@ import Base from '../layouts/Base.astro';
 import { site } from '../config/site';
 ---
 
-<Base title="Page Not Found" noindex>
+<Base
+  title="Page Not Found"
+  description={`That page moved or no longer exists. See the services ${site.name} offers in ${site.address.city}, CA, or ask for a quote.`}
+  canonical={false}
+  noindex
+>
   <section class="section">
     <div class="container prose">
       <h1>Page not found</h1>

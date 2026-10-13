@@ -1,7 +1,8 @@
 ---
 // Part page, phones: replaces the global call/quote bar with Call, quantity
 // and "Add to Quote". After adding it offers "View quote (N)" / "+ Add another".
-// Pair it with <Base hideMobileBar>.
+// Pair it with <Base hideMobileBar>. It is position: fixed, so put it in the page where
+// its controls belong in the Tab order (right after the page's own Add block).
 import PartAdd from './PartAdd.astro';
 import { site } from '../config/site';
 import '../styles/store.css';

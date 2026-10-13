@@ -4,7 +4,7 @@
 // and the search "no results" state. Prefilled by the "part-request:prefill"
 // document event ({ detail: { query } }) and by ?part= in the URL.
 // With the parts shop off (site.store.enabled) the copy drops the catalog and
-// Hayssen wording: it is a plain "send us the part number" form.
+// OEM-number wording: it is a plain "send us the part number" form.
 import { site } from '../config/site';
 import { forms } from '../config/forms';
 
@@ -24,7 +24,7 @@ const Heading = compact ? 'h3' : 'h2';
 
 <section class:list={['part-request', { 'part-request--compact': compact }]} id="request" data-part-request-box>
   <Heading class="part-request__title">{heading}</Heading>
-  <p class="pr__lead">{shopOn ? <>Send us the Hayssen part number and we'll check it.</> : <>Send us the part number and we'll check it and quote it.</>} {site.replyTime}.</p>
+  <p class="pr__lead">{shopOn ? <>Send us the OEM part number and we'll check it.</> : <>Send us the part number and we'll check it and quote it.</>} {site.replyTime}.</p>
 
   <form
     class="pr__form"
@@ -45,7 +45,7 @@ const Heading = compact ? 'h3' : 'h2';
 
     <div class="field-row">
       <div class="field">
-        <label for="pr-number">{shopOn ? 'Hayssen part number' : 'Part number'}</label>
+        <label for="pr-number">{shopOn ? 'OEM part number' : 'Part number'}</label>
         <input id="pr-number" name="part_number" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder={shopOn ? 'e.g. 03186D0379' : 'The number stamped on the part'} />
       </div>
       <div class="field pr__qty">

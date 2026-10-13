@@ -1,6 +1,8 @@
 // Add-to-quote controls shared by every store surface: list rows, part page,
 // sticky bar and the search dropdown. One delegated listener handles the
 // quantity stepper and the Add buttons, so rows need no script of their own.
+// The sticky bar swaps its Add button for "View quote" / "+ Add more", which
+// hides the control that had focus, so focus is moved to the one that replaces it.
 import { addItem, lineCount } from './quote-store';
 import { showToast } from './toast';
 import './copy';
@@ -8,7 +10,7 @@ import './copy';
 export interface PartData {
   id: string;
   title: string;
-  oem?: string; // Hayssen number; absent for parts that have none
+  oem?: string; // OEM number; absent for parts that have none
   cm: string;
   section: string;
   url: string;
@@ -17,7 +19,8 @@ export interface PartData {
 
 export const clampQty = (n: number) => Math.max(1, Math.min(999, Math.round(n) || 1));
 
-export function addPart(d: PartData, qty: number) {
+// toast: false when the page already shows the result (the sticky bar turns into "View quote").
+export function addPart(d: PartData, qty: number, { toast = true } = {}) {
   const q = clampQty(qty);
   const line = addItem({
     kind: 'part',
@@ -30,7 +33,7 @@ export function addPart(d: PartData, qty: number) {
     url: d.url,
     qty: q,
   });
-  showToast(`Added ${q} × ${d.oem || d.cm} ${d.title}`, { actionLabel: `View quote (${lineCount()})`, href: '/quote/' });
+  if (toast) showToast(`Added ${q} × ${d.oem ? `OEM # ${d.oem}` : `C&M # ${d.cm}`} ${d.title}`, { actionLabel: `View quote (${lineCount()})`, href: '/quote/' });
   return line;
 }
 
@@ -78,7 +81,9 @@ document.addEventListener('click', (event) => {
 
   const again = target.closest<HTMLElement>('[data-add-another]');
   if (again) {
-    again.closest<HTMLElement>('[data-addbar]')?.removeAttribute('data-state');
+    const bar = again.closest<HTMLElement>('[data-addbar]');
+    bar?.removeAttribute('data-state');
+    bar?.querySelector<HTMLElement>('[data-add]')?.focus();
     return;
   }
 
@@ -86,10 +91,14 @@ document.addEventListener('click', (event) => {
   if (add) {
     const host = add.closest<HTMLElement>('[data-part]');
     if (!host) return;
-    addPart(dataOf(host), readQty(host));
-    flash(add);
     const bar = add.closest<HTMLElement>('[data-addbar]');
-    if (bar) bar.dataset.state = 'added';
+    const barShown = !!bar && getComputedStyle(bar).display !== 'none';
+    addPart(dataOf(host), readQty(host), { toast: !barShown });
+    flash(add);
+    if (bar) {
+      bar.dataset.state = 'added';
+      bar.querySelector<HTMLElement>('.addbar__view')?.focus();
+    }
   }
 });
 

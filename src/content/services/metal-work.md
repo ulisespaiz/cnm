@@ -26,10 +26,10 @@ faqs:
 ---
 From MIG and TIG welding to plate rolling and precision forming, we handle every aspect of metalwork with expert skill and strict quality control — ideal for both structural frameworks and decorative assemblies. Our capabilities include CNC press braking, tube & pipe rolling, and robotic welding cells.
 
-### Forming
+## Forming
 
 Custom metal forming solutions with advanced techniques. We create precise bends, folds, and shapes to your exact specifications.
 
-### Welding
+## Welding
 
 Expert welding services for permanent, strong joints. Our certified welders deliver flawless results for all your joining needs.

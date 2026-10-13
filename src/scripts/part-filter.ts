@@ -1,6 +1,9 @@
 // Filters, sort and the result count for the parts list (PartTable.astro).
 // All rows are in the HTML; this script only hides, reorders and counts them,
 // and mirrors the state into the URL (?q=&section=&type=&width=&side=&sort=).
+// While a search is applied the page carries html[data-q] (store home: the browse blocks
+// give way to the results, see store.css); html[data-q-ready] says the index-filtered list is
+// on screen, or that the index failed. public/shop-early.js sets data-q before first paint.
 import { loadIndex, search } from './part-search';
 
 const FACETS = ['section', 'type', 'width', 'side'] as const;
@@ -10,7 +13,7 @@ interface Row {
   el: HTMLElement;
   id: string;
   idx: number;
-  pn: string; // sort key: the Hayssen number, or "ZZ-<C&M number>" so parts without one sort last
+  pn: string; // sort key: the OEM number, or "ZZ-<C&M number>" so parts without one sort last
   name: string;
   section: string;
   type: string;
@@ -44,6 +47,9 @@ function init(root: HTMLElement) {
   const emptyEl = root.querySelector<HTMLElement>('[data-empty]')!;
   const emptyTitle = root.querySelector<HTMLElement>('[data-empty-title]')!;
   const emptyRequest = root.querySelector<HTMLElement>('[data-empty-request]')!;
+  const emptyClear = root.querySelector<HTMLElement>('[data-empty-clear]')!;
+  const toolbar = root.querySelector<HTMLElement>('.plist__toolbar')!;
+  const filterBtn = root.querySelector<HTMLElement>('[data-open-filters]');
   const filterN = root.querySelector<HTMLElement>('[data-filter-n]');
   const sheet = root.querySelector<HTMLDialogElement>('[data-sheet]');
   const showBtn = root.querySelector<HTMLElement>('[data-sheet-show]');
@@ -69,7 +75,10 @@ function init(root: HTMLElement) {
 
   function update() {
     let ranks: Map<string, number> | null = null;
-    if (state.q && ready) ranks = new Map(search(state.q).map((h, n) => [h.rec.i, n]));
+    if (state.q && ready) {
+      ranks = new Map(search(state.q).map((h, n) => [h.rec.i, n]));
+      document.documentElement.dataset.qReady = '';
+    }
     const visible = rows.filter((r) => pass(r, ranks));
     const shown = new Set(visible);
     for (const r of rows) r.el.hidden = !shown.has(r);
@@ -129,6 +138,7 @@ function init(root: HTMLElement) {
     if (!n) {
       emptyTitle.textContent = state.q ? `No match for “${state.q}”` : 'No parts match these filters';
       emptyRequest.dataset.query = state.q;
+      emptyClear.textContent = state.q && !FACETS.some((f) => state[f].size) ? 'Clear search' : 'Clear filters';
     }
     renderChips();
     const active = FACETS.reduce((k, f) => k + state[f].size, 0);
@@ -169,7 +179,11 @@ function init(root: HTMLElement) {
       sr.className = 'visually-hidden';
       sr.textContent = ' (remove filter)';
       b.append(x, sr);
-      b.addEventListener('click', c.remove);
+      b.addEventListener('click', () => {
+        const at = [...chipsEl.querySelectorAll('.chip:not(.chip--clear)')].indexOf(b);
+        c.remove();
+        focusChip(at);
+      });
       chipsEl.append(b);
     }
     if (chips.length > 1) {
@@ -180,6 +194,17 @@ function init(root: HTMLElement) {
       all.addEventListener('click', clearAll);
       chipsEl.append(all);
     }
+  }
+
+  // The chip that was pressed is gone: focus the chip that took its place, else the one before it,
+  // else the Filters button (phones) or the result count, so focus never falls back to the page.
+  function focusChip(at: number) {
+    const left = chipsEl.querySelectorAll<HTMLElement>('.chip:not(.chip--clear)');
+    const next = left[at] ?? left[at - 1];
+    if (next) return next.focus();
+    if (filterBtn && filterBtn.getClientRects().length) return filterBtn.focus();
+    countEl.tabIndex = -1;
+    countEl.focus();
   }
 
   function syncUrl() {
@@ -210,8 +235,19 @@ function init(root: HTMLElement) {
     if (mirror) {
       searchRoot()?.dispatchEvent(new CustomEvent('partsearch:set', { detail: state.q }));
     }
-    if (state.q && !ready) void loadIndex().then(() => ((ready = true), update())).catch(() => {});
+    const html = document.documentElement;
+    if (state.q) html.dataset.q = '1';
+    else delete html.dataset.q;
+    // A failed index shows the list as it is: do not leave it behind "Searching…"
+    if (state.q && !ready) void loadIndex().then(() => ((ready = true), update())).catch(() => (html.dataset.qReady = ''));
     update();
+  }
+
+  // The store home shows the results right under its search box; section pages jump to the list.
+  function reveal(behavior?: ScrollBehavior) {
+    const box = searchRoot();
+    if (box?.matches('.psearch--hero')) box.scrollIntoView({ behavior, block: 'nearest' });
+    else root.scrollIntoView({ behavior, block: 'start' });
   }
 
   function clearAll() {
@@ -234,7 +270,7 @@ function init(root: HTMLElement) {
 
   document.addEventListener('partsearch:apply', ((e: CustomEvent<{ query: string; fromInput?: boolean }>) => {
     setQuery(e.detail.query, false);
-    if (e.detail.query && !e.detail.fromInput) root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (e.detail.query && !e.detail.fromInput) reveal('smooth');
   }) as EventListener);
 
   // Mobile: the filter panel lives in a bottom sheet; desktop: in the sidebar.
@@ -249,7 +285,13 @@ function init(root: HTMLElement) {
     place();
     mq.addEventListener('change', place);
     root.querySelector('[data-open-filters]')?.addEventListener('click', () => sheet.showModal());
-    root.querySelectorAll('[data-sheet-close]').forEach((b) => b.addEventListener('click', () => sheet.close()));
+    root.querySelectorAll('[data-sheet-close]').forEach((b) =>
+      b.addEventListener('click', () => {
+        sheet.close();
+        // "Show N parts": bring the results up under the sticky bars
+        if (b.hasAttribute('data-sheet-show')) toolbar.scrollIntoView({ block: 'start' });
+      }),
+    );
     sheet.addEventListener('click', (e) => {
       if (e.target === sheet) sheet.close();
     });
@@ -276,10 +318,10 @@ function init(root: HTMLElement) {
       .then(() => {
         ready = true;
         update();
-        root.scrollIntoView({ block: 'start' });
+        reveal();
       })
       .catch(() => {});
-  } else void loadIndex().then(() => (ready = true)).catch(() => {});
+  } else delete document.documentElement.dataset.q; // the early script saw a q that is blank
 }
 
 const root = document.querySelector<HTMLElement>('[data-plist]');

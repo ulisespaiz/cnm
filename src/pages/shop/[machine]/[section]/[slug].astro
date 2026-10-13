@@ -1,10 +1,11 @@
 ---
-// Part page: identifier block (Hayssen part # + Copy, or the C&M # for a part with
-// no Hayssen number), description, quantity + Add to Quote, specification table,
+// Part page: identifier block (OEM # + Copy, or the C&M # for a part with
+// no OEM number), description, quantity + Add to Quote, specification table,
 // related parts and previous/next. On phones the global
 // call/quote bar is replaced by a sticky Add bar.
 import type { GetStaticPaths } from 'astro';
 import { getEntry } from 'astro:content';
+import { getImage } from 'astro:assets';
 import Base from '../../../../layouts/Base.astro';
 import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
 import PartSearch from '../../../../components/PartSearch.astro';
@@ -44,11 +45,13 @@ const add = await addData(part, sectionTitle);
 const related = relatedParts(part, all, 4);
 const { prev, next } = neighbours(part, all);
 
-const availability = { ask: leadTime(), 'in-stock': 'In stock', 'made-to-order': 'Made to order' }[d.availability];
-// A part with no Hayssen number is identified by its C&M number alone.
+// With no lead time on file the shop's standing line ("Lead time confirmed on your quote") would repeat the row's label.
+const askLeadTime = leadTime() === site.store.leadTimeFallback ? 'Confirmed on your quote' : leadTime();
+const availability = { ask: askLeadTime, 'in-stock': 'In stock', 'made-to-order': 'Made to order' }[d.availability];
+// A part with no OEM number is identified by its C&M number alone.
 const mainNo = mainNumber(d);
 const specs: { label: string; value: string; mono?: boolean }[] = [
-  ...(d.oem ? [{ label: 'Hayssen part #', value: d.oem, mono: true }] : []),
+  ...(d.oem ? [{ label: 'OEM #', value: d.oem, mono: true }] : []),
   { label: 'C&M #', value: d.cm, mono: true },
   { label: 'Machine', value: machine.data.name },
   { label: 'Section', value: sectionTitle },
@@ -60,26 +63,53 @@ const specs: { label: string; value: string; mono?: boolean }[] = [
   { label: 'Lead time', value: availability },
 ];
 
-const title = `${d.name} ${mainNo} | Hayssen VFFS Replacement Part`;
+// Titles stay within 65 characters once decoded (search results cut them off). The part number and
+// "VFFS Part" always stay: first the whole title with the shop name, then without it, then with the
+// part name clipped at a word boundary.
+const TITLE_LIMIT = 65;
+const partTitle = (name: string) => `${mainNo} ${name} | VFFS Part`;
+function clippedTitleName() {
+  const words = d.name.split(' ');
+  while (words.length > 1) {
+    words.pop();
+    let text = words.join(' ');
+    // Do not stop inside an open parenthesis, or on a trailing comma or a dangling "x" / "with".
+    if ((text.match(/\(/g) ?? []).length > (text.match(/\)/g) ?? []).length) continue;
+    text = text.replace(/[\s,;:/&-]+$/, '').replace(/\s+(?:x|with|for|and|of)$/i, '');
+    if (partTitle(`${text}…`).length <= TITLE_LIMIT) return `${text}…`;
+  }
+  return `${words[0]}…`;
+}
+const withBrand = `${partTitle(d.name)} | ${site.name}`;
+const withoutBrand = partTitle(d.name);
+const title =
+  withBrand.length <= TITLE_LIMIT ? withBrand : withoutBrand.length <= TITLE_LIMIT ? withoutBrand : partTitle(clippedTitleName());
+// Link previews have room for the whole name and the brand.
+const ogTitle = `${d.name} ${mainNo} | VFFS Replacement Part | ${site.name}`;
 // Meta descriptions stay within 160 characters (search results cut them off): use the
-// fullest wording that fits, then shorter ones. A part with no Hayssen number is named
-// by its C&M number.
-const idShort = d.oem ? `Hayssen part # ${d.oem}` : `C&M part # ${d.cm}`;
+// fullest wording that fits, then shorter ones. A part with no OEM number is named
+// by its C&M number. Fit is always tied to a number, never to the machine type alone.
+const idShort = d.oem ? `OEM # ${d.oem}` : `C&M part # ${d.cm}`;
 const idLong = d.oem ? `${idShort}, C&M # ${d.cm}` : idShort;
+const matchedBy = d.oem ? 'matched by OEM part number' : 'ordered by C&M number';
 const descriptionOptions = [
-  `${d.name}, ${idLong}. Replacement part for Hayssen VFFS machines, from C&M Machine Shop in Salinas, CA. Request a quote.`,
-  `${d.name}, ${idShort}. Replacement part for Hayssen VFFS machines, from C&M Machine Shop in Salinas, CA. Request a quote.`,
-  `${d.name}, ${idShort}. Replacement part for Hayssen VFFS machines from C&M Machine Shop. Request a quote.`,
-  `${d.name}, ${idShort}. Replacement part for Hayssen VFFS machines. Request a quote.`,
+  `${d.name}, ${idLong}. Replacement part for VFFS packaging machines, ${matchedBy}. From C&M Machine Shop in Salinas, CA. Request a quote.`,
+  `${d.name}, ${idShort}. Replacement part for VFFS packaging machines, ${matchedBy}. From C&M Machine Shop. Request a quote.`,
+  `${d.name}, ${idShort}. Replacement part for VFFS packaging machines, ${matchedBy}. Request a quote.`,
+  `${d.name}, ${idShort}. Replacement part for VFFS packaging machines, ${matchedBy}.`,
+  `${d.name}, ${idShort}. Replacement part for VFFS packaging machines. Request a quote.`,
 ];
 // Measure the HTML-escaped length too, so the limit holds in the page source as well.
 const escapedLength = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').length;
 // When the part has a written description, its first sentence is the meta description if it fits
 // and is worth showing alone: long enough to say something and carrying the part's main number
-// (Hayssen number, or C&M number when it has none). A short opener or a question like
-// "Looking for Hayssen part number X?" falls back to the standard wording below.
+// (OEM number, or C&M number when it has none). A short opener or a question like
+// "Looking for OEM part number X?" falls back to the standard wording below.
 const firstSentence = (text: string) => /^.+?[.!?](?=\s|$)/s.exec(text.trim())?.[0] ?? text.trim();
 const lead = d.description?.trim() || '';
+// The opening "Replacement part for VFFS packaging machines..." sentence of the fit line is dropped when the
+// description already says so; "Confirm fitment by part number..." always stays.
+const leadSaysFit = /\bVFFS\b/.test(lead);
 const leadSentence = lead ? firstSentence(lead) : '';
 const leadWorksAlone = leadSentence.length >= 70 && !leadSentence.endsWith('?') && leadSentence.includes(mainNo);
 // A very long part name: cut the name, never the part number that follows it.
@@ -89,46 +119,63 @@ function clippedName() {
   while (name.length > 20 && escapedLength(`${name}…${tail}`) > 160) name = name.slice(0, -1);
   return name === d.name ? `${name}${tail}` : `${name.trimEnd()}…${tail}`;
 }
-const description =
+const baseDescription =
   leadWorksAlone && escapedLength(leadSentence) <= 160
     ? leadSentence
     : (descriptionOptions.find((text) => escapedLength(text) <= 160) ?? clippedName());
+// Say where the shop is when the wording has not already and there is room for it.
+const localTail = ` Quote from ${site.name} in ${site.address.city}, CA.`;
+const description =
+  !baseDescription.includes(site.address.city) && escapedLength(`${baseDescription}${localTail}`) <= 160
+    ? `${baseDescription}${localTail}`
+    : baseDescription;
+// Link preview: the first photo as a JPEG at its native size (never scaled up), which is what
+// Facebook and X read. A part with no photo falls back to the shop's og.jpg.
+const shot = d.images[0];
+const share = shot ? await getImage({ src: shot, width: Math.min(shot.width, 250), format: 'jpg', quality: 82 }) : undefined;
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Parts Store', path: '/shop/' },
+  { name: machine.data.name, path: machineUrl(machine.id) },
+  { name: sectionTitle, path: sectionUrl(section) },
+  { name: d.name, path: url },
+];
 const jsonLd = [
   product({
     name: d.name,
     description:
       lead ||
-      `${d.name}. Replacement part for Hayssen VFFS machines, ${d.oem ? `Hayssen part number ${d.oem}, ` : ''}C&M number ${d.cm}.`,
+      `${d.name}. Replacement part for VFFS packaging machines, ${d.oem ? `OEM part number ${d.oem}, ` : ''}C&M number ${d.cm}.`,
     path: url,
     images: photos.map((p) => p.src),
     category: sectionTitle,
     sku: d.cm,
     oem: d.oem,
   }),
-  breadcrumbs([
-    { name: 'Parts Store', path: '/shop/' },
-    { name: machine.data.name, path: machineUrl(machine.id) },
-    { name: sectionTitle, path: sectionUrl(section) },
-    { name: d.name, path: url },
-  ]),
+  breadcrumbs(crumbs),
 ];
 ---
 
-<Base title={title} description={description} jsonLd={jsonLd} hideMobileBar>
-  <div class="storebar">
+<Base
+  title={title}
+  brand={false}
+  ogTitle={ogTitle}
+  description={description}
+  image={share?.src}
+  imageAlt={share ? d.imageAlt : undefined}
+  imageWidth={share?.options.width}
+  imageHeight={share?.options.height}
+  twitterCard={share ? 'summary' : undefined}
+  jsonLd={jsonLd}
+  hideMobileBar
+>
+  <div class="storebar storebar--static">
     <div class="container container--wide"><PartSearch variant="bar" /></div>
   </div>
 
   <div class="container container--wide part-page">
     <div class="crumbs-desktop">
-      <Breadcrumbs
-        items={[
-          { name: 'Parts Store', path: '/shop/' },
-          { name: machine.data.name, path: machineUrl(machine.id) },
-          { name: sectionTitle, path: sectionUrl(section) },
-          { name: d.name, path: url },
-        ]}
-      />
+      <Breadcrumbs items={crumbs} />
     </div>
     <a class="back-link" href={sectionUrl(section)}>‹ {sectionTitle}</a>
 
@@ -137,9 +184,9 @@ const jsonLd = [
         <p class="part__eyebrow">
           <a href={machineUrl(machine.id)}>{machine.data.name}</a> · <a href={sectionUrl(section)}>{sectionTitle}</a>
         </p>
-        <h1>{d.name}</h1>
+        <h1>{d.name} <span class="part__h1no">{mainNo}</span></h1>
         <div class="ident">
-          <p class="ident__label">{d.oem ? 'Hayssen part #' : 'C&M part #'}</p>
+          <p class="ident__label">{d.oem ? 'OEM #' : 'C&M part #'}</p>
           <div class="ident__row">
             <span class="ident__oem" id="part-oem">{mainNo}</span>
             <button type="button" class="copybtn copybtn--text" data-copy={mainNo} aria-describedby="part-oem">
@@ -157,7 +204,7 @@ const jsonLd = [
                 </button>
               </p>
             ) : (
-              <p class="ident__none">No Hayssen number listed: quote by C&amp;M number</p>
+              <p class="ident__none">This part has no OEM number. Give us the C&amp;M number when you ask for a quote.</p>
             )
           }
         </div>
@@ -171,12 +218,13 @@ const jsonLd = [
       <div class="part__rest">
         {lead && <p class="part__lead">{lead}</p>}
         <p class="part__fit">
-          Replacement part for Hayssen VFFS machines. Confirm fitment by part number, or call us and describe your machine.
+          {!leadSaysFit && <>Replacement part for VFFS packaging machines{d.oem ? ', matched by OEM part number' : ''}. </>}Confirm fitment by part number, or call us and describe your machine.
         </p>
 
         <div class="part__add">
           <PartAdd data={add} variant="page" />
         </div>
+        <StickyAddBar data={add} />
 
         <TrustStrip variant="list" limit={3} />
         <a class="part__call btn btn--outline" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
@@ -211,7 +259,7 @@ const jsonLd = [
             <div class="plist__head" aria-hidden="true">
               <span />
               <span>Part</span>
-              <span>Hayssen part #</span>
+              <span>OEM #</span>
               <span>C&amp;M #</span>
               <span>Quantity</span>
             </div>
@@ -245,14 +293,15 @@ const jsonLd = [
     </nav>
 
     <details class="req" id="request-details">
-      <summary>Can't find your part? Request it by number</summary>
+      <summary>
+        Can't find your part? Request it by number
+        <svg class="req__chev" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5l4 4 4-4" /></svg>
+      </summary>
       <PartRequestForm compact />
     </details>
 
     <StoreDisclaimer />
   </div>
-
-  <StickyAddBar data={add} />
 </Base>
 
 <style is:global>
@@ -306,11 +355,29 @@ const jsonLd = [
     min-height: 44px;
   }
 
+  /* phones: the back link above the title already names the section */
+  @media (max-width: 767px) {
+    .part__eyebrow {
+      display: none;
+    }
+  }
+
   .part h1 {
     margin-bottom: 14px;
     font-size: clamp(1.5rem, 1rem + 2vw, 2.25rem);
     line-height: 1.15;
     overflow-wrap: anywhere;
+  }
+
+  /* The number follows the name, small and muted; it moves to the next line whole, never mid-number. */
+  .part__h1no {
+    display: inline-block;
+    color: var(--color-muted);
+    font-family: var(--oem-font);
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
   }
 
   .ident {
@@ -486,10 +553,26 @@ const jsonLd = [
   .req > summary {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     min-height: 56px;
-    padding: 0 16px;
+    padding: 14px 16px;
     font-weight: 700;
+    list-style: none;
     cursor: pointer;
+  }
+
+  .req > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .req__chev {
+    flex: none;
+    transition: transform 0.15s;
+  }
+
+  .req[open] .req__chev {
+    transform: rotate(180deg);
   }
 
   .req[open] > summary {
@@ -514,12 +597,11 @@ const jsonLd = [
     .pn__link--next {
       text-align: right;
     }
-  }
 
-  @media (min-width: 900px) {
+    /* photo column about 240-300px beside the title, number and specs */
     .part {
-      gap: 0 48px;
-      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 0 32px;
+      grid-template-columns: clamp(240px, 30vw, 300px) minmax(0, 1fr);
       grid-template-areas:
         'photo head'
         'photo rest';
@@ -529,12 +611,18 @@ const jsonLd = [
 
     .part__photo {
       position: sticky;
-      top: calc(var(--store-header) + var(--store-bar) + 16px);
+      top: calc(var(--store-stick) + 16px);
       padding-top: 6px;
     }
 
     .part__rest {
       margin-top: 16px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .part {
+      gap: 0 48px;
     }
   }
 </style>

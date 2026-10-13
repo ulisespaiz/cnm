@@ -5,14 +5,14 @@ import FeaturedParts from '../../components/FeaturedParts.astro';
 import CtaBand from '../../components/CtaBand.astro';
 import { site } from '../../config/site';
 import { getServices, serviceUrl } from '../../lib/content';
-import { getParts, getSections, sectionUrl, machineUrl } from '../../lib/parts';
+import { getParts, getSections, MAIN_MACHINE, sectionUrl, machineUrl } from '../../lib/parts';
 import { breadcrumbs, faqPage } from '../../lib/schema';
 
-// Parts shop switch (site.store.enabled): off hides the Hayssen section and its FAQ entry.
+// Parts shop switch (site.store.enabled): off hides the VFFS parts section and its FAQ entry.
 const shopOn = site.store.enabled;
 const services = await getServices();
 const partCount = shopOn ? (await getParts()).length : 0;
-const sections = shopOn ? await getSections('hayssen-vffs') : [];
+const sections = shopOn ? await getSections(MAIN_MACHINE) : [];
 const path = '/industries/food-processing-agriculture/';
 const crumbs = [
   { name: 'Home', path: '/' },
@@ -27,8 +27,8 @@ const faqs = [
   ...(shopOn
     ? [
         {
-          q: 'Do you carry parts for Hayssen packaging machines?',
-          a: `Yes. Our parts catalog lists ${partCount} replacement parts for Hayssen vertical form fill seal (VFFS) machines, searchable by Hayssen part number or C&M number. If yours is not listed, send us the number and we will quote it.`,
+          q: 'Do you carry parts for VFFS packaging machines?',
+          a: `Yes. Our parts catalog lists ${partCount} replacement parts for vertical form fill seal (VFFS) packaging machines, matched by OEM part number and searchable by OEM part number or C&M number. If yours is not listed, send us the number and we will quote it.`,
         },
       ]
     : []),
@@ -40,10 +40,10 @@ const faqs = [
 ---
 
 <Base
-  title="Machine Shop for Food Processing & Agriculture in Salinas, CA"
+  title={`Food Processing & Ag Machine Shop, ${site.address.city} CA`}
   description={shopOn
     ? `Replacement parts, machining, cutting, welding and fabrication for food processing, packaging and agriculture equipment. ${site.legalName}, ${site.address.city}, CA.`
-    : `Replacement parts made to your drawing or sample, plus machining, cutting, welding and fabrication for food processing, packaging and agriculture equipment. ${site.legalName}, ${site.address.city}, CA.`}
+    : `Replacement parts made to your drawing or sample, plus machining, cutting, welding and fabrication for food processing and ag equipment in ${site.address.city}, CA.`}
   jsonLd={[breadcrumbs(crumbs), faqPage(faqs)]}
 >
   <section class="section">
@@ -87,10 +87,10 @@ const faqs = [
   {shopOn && (
     <section class="section">
       <div class="container">
-        <h2>Replacement parts for Hayssen VFFS machines</h2>
+        <h2>Replacement parts for VFFS packaging machines</h2>
         <p>
-          Our <a href={machineUrl('hayssen-vffs')}>parts catalog</a> lists {partCount} replacement parts for Hayssen vertical form
-          fill seal packaging machines, searchable by Hayssen part number or C&amp;M number:
+          Our <a href={machineUrl(MAIN_MACHINE)}>parts catalog</a> lists {partCount} replacement parts for vertical form fill
+          seal (VFFS) packaging machines, searchable by OEM part number or C&amp;M number:
           {sections.map((sec, i) => (
             <>
               <a href={sectionUrl(sec)}>{sec.data.title}</a>{i < sections.length - 1 ? ', ' : '.'}

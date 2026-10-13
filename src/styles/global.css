@@ -1,3 +1,16 @@
+/* Geist, latin subset only (all the site's text is in it). font-display: optional
+   plus the preload in Base.astro: the font is used when it arrives with the first
+   paint and is otherwise left for the next page, so it can never swap in and reflow
+   text that is already on screen. */
+@font-face {
+  font-family: 'Geist Variable';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: optional;
+  src: url('@fontsource-variable/geist/files/geist-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* Design tokens. Colors and type are neutral placeholders until the brand is
    lifted from the existing site; change them here, not in components. */
 :root {
@@ -7,6 +20,8 @@
   --color-text: #000000;
   --color-muted: #666666;
   --color-border: #dddddd;
+  /* Form controls and other boundaries a user must find: 4.5:1 on white (WCAG 1.4.11). --color-border stays for decorative card edges. */
+  --color-field-border: #767676;
   --color-primary: #193cb8;
   --color-primary-hover: #1c398e;
   --color-primary-contrast: #ffffff;
@@ -58,6 +73,11 @@ body {
 @media (max-width: 767px) {
   body:not(.no-mobile-bar) {
     padding-bottom: calc(var(--mobile-bar-height) + env(safe-area-inset-bottom));
+  }
+
+  /* Keep a focused field or link out from under the fixed bottom bar (68px call/quote bar, 64px add bar) */
+  html {
+    scroll-padding-bottom: calc(var(--mobile-bar-height) + 16px + env(safe-area-inset-bottom));
   }
 }
 
@@ -186,6 +206,11 @@ p {
   top: 8px;
 }
 
+/* The skip link lands on <main tabindex="-1">: it takes focus without a ring, since it is not a control */
+main:focus {
+  outline: none;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -250,6 +275,15 @@ p {
 :focus-visible {
   outline: 3px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* The red ring is 1.9:1 on the brand blue: use white on every blue block (footer band, home bento card and parts count) */
+.cta :focus-visible,
+.bento__card--blue:focus-visible,
+.bento__card--blue :focus-visible,
+.store__count:focus-visible,
+.store__count :focus-visible {
+  outline-color: #fff;
 }
 
 /* Quote count badge (header + menu). White on dark red, 14px+ */
@@ -349,7 +383,7 @@ p {
   width: 100%;
   min-height: var(--tap);
   padding: 10px 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-field-border);
   border-radius: var(--radius);
   background: #fff;
   color: inherit;
@@ -360,6 +394,43 @@ p {
 .field textarea {
   min-height: 120px;
   resize: vertical;
+}
+
+/* Field errors (src/scripts/web3forms-submit.ts): a thicker red border and a message under the
+   control. The message opens with a warning sign, so the state never rests on color alone. */
+.field [aria-invalid='true'],
+input[aria-invalid='true'],
+select[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+  border: 2px solid var(--color-danger);
+  padding: 9px 11px; /* 1px less each side: the thicker border must not move the text */
+}
+
+.field-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.field-error::before {
+  content: '\26A0\FE0E';
+  content: '\26A0\FE0E' / ''; /* decoration: not read out */
+  margin-right: 6px;
+}
+
+/* A busy button keeps focus (aria-disabled instead of disabled), so it needs its own look */
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.65;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+.btn[aria-disabled='true'] {
+  cursor: progress;
 }
 
 .field-row {
@@ -379,6 +450,24 @@ p {
 
 .prose img {
   border-radius: var(--radius);
+}
+
+/* Sub-sections in a service's copy are h2s for the page outline (the h1 is the title) but read as sub-headings */
+.service .prose h2 {
+  margin-top: 1.5em;
+  font-size: 1.5rem;
+}
+
+/* tel: and mailto: links in running text: 12px of padding makes the tap target 44px+ tall,
+   the matching negative margin keeps the text exactly where it was */
+.form-note a,
+.qdrop a,
+.qp__call a,
+.service__call a,
+.service__areas a {
+  display: inline-block;
+  padding-block: 12px;
+  margin-block: -12px;
 }
 
 /* Toasts (src/scripts/toast.ts) */
@@ -410,6 +499,11 @@ p {
   font-weight: 600;
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
   pointer-events: auto;
+}
+
+/* toast.ts adds the text a moment after the node, so a screen reader announces it: no empty box meanwhile */
+.toast:empty {
+  display: none;
 }
 
 .toast__action {

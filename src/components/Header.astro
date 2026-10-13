@@ -1,5 +1,5 @@
 ---
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
 import logo from '../assets/site/cnm-logo.png';
 import { site, nav } from '../config/site';
 
@@ -12,7 +12,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
 <header class="site-header">
   <div class="container site-header__inner">
     <a class="brand" href="/" aria-label={`${site.name} home`}>
-      <Image src={logo} alt={`${site.name} logo`} height={56} densities={[1, 2]} loading="eager" />
+      <Picture src={logo} alt={`${site.name} logo`} height={56} densities={[1, 2]} formats={['avif', 'webp']} quality={50} loading="eager" />
     </a>
 
     <nav class="nav-desktop" aria-label="Main">
@@ -24,23 +24,16 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     <div class="header-actions">
       <a class="header-phone" href={`tel:${site.phoneE164}`}>{site.phone}</a>
 
-      <!-- 768px and up: labelled buttons. Under 768px: icon-only cart button. -->
+      <!-- 768px and up: labelled buttons. Under 768px: icon-only quote list button.
+           The visible label is aria-hidden and a visually-hidden copy names the link at every width. -->
       <a class="btn btn--red cart-btn" href="/quote/">
-        {shopOn ? (
-          <svg class="cart-btn__icon" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m15 11-1 9"></path><path d="m19 11-4-7"></path><path d="M2 11h20"></path>
-            <path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"></path>
-            <path d="m5 11 4-7"></path><path d="m9 11 1 9"></path>
-          </svg>
-        ) : (
-          <svg class="cart-btn__icon" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect>
-            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-            <path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path>
-          </svg>
-        )}
-        <span class="cart-btn__label">{shopOn ? 'Cart' : 'Get a Quote'}</span>
-        {shopOn ? <span class="visually-hidden"> (quote list)</span> : <span class="visually-hidden cart-btn__sr"> Get a quote</span>}
+        <svg class="cart-btn__icon" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect>
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path>
+        </svg>
+        <span class="cart-btn__label" aria-hidden="true">{shopOn ? 'Quote list' : 'Get a Quote'}</span>
+        <span class="visually-hidden">{shopOn ? 'Quote list' : 'Get a Quote'}</span>
         <span class="badge" data-quote-count hidden>0</span>
       </a>
       {shopOn && (
@@ -85,6 +78,11 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     toggle.addEventListener('click', () => setOpen(!isOpen()));
     menu.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('a')) setOpen(false);
+    });
+    // Tabbing past the last link ("Call ...") must not leave the panel open over the page.
+    menu.addEventListener('focusout', (e) => {
+      const n = e.relatedTarget as Node | null;
+      if (n && !menu.contains(n) && n !== toggle) setOpen(false);
     });
     document.addEventListener('click', (e) => {
       if (isOpen() && !menu.contains(e.target as Node) && !toggle.contains(e.target as Node)) setOpen(false);
@@ -150,7 +148,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     color: var(--color-primary) !important;
   }
 
-  /* Cart + Shop. Phones: icon-only buttons (48px), labelled from 768px. */
+  /* Quote list + Shop. Phones: icon-only buttons (48px), labelled from 768px. */
   .header-actions {
     display: flex;
     align-items: center;
@@ -274,7 +272,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     box-shadow: none;
   }
 
-  /* Tablet: labelled Cart and Shop buttons sit next to the burger. */
+  /* Tablet: labelled Quote list and Shop buttons sit next to the burger. */
   @media (min-width: 768px) {
     .site-header__inner {
       gap: 10px;
@@ -299,11 +297,6 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
 
     .cart-btn__label {
       display: inline;
-    }
-
-    /* Parts shop off: the visible "Get a Quote" label replaces the phone-only text. */
-    .cart-btn__sr {
-      display: none;
     }
   }
 

@@ -35,7 +35,7 @@ const items = [
 ];
 ---
 
-<ul class={`trust trust--${variant}`} aria-label="Why order from C&M" tabindex={variant === "strip" ? 0 : undefined}>
+<ul class={`trust trust--${variant}`} aria-label="Why order from C&M">
   {
     items.slice(0, limit).map((i) => (
       <li class="trust__item">
@@ -51,26 +51,22 @@ const items = [
 
 <style>
   .trust {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 10px;
     margin: 0;
     padding: 0;
     list-style: none;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
   }
 
   .trust__item {
-    flex: none;
     display: flex;
     gap: 12px;
     align-items: flex-start;
-    width: min(300px, 82%);
     padding: 14px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     background: #fff;
-    scroll-snap-align: start;
     font-size: 0.9rem;
     line-height: 1.4;
   }
@@ -90,27 +86,25 @@ const items = [
     color: #444;
   }
 
+  /* strip: wraps instead of scrolling. One column on phones, two from 480px, four from 900px. */
+  @media (min-width: 480px) {
+    .trust--strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
   @media (min-width: 900px) {
     .trust--strip {
-      display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      overflow: visible;
-    }
-
-    .trust--strip .trust__item {
-      width: auto;
     }
   }
 
   /* part page: compact vertical list */
   .trust--list {
-    display: grid;
     gap: 0;
-    overflow: visible;
   }
 
   .trust--list .trust__item {
-    width: auto;
     padding: 8px 4px;
     border: 0;
     background: transparent;

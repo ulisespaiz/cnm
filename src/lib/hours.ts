@@ -35,7 +35,7 @@ export interface HoursRow {
 
 // One row per opening block, then one row per closed day.
 export function hoursRows(): HoursRow[] {
-  const open = new Set(site.hours.flatMap((h) => [...h.days]));
+  const open = new Set<string>(site.hours.flatMap((h) => [...h.days]));
   const rows: HoursRow[] = site.hours.map((h) => ({
     label: dayRange(h.days),
     value: `${formatTime(h.opens)} – ${formatTime(h.closes)}`,

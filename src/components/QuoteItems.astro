@@ -3,7 +3,8 @@
 // src/scripts/quote-page.ts), the reference, summary, drawing box and the
 // bulk paste panel. With the parts shop off (site.store.enabled) there is no
 // catalog to match against, so the empty state points to the services instead
-// and the bulk paste panel is left out.
+// and the bulk paste panel is left out. A returning visitor's list is flagged
+// before first paint by public/quote-early.js (html[data-quote="filled"]).
 import { site } from '../config/site';
 import QuoteSummary from './QuoteSummary.astro';
 import BulkPaste from './BulkPaste.astro';
@@ -13,7 +14,7 @@ const shopOn = site.store.enabled;
 
 <section class="qcard qcard--items" aria-labelledby="items-title">
   <header class="qcard__head">
-    <h2 id="items-title" class="qcard__title qcard__title--red">{shopOn ? 'Items in Your Request' : 'Your Request'}</h2>
+    <h2 id="items-title" class="qcard__title qcard__title--red" tabindex="-1">{shopOn ? 'Items in Your Request' : 'Your Request'}</h2>
     <p class="qref">Reference <strong data-quote-ref>Q-</strong></p>
   </header>
 
@@ -22,7 +23,7 @@ const shopOn = site.store.enabled;
       <h3 tabindex="-1" data-quote-empty-title>{shopOn ? 'Your quote list is empty' : 'Nothing added yet'}</h3>
       {shopOn ? (
         <p class="muted">
-          Add replacement parts for Hayssen VFFS machines from the catalog, or describe what you need in the form and we'll quote it. For
+          Add replacement parts for VFFS packaging machines from the catalog, or describe what you need in the form and we'll quote it. For
           machining, cutting or fabrication, see our <a href="/services/">services</a>.
         </p>
       ) : (
@@ -34,7 +35,6 @@ const shopOn = site.store.enabled;
         {shopOn ? (
           <>
             <a class="btn" href="/shop/">Browse the catalog</a>
-            <a class="btn btn--outline" href="/shop/">Search by part number</a>
             <a class="btn btn--outline" href="#bulk">Paste a list</a>
           </>
         ) : (
@@ -46,6 +46,8 @@ const shopOn = site.store.enabled;
     <div data-quote-filled hidden>
       <ul class="qi-list" data-quote-items></ul>
       <button type="button" class="qclear" data-clear-all>Clear all items</button>
+      <!-- Phones stack the form under the list, past the summary and the drawing box: a way straight to it -->
+      <a class="btn btn--block qcontinue" href="#info-title">Continue: your details</a>
     </div>
 
     <QuoteSummary />
@@ -103,6 +105,10 @@ const shopOn = site.store.enabled;
   }
 
   .qref strong {
+    /* Reserve the width of the real reference (Q-YYMMDD-XXXX, 13 monospace characters)
+       so filling it in from quote-page.ts does not wrap the header and push the card down. */
+    display: inline-block;
+    min-width: 13.5ch;
     padding: 3px 8px;
     border-radius: 6px;
     background: var(--color-bg);
@@ -126,6 +132,17 @@ const shopOn = site.store.enabled;
     display: none;
   }
 
+  /* Returning visitor with items: quote-early.js sets html[data-quote="filled"] before first paint, so the
+     empty state is never drawn and the filled blocks (here and in QuoteSummary) are there from the start.
+     quote-page.ts takes over when it runs. Without the script nothing here applies: the empty state shows. */
+  :global(html[data-quote='filled'] .qempty) {
+    display: none;
+  }
+
+  :global(html[data-quote='filled'] [data-quote-filled][hidden]) {
+    display: block;
+  }
+
   .qempty h3 {
     margin-bottom: 8px;
   }
@@ -140,6 +157,23 @@ const shopOn = site.store.enabled;
     margin: 0;
     padding: 0;
     list-style: none;
+    /* Room for the rows until quote-page.ts draws them (it removes --quote-rows, which quote-early.js
+       set to the number of saved lines, 6 at most): about one row each, so the form below stays put.
+       --qi-row is a typical catalog row (stacked on phones, three columns from 480px). */
+    --qi-row: 200px;
+    min-height: calc(var(--quote-rows, 0) * var(--qi-row));
+  }
+
+  @media (min-width: 480px) {
+    .qi-list {
+      --qi-row: 143px;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .qi-list {
+      --qi-row: 150px;
+    }
   }
 
   /* Rows are created by quote-page.ts, hence :global under the list. */
@@ -238,13 +272,14 @@ const shopOn = site.store.enabled;
     padding: 0 8px;
   }
 
+  /* The note is the last child of the row and spans all its columns, so a phone gives it the full width. */
   .qi-list :global(.qi__note) {
+    grid-column: 1 / -1;
     display: block;
     width: 100%;
     min-height: 44px;
-    margin-top: 4px;
     padding: 8px 12px;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-field-border);
     border-radius: 10px;
     background: #fff;
     font: 400 1rem/1.4 var(--font-body);
@@ -265,10 +300,20 @@ const shopOn = site.store.enabled;
   .qi-list :global(.qi__stepper) {
     display: inline-flex;
     align-items: center;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-field-border);
     border-radius: 10px;
     background: #fff;
     overflow: hidden;
+  }
+
+  .qi-list :global(.qi__stepper:focus-within) {
+    border-color: var(--color-accent);
+  }
+
+  /* The stepper clips what is outside it: draw the focus ring inside the buttons */
+  .qi-list :global(.qi__step:focus-visible),
+  .qi-list :global(.qi__qty:focus-visible) {
+    outline-offset: -3px;
   }
 
   .qi-list :global(.qi__step) {
@@ -314,6 +359,17 @@ const shopOn = site.store.enabled;
       flex-direction: column;
       align-items: flex-end;
       gap: 4px;
+    }
+  }
+
+  .qcontinue {
+    margin-top: 12px;
+  }
+
+  @media (min-width: 900px) {
+    /* Two columns from here: the form is beside the list, not far below it */
+    .qcontinue {
+      display: none;
     }
   }
 

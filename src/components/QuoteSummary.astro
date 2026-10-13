@@ -34,6 +34,7 @@ const checks = ['No payment required: quote only', "We'll email you a detailed q
 
   .qs__count {
     margin: 0 0 4px;
+    min-height: 1.6em; /* one line: quote-page.ts fills in the text after first paint, so the lines below must not move */
     color: var(--color-muted);
     font-size: 0.95rem;
   }

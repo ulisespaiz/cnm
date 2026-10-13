@@ -15,8 +15,22 @@ export const noLead0 = (k: string) => k.replace(/^0+/, '');
 // Tolerate the letter O typed for zero.
 export const o2zero = (k: string) => k.replace(/O/g, '0');
 
-// The standard Hayssen format: 5 digits, 1 letter, 4 digits.
+// The standard OEM number format: 5 digits, 1 letter, 4 digits.
 export const OEM_PATTERN = /^\d{5}[A-Z]\d{4}$/;
+
+// Words that mean the same in part names ("LH" is "left"), for search and bulk paste.
+export const SYNONYMS: Record<string, string[]> = {
+  lh: ['left'],
+  left: ['lh'],
+  rh: ['right'],
+  right: ['rh'],
+  ss: ['stainless'],
+  stainless: ['ss'],
+  assy: ['assembly'],
+  mtg: ['mounting'],
+  comp: ['compression'],
+  adj: ['adjustable'],
+};
 
 // "cm 2", "CM-0002", "cm#12" -> "CM-0002" / "CM-0012"; null if not a CM number.
 export function cmKey(s: string) {

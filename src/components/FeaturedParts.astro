@@ -2,6 +2,7 @@
 // Grid of featured parts (parts with featured: true, else the first few with
 // a photo). Used on the home page.
 import PartCard from './PartCard.astro';
+import { site } from '../config/site';
 import { getParts } from '../lib/parts';
 
 interface Props {
@@ -15,10 +16,19 @@ const parts = (featured.length ? featured : all.filter((p) => p.data.images.leng
 ---
 
 <ul class="featured-parts">
-  {parts.map((p, i) => <li><PartCard part={p} eager={i < 2} /></li>)}
+  {parts.map((p) => <li><PartCard part={p} /></li>)}
 </ul>
+{/* The trademark notice every store page carries. Styled here, not via StoreDisclaimer: that pulls store.css onto this page. */}
+{site.store.enabled && <p class="featured-note">{site.store.disclaimer}</p>}
 
 <style>
+  .featured-note {
+    margin: 12px 0 0;
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
   .featured-parts {
     display: grid;
     gap: 14px;

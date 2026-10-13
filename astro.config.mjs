@@ -12,7 +12,9 @@ import { site } from './src/config/site.ts';
 //
 // The parts collection still makes Vite emit every part photo (and the shop scripts and
 // styles) into _astro/, although no page uses them. Anything in _astro/ that no other
-// output file mentions is deleted, so none of it stays a public URL.
+// output file mentions is deleted, so none of it stays a public URL. public/shop-early.js
+// (only the store home loads it) goes too.
+/** @param {string} out */
 async function pruneAstroAssets(out) {
   const text = /\.(html|css|js|json|xml|txt|svg)$/;
   const dir = join(out, '_astro');
@@ -37,6 +39,7 @@ async function pruneAstroAssets(out) {
 // public/_redirects still sends the old WooCommerce URLs to /shop/ pages with a permanent 301.
 // While the shop is off those go straight to the quote page, so no Location header names a
 // shop path and no browser caches a permanent redirect into the hidden shop.
+/** @param {string} text */
 const redirectsToQuote = (text) =>
   text
     .split('\n')
@@ -54,6 +57,7 @@ const shopSwitch = {
       if (site.store.enabled) return;
       const out = fileURLToPath(dir);
       await rm(join(out, 'shop'), { recursive: true, force: true });
+      await rm(join(out, 'shop-early.js'), { force: true });
       await pruneAstroAssets(out);
       const redirects = await readFile(join(out, '_redirects'), 'utf8').catch(() => '');
       await writeFile(

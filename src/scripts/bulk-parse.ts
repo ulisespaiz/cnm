@@ -4,16 +4,18 @@
 // Accepted line shapes (case-insensitive):
 //   03187A0897            03187A0897 x2         03187A0897, 2
 //   2 x 03187A0897        03187A0897<TAB>2      OEM# 03187 A0897 qty 4
+//   <any maker's name> 03187A0897   (up to two words of letters in front of a number are skipped)
 //   CM-0002 3             03187A0897 Rail guide (trailing words are a note)
+//   Rail guide, 03187A0897, 4   (spreadsheet cells in any order; the cell that is a part number wins)
 
-import { cmKey, noLead0, oemKey, queryVariants, OEM_PATTERN } from '../lib/partkey';
+import { cmKey, noLead0, oemKey, queryVariants, OEM_PATTERN, SYNONYMS } from '../lib/partkey';
 
 export const MAX_LINES = 200;
 
 /** One record of /shop/search-index.json (see src/pages/shop/search-index.json.ts). */
 export interface IndexRecord {
   i: string;
-  o: string; // Hayssen number; "" for a part that has none
+  o: string; // OEM number; "" for a part that has none
   k: string; // "" for a part that has none: it is matched by its C&M number or its name
   z: string;
   a: string[];
@@ -41,42 +43,65 @@ export interface Matcher {
 
 const nameKey = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
+// A word of letters with a separator after it: "OEM#", "acme ", "maker-". Up to two of them in front of
+// a number are skipped when the whole text matches nothing, whatever the word is: no brand is listed.
+const LEAD_WORD = /^[A-Za-z]{2,}\.?[\s#:;/_-]+(?=\S)/;
+const MAX_LEAD_WORDS = 2;
+const wordsOf = (s: string) => s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+
 export function buildMatcher(index: IndexRecord[]): Matcher {
   const byKey = new Map<string, IndexRecord>();
+  const numberKeys = new Set<string>();
   const byCm = new Map<string, IndexRecord>();
-  const put = (key: string, rec: IndexRecord) => {
-    if (key && !byKey.has(key)) byKey.set(key, rec);
+  const known = new Set<string>(); // every word some part name, other name or section uses
+  const put = (key: string, rec: IndexRecord, isNumber = false) => {
+    if (!key) return;
+    if (!byKey.has(key)) byKey.set(key, rec);
+    if (isNumber) numberKeys.add(key);
   };
-  // Part numbers first so a name can never shadow a number. A part with no Hayssen
+  // Part numbers first so a name can never shadow a number. A part with no OEM
   // number (empty k) is reached through its C&M number, then its name.
   for (const r of index) {
     if (r.k) {
-      put(r.k, r);
-      put(r.z || noLead0(r.k), r);
+      put(r.k, r, true);
+      put(r.z || noLead0(r.k), r, true);
     }
     for (const a of r.a ?? []) {
       const k = oemKey(a);
-      put(k, r);
-      put(noLead0(k), r);
+      put(k, r, true);
+      put(noLead0(k), r, true);
     }
     if (r.c) byCm.set(r.c.toUpperCase(), r);
   }
   for (const r of index) {
     put(nameKey(r.n), r);
     for (const w of r.w ?? []) put(nameKey(w), r);
+    for (const w of wordsOf(`${r.n} ${(r.w ?? []).join(' ')} ${r.st}`)) {
+      known.add(w);
+      for (const alt of SYNONYMS[w] ?? []) known.add(alt); // "left" is a word parts use, as "LH"
+    }
   }
 
   return {
     find(text) {
-      const cm = cmKey(text);
-      if (cm) return byCm.get(cm) ?? null;
-      const cleaned = text.replace(/\bhayssen\b/gi, ' ');
-      for (const v of queryVariants(cleaned)) {
-        const hit = byKey.get(v);
-        if (hit) return hit;
+      const full = text.trim();
+      let rest = full;
+      for (let skipped = 0; ; skipped++) {
+        const cm = cmKey(rest);
+        if (cm) return byCm.get(cm) ?? null;
+        // A name may be matched after skipping words only when no part uses those words; a number always may.
+        const nameOk = wordsOf(full.slice(0, full.length - rest.length)).every((w) => !known.has(w));
+        for (const v of queryVariants(rest)) {
+          const hit = byKey.get(v);
+          if (hit && (nameOk || numberKeys.has(v))) return hit;
+        }
+        const nk = nameKey(rest);
+        const byName = nameOk && nk ? byKey.get(nk) : undefined;
+        if (byName) return byName;
+        const next = rest.replace(LEAD_WORD, '');
+        if (skipped >= MAX_LEAD_WORDS || next === rest) return null;
+        rest = next;
       }
-      const nk = nameKey(cleaned);
-      return (nk && byKey.get(nk)) || null;
     },
   };
 }
@@ -104,18 +129,25 @@ function candidates(raw: string): Candidate[] {
   const out: Candidate[] = [];
   const flat = raw.replace(/\t/g, ' ').replace(/\s+/g, ' ').trim();
 
-  // Spreadsheet and CSV rows: part, qty, description in any order.
+  // Spreadsheet and CSV rows: part, qty, description in any order. Each cell that is not the
+  // quantity gets a turn as the part (the others become its note), cells that look like a part
+  // number first, so "Rail guide, 03187A0897, 4" is the part 03187A0897 with the note "Rail guide".
   const cells = raw.split(/[\t,;]+/).map((c) => c.trim()).filter(Boolean);
   if (cells.length >= 2) {
     const q = cells.findIndex((c) => QTY_CELL.test(c));
     if (q >= 0) {
+      const qty = Number(QTY_CELL.exec(cells[q])![1]);
       const rest = cells.filter((_, i) => i !== q);
-      out.push({
-        qty: Number(QTY_CELL.exec(cells[q])![1]),
-        text: rest[0],
-        note: rest.slice(1).join(' ') || undefined,
-        prefix: false,
-      });
+      const looksLikeNumber = (c: string) => !!cmKey(c) || OEM_PATTERN.test(oemKey(c));
+      const order = rest.map((_, i) => i).sort((a, b) => Number(looksLikeNumber(rest[b])) - Number(looksLikeNumber(rest[a])));
+      for (const i of order) {
+        out.push({
+          qty,
+          text: rest[i],
+          note: rest.filter((_, j) => j !== i).join(' ') || undefined,
+          prefix: false,
+        });
+      }
     }
   }
 
@@ -181,19 +213,37 @@ export interface BulkResult {
   total: number; // non-empty lines pasted
 }
 
-// Best guess at the part number in a line we could not match.
+// Words that only label a number ("OEM#", "P/N", "part no."): kept out of the note.
+const LABEL_WORD = /^(?:oem|p\/?n|part|no|number|#)[.:#]*$/i;
+
+// Where the part number is in a line of words: a word or two adjacent words shaped like a number
+// ("acme 03187 A0897 pulley" -> words 1-2), else a word that mixes letters with digits.
+function numberRun(words: string[]): { start: number; len: number } | null {
+  const isNumber = (text: string) => OEM_PATTERN.test(oemKey(text)) || !!cmKey(text);
+  for (let i = 0; i < words.length; i++) {
+    if (i + 1 < words.length && !LABEL_WORD.test(words[i]) && isNumber(`${words[i]} ${words[i + 1]}`)) return { start: i, len: 2 };
+    if (isNumber(words[i])) return { start: i, len: 1 };
+  }
+  // A number with a typo is still a number: the first word is taken with any digits in it, later ones need four.
+  for (let i = 0; i < words.length; i++) {
+    const digits = (words[i].match(/\d/g) ?? []).length;
+    if (/[A-Za-z]/.test(words[i]) && digits >= (i === 0 ? 1 : 4)) return { start: i, len: 1 };
+  }
+  return null;
+}
+
+// Best guess at the part number in a line we could not match. Only the number is saved as the part; any
+// other words in the line (a maker's name typed in front, a description after) go to the note.
 function guessText(raw: string, cands: Candidate[]): { text: string; qty: number; note?: string } {
   const flat = raw.replace(/\s+/g, ' ').trim();
   const pick = cands.find((c) => !c.whole && !(c.glued && !OEM_PATTERN.test(oemKey(c.text)))) ?? null;
   const qty = pick ? clampQty(pick.qty) : 1;
   const text = (pick ? pick.text : flat).trim();
   const words = text.split(/\s+/);
-  // Two words that together look like a number: "03187 A0897".
-  if (words.length >= 2 && OEM_PATTERN.test(oemKey(words.slice(0, 2).join(' ')))) {
-    return { text: words.slice(0, 2).join(' '), qty, note: [words.slice(2).join(' '), pick?.note].filter(Boolean).join(' ') || undefined };
-  }
-  if (words.length > 1 && /[A-Za-z]/.test(words[0]) && /\d/.test(words[0])) {
-    return { text: words[0], qty, note: [words.slice(1).join(' '), pick?.note].filter(Boolean).join(' ') || undefined };
+  const run = numberRun(words);
+  if (run && words.length > 1) {
+    const around = [...words.slice(0, run.start).filter((w) => !LABEL_WORD.test(w)), ...words.slice(run.start + run.len)];
+    return { text: words.slice(run.start, run.start + run.len).join(' '), qty, note: [around.join(' '), pick?.note].filter(Boolean).join(' ') || undefined };
   }
   return { text: text.slice(0, 80), qty, note: pick?.note };
 }
