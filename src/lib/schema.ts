@@ -15,6 +15,8 @@ export const areaServed = () => [
 // The business entity. Every page carries it; AI and search engines use it as
 // the canonical description of the company.
 export function localBusiness(services: { name: string; url: string }[] = []) {
+  // Identity profiles only. site.maps is an unconfirmed short link (see site.ts), so it is in hasMap but not
+  // here: add it to this list once the owner has opened it and confirmed it is the C&M listing.
   const sameAs = Object.values(site.social).filter(Boolean);
   return {
     '@context': 'https://schema.org',
@@ -31,7 +33,6 @@ export function localBusiness(services: { name: string; url: string }[] = []) {
     image: [abs('/og.jpg'), abs('/logo.png')],
     telephone: site.phoneE164,
     email: site.email,
-    currenciesAccepted: 'USD',
     address: {
       '@type': 'PostalAddress',
       streetAddress: site.address.street,
@@ -40,12 +41,8 @@ export function localBusiness(services: { name: string; url: string }[] = []) {
       postalCode: site.address.postalCode,
       addressCountry: site.address.country,
     },
-    ...(site.geo.lat
-      ? { geo: { '@type': 'GeoCoordinates', latitude: site.geo.lat, longitude: site.geo.lng } }
-      : {}),
-    hasMap: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      `${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}`,
-    )}`,
+    // No `geo`: the exact pin coordinates are not known and are never guessed.
+    hasMap: site.maps,
     openingHoursSpecification: site.hours.map((h) => ({
       '@type': 'OpeningHoursSpecification',
       dayOfWeek: h.days.map((d) => `https://schema.org/${dayNames[d]}`),
@@ -58,7 +55,6 @@ export function localBusiness(services: { name: string; url: string }[] = []) {
       telephone: site.phoneE164,
       email: site.email,
       areaServed: 'US-CA',
-      availableLanguage: ['English'],
     },
     areaServed: areaServed(),
     knowsAbout: site.expertise,

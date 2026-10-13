@@ -9,6 +9,7 @@
     "check": "astro check",
     "prelaunch": "node scripts/prelaunch.mjs",
     "check:dist": "node scripts/check-dist.mjs",
+    "indexnow": "node scripts/indexnow.mjs",
     "test:e2e": "playwright test"
   },
   "repository": {

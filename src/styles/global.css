@@ -137,6 +137,11 @@ h2 {
   font-weight: 600;
 }
 
+/* On a white section the white pill vanished and the label looked indented: use the page gray so it stays a chip */
+.section--alt .eyebrow {
+  background: var(--color-bg);
+}
+
 .eyebrow::before {
   content: '';
   width: 12px;
@@ -181,6 +186,11 @@ p {
 
 .muted {
   color: var(--color-muted);
+}
+
+/* Keeps a short phrase (a part number, "1–2 business days") in one piece; used with set:html where text is wrapped */
+.nowrap {
+  white-space: nowrap;
 }
 
 .visually-hidden {
@@ -396,6 +406,14 @@ main:focus {
   resize: vertical;
 }
 
+/* Blue focus ring on form controls: red is the error state (border + message), so a valid field in focus
+   must not look like an error. */
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  outline-color: var(--color-primary);
+}
+
 /* Field errors (src/scripts/web3forms-submit.ts): a thicker red border and a message under the
    control. The message opens with a warning sign, so the state never rests on color alone. */
 .field [aria-invalid='true'],
@@ -419,6 +437,31 @@ textarea[aria-invalid='true'] {
   margin-right: 6px;
 }
 
+/* "Email or phone, at least one" (<fieldset data-reach>): the legend, a hint, the two fields side by side and
+   one error for the pair (src/scripts/web3forms-submit.ts) under them. */
+.reach {
+  min-width: 0;
+  margin: 0; /* the 16px under the fields comes from the .field inside */
+  padding: 0;
+  border: 0;
+}
+
+.reach legend {
+  margin-bottom: 2px;
+  padding: 0;
+  font-weight: 600;
+}
+
+.reach__hint {
+  margin: 0 0 6px;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.reach > .field-error {
+  margin: -16px 0 16px; /* the row above ends with a 16px field margin: pull the error up to its fields */
+}
+
 /* A busy button keeps focus (aria-disabled instead of disabled), so it needs its own look */
 .btn:disabled,
 .btn[aria-disabled='true'] {
@@ -436,6 +479,7 @@ textarea[aria-invalid='true'] {
 .field-row {
   display: grid;
   gap: 0 16px;
+  align-items: start; /* a field with an error under it must not stretch its neighbour's label and input apart */
 }
 
 @media (min-width: 640px) {

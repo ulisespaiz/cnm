@@ -1,0 +1,334 @@
+---
+// OEM part number index: every part in one plain table (OEM # | C&M # | Part name | Section), sorted by OEM
+// number, with the parts that have none at the end. Static HTML, no script: it works with Ctrl-F, in a
+// text browser and on a slow phone. On phones each row stacks into a small card instead of scrolling sideways.
+// The same rows are the CSV at /shop/catalog.csv (src/lib/catalog.ts builds both).
+import Base from '../../../layouts/Base.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import PartRequestForm from '../../../components/PartRequestForm.astro';
+import StoreDisclaimer from '../../../components/StoreDisclaimer.astro';
+import { getCatalogRows } from '../../../lib/catalog';
+import { breadcrumbs } from '../../../lib/schema';
+import { site } from '../../../config/site';
+import '../../../styles/store.css';
+
+// Parts shop off (site.store.enabled): render nothing, send visitors to the quote page.
+if (!site.store.enabled) return Astro.redirect('/quote/', 302);
+
+const rows = await getCatalogRows();
+const withOem = rows.filter((r) => r.oem).length;
+const noOem = rows.length - withOem;
+
+// Titles stay within 65 characters (search results cut them off): the shop name is added when it fits.
+const pageTitle = 'OEM Part Number Index for VFFS Replacement Parts';
+const withShopName = `${pageTitle} | ${site.name}`.length <= 65;
+const description = `Find a VFFS packaging machine replacement part by the OEM part number on the worn part. All ${rows.length} parts in one table with C&M numbers.`;
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Parts Store', path: '/shop/' },
+  { name: 'OEM Part Number Index', path: '/shop/part-numbers/' },
+];
+---
+
+<Base title={pageTitle} brand={withShopName} description={description} jsonLd={[breadcrumbs(crumbs)]}>
+  <link slot="head" rel="alternate" type="text/csv" href="/shop/catalog.csv" title="Parts catalog (CSV)" />
+
+  <div class="container container--wide pn">
+    <div class="crumbs-desktop"><Breadcrumbs items={crumbs} /></div>
+    <a class="back-link" href="/shop/">‹ Parts Store</a>
+
+    <header class="pn__head">
+      <p class="eyebrow">Parts Store</p>
+      <h1>OEM part number <span class="mark">index</span></h1>
+      <p class="lead">
+        Find your part by the number on the worn part. All {rows.length} replacement parts for VFFS packaging machines are
+        listed here by OEM part number. Open a part name to see the part and add it to your quote.
+      </p>
+      <p>
+        Have a list of numbers? <a href="/quote/#bulk">Paste it on the quote page</a> (bulk paste).
+        Don't see your number? <a href="#request">Send us the part number</a> and we'll check it. {site.replyTime}.
+        To look up one number, use the <a href="/shop/">search on the parts store</a> or your browser's Find in page.
+      </p>
+      <p class="pn__tools">
+        <a class="btn btn--outline" href="/shop/catalog.csv" download="cm-machine-shop-parts-catalog.csv">Download the catalog (CSV)</a>
+        <span class="pn__csv-note">All {rows.length} parts as a spreadsheet that opens in Excel.</span>
+      </p>
+    </header>
+
+    <section class="pn__list" aria-labelledby="pn-title">
+      <h2 id="pn-title" class="visually-hidden">All {rows.length} parts by OEM part number</h2>
+      {/* The ARIA roles repeat what the elements already are. They stay on purpose: on phones the rows are
+          laid out as cards (display: grid), and some browsers drop the table meaning when that happens. */}
+      <table class="pn__table" role="table">
+        <caption>
+          {rows.length} parts, sorted by OEM #. {noOem} with no OEM # {noOem === 1 ? 'is' : 'are'} last, by C&amp;M #.
+        </caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th role="columnheader" scope="col">OEM #</th>
+            <th role="columnheader" scope="col">C&amp;M #</th>
+            <th role="columnheader" scope="col">Part name</th>
+            <th role="columnheader" scope="col">Section</th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          {
+            rows.map((r) => (
+              <tr role="row">
+                <td role="cell" class="pn__oem" data-label="OEM #">
+                  {r.oem ? (
+                    <span class="oem">{r.oem}</span>
+                  ) : (
+                    <span class="oem-none">
+                      <span aria-hidden="true">&ndash;</span>
+                      <span class="visually-hidden">No OEM #</span>
+                    </span>
+                  )}
+                </td>
+                <td role="cell" class="pn__cm" data-label="C&amp;M #">{r.cm}</td>
+                <td role="cell" class="pn__name">
+                  <a href={r.path}>
+                    {r.name}
+                    <span class="visually-hidden"> ({r.oem || r.cm})</span>
+                  </a>
+                </td>
+                <td role="cell" class="pn__sec">{r.section}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <PartRequestForm />
+    <StoreDisclaimer />
+  </div>
+</Base>
+
+<style>
+  .pn {
+    padding-block: 8px 40px;
+  }
+
+  .pn__head h1 {
+    margin-bottom: 10px;
+    font-size: clamp(1.75rem, 1.2rem + 2.4vw, 3rem);
+  }
+
+  .pn__head .eyebrow {
+    margin-bottom: 10px;
+    padding: 5px 12px;
+    font-size: 0.875rem;
+  }
+
+  /* phones: the back link above the title already names the store */
+  @media (max-width: 767px) {
+    .pn__head .eyebrow {
+      display: none;
+    }
+  }
+
+  .pn__head .lead {
+    font-size: 1.05rem;
+  }
+
+  .pn__head p {
+    max-width: 75ch;
+  }
+
+  .pn__tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin: 18px 0 20px;
+  }
+
+  .pn__csv-note {
+    flex: 1 1 16rem;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .pn__list {
+    margin-bottom: 32px;
+  }
+
+  /* ---------- the table ---------- */
+  .pn__table {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+  }
+
+  .pn__table caption {
+    padding: 0 2px 10px;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    text-align: left;
+  }
+
+  .pn__table th {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-tint);
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .pn__table th:first-child {
+    border-top-left-radius: calc(var(--radius) - 1px);
+  }
+
+  .pn__table th:last-child {
+    border-top-right-radius: calc(var(--radius) - 1px);
+  }
+
+  .pn__table td {
+    padding: 4px 14px;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+  }
+
+  .pn__table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .pn__table tbody tr:hover td {
+    background: #fafbff;
+  }
+
+  .pn__cm {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .pn__sec {
+    color: #333;
+  }
+
+  /* At least a 44px tap target; the same space above and below whether the name takes one line or two. */
+  .pn__name a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding-block: 6px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  /* Wider screens: a real table; the column header stays under the site header while the list scrolls. */
+  @media (min-width: 640px) {
+    .pn__table th {
+      position: sticky;
+      top: var(--store-stick);
+      z-index: 1;
+    }
+
+    .pn__oem {
+      width: 11.5rem;
+    }
+
+    .pn__cm {
+      width: 7.5rem;
+    }
+
+    .pn__sec {
+      width: 16rem;
+    }
+  }
+
+  /* Phones: one card per row. OEM # and C&M # share the first line, then the name (the link), then the section. */
+  @media (max-width: 639px) {
+    .pn__table,
+    .pn__table tbody {
+      display: block;
+    }
+
+    /* the table is a card on phones, so the caption sits inside its border: give it the rows' side padding */
+    .pn__table caption {
+      display: block;
+      padding: 10px 14px 8px;
+    }
+
+    .pn__table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .pn__table tbody tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 12px;
+      padding: 6px 14px 8px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .pn__table tbody tr:last-child {
+      border-bottom: 0;
+    }
+
+    .pn__table td,
+    .pn__table tbody tr:hover td {
+      padding: 0;
+      border: 0;
+      background: none;
+    }
+
+    .pn__oem {
+      grid-column: 1;
+    }
+
+    .pn__cm {
+      grid-column: 2;
+      text-align: right;
+    }
+
+    .pn__oem,
+    .pn__cm {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-height: 26px;
+    }
+
+    .pn__cm {
+      justify-content: flex-end;
+    }
+
+    /* The column header is hidden on phones, so each number carries its label (drawn here, not in the HTML). */
+    .pn__oem::before,
+    .pn__cm::before {
+      content: attr(data-label);
+      content: attr(data-label) / '';
+      color: var(--color-muted);
+      font-size: 0.8125rem;
+      font-weight: 600;
+    }
+
+    .pn__name {
+      grid-column: 1 / -1;
+    }
+
+    /* The section is on the part page and in the desktop table. Each card is about a third shorter without it,
+       which takes thousands of pixels off a 146-row list on a phone. */
+    .pn__sec {
+      display: none;
+    }
+  }
+
+  .pn :global(.part-request) {
+    max-width: 760px;
+    margin-bottom: 20px;
+  }
+</style>

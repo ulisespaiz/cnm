@@ -19,6 +19,12 @@ export interface SubmitConfig {
 
 type Field = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
+// A form can ask for "at least one of" a few fields (the quote, contact and part request forms need an
+// email or a phone number, neither required on its own): a <fieldset data-reach id="…"> around them.
+// When all are empty, one error under the group is tied to every field in it.
+const REACH_MESSAGE = 'Enter an email or a phone number so we can reply.';
+const REACH_NAME = 'Email or phone'; // how the group is named in the "Please fix N fields" summary
+
 const SEND_TIMEOUT = 20000; // ms: a send that has not answered by then is reported as unconfirmed
 const MAILTO_MAX = 1800; // characters: longer mailto: links are cut or refused by browsers and mail apps
 const MAILTO_MORE = '… (list continues, see the quote page)';
@@ -94,26 +100,74 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
   let sending = false;
   let locked = false; // sent, and the page is on its way elsewhere (lockOnSuccess)
 
+  // ---------- "At least one of" group ----------
+  // One error for the whole group, after its last child, listed in every field's aria-describedby.
+  const reachBox = form.querySelector<HTMLElement>('fieldset[data-reach][id]');
+  const reachFields = reachBox ? [...reachBox.querySelectorAll<Field>('input')] : [];
+  const reachErrId = reachBox ? `${reachBox.id}-err` : '';
+  const reachEmpty = () => reachFields.length > 0 && reachFields.every((f) => !f.value.trim());
+  const reachError = () => (reachBox ? reachBox.querySelector<HTMLElement>(':scope > .field-error') : null);
+  // The message under a field: its own, or the group's.
+  const errorOf = (field: Field) => fieldError(field) ?? (reachFields.includes(field) ? reachError() : null);
+
+  function showReachError() {
+    if (!reachBox) return;
+    let err = reachError();
+    if (!err) {
+      err = document.createElement('p');
+      err.className = 'field-error';
+      err.id = reachErrId;
+      reachBox.append(err);
+    }
+    err.textContent = REACH_MESSAGE;
+    for (const field of reachFields) {
+      field.setAttribute('aria-invalid', 'true');
+      const ids = describedBy(field);
+      if (!ids.includes(reachErrId)) field.setAttribute('aria-describedby', [...ids, reachErrId].join(' '));
+    }
+  }
+
+  function clearReachError() {
+    reachError()?.remove();
+    for (const field of reachFields) {
+      field.removeAttribute('aria-invalid');
+      const ids = describedBy(field).filter((id) => id !== reachErrId);
+      if (ids.length) field.setAttribute('aria-describedby', ids.join(' '));
+      else field.removeAttribute('aria-describedby');
+    }
+  }
+
   // Required-field errors: mark every invalid field and put its message under it, focus the
   // first one, and keep a summary in the status line, instead of relying on the browser bubble.
   // The browser fires "invalid" once per field in one go, so the first one schedules the report.
+  // An empty "at least one of" group is reported with them, so a form with several problems shows
+  // them all at once.
   let flagged: Field[] = [];
   let summary = false; // the status line currently shows that summary
 
+  // True when something was reported (and focused).
   const report = () => {
-    const fields = flagged;
+    const problems = flagged.map((field) => ({ field, name: labelText(form, field), message: field.validationMessage, reach: false }));
     flagged = [];
-    const first = fields[0];
-    const names = fields.map((f) => labelText(form, f)).filter(Boolean);
+    if (reachEmpty()) {
+      showReachError();
+      problems.push({ field: reachFields[0], name: REACH_NAME, message: REACH_MESSAGE, reach: true });
+      // Document order, so the first problem on the page takes focus.
+      problems.sort((a, b) => (a.field.compareDocumentPosition(b.field) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+    }
+    if (!problems.length) return false;
+    const first = problems[0];
+    const names = problems.map((p) => p.name).filter(Boolean);
     let message: string;
-    if (fields.length === 1) message = names[0] ? `${names[0]}: ${first.validationMessage}` : first.validationMessage;
-    else message = `Please fix ${fields.length} fields${names.length === fields.length ? `: ${names.join(', ')}` : ''}.`;
+    if (problems.length === 1) message = first.reach || !first.name ? first.message : `${first.name}: ${first.message}`;
+    else message = `Please fix ${problems.length} fields${names.length === problems.length ? `: ${names.join(', ')}` : ''}.`;
     setStatus(status, 'error', message);
     summary = true;
     // The first field takes focus; its message (just below it) has to be on screen with it.
-    first.focus({ preventScroll: true });
-    const err = fieldError(first) ?? first;
-    if (first.getBoundingClientRect().top < 88 || !inView(err)) err.scrollIntoView({ block: 'center' });
+    first.field.focus({ preventScroll: true });
+    const err = errorOf(first.field) ?? first.field;
+    if (first.field.getBoundingClientRect().top < 88 || !inView(err)) err.scrollIntoView({ block: 'center' });
+    return true;
   };
 
   form.addEventListener(
@@ -128,8 +182,21 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
     true,
   );
 
+  // The summary has nothing left to say once no field is marked invalid.
+  const settleSummary = () => {
+    if (summary && !form.querySelector('[aria-invalid="true"]')) {
+      summary = false;
+      setStatus(status, 'none');
+    }
+  };
+
   form.addEventListener('input', (event) => {
     const field = event.target as Field;
+    // Any of the group's fields filled in answers the group error (a badly typed email is caught on send).
+    if (reachError() && reachFields.includes(field) && !reachEmpty()) {
+      clearReachError();
+      settleSummary();
+    }
     if (field.getAttribute?.('aria-invalid') !== 'true') return;
     if (!field.validity?.valid) {
       const err = fieldError(field);
@@ -137,11 +204,7 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
       return;
     }
     clearFieldError(field);
-    // The last flagged field is fixed: the summary has nothing left to say.
-    if (summary && !form.querySelector('[aria-invalid="true"]')) {
-      summary = false;
-      setStatus(status, 'none');
-    }
+    settleSummary();
   });
 
   // A submit button that is busy stays focusable (aria-disabled, not disabled), so focus
@@ -155,6 +218,7 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
     if (sending || locked) return;
 
     // Every field passed the browser's check to get here: earlier errors are out of date.
+    clearReachError();
     form.querySelectorAll<Field>('[aria-invalid="true"]').forEach(clearFieldError);
     summary = false;
 
@@ -163,6 +227,13 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
     // Honeypot: a human never ticks it. Pretend all is well and send nothing.
     if (data.get('botcheck')) {
       setStatus(status, 'success', 'Thanks!');
+      return;
+    }
+
+    // At least one of the group's fields (email or phone) has to be filled in. The browser only checks
+    // each field alone, so this is the group's own check; it reports like a required field.
+    if (reachEmpty()) {
+      report();
       return;
     }
 
@@ -180,6 +251,8 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
     }
     data.delete('redirect'); // JS keeps the visitor on-site
     data.delete('botcheck');
+    // Web3Forms uses "email" as the reply-to address: an empty one (phone only) is left out of the request.
+    if (!String(data.get('email') ?? '').trim()) data.delete('email');
 
     sending = true;
     const label = button?.textContent ?? '';

@@ -10,7 +10,9 @@ forms delivered by [Web3Forms](https://web3forms.com).
 Content and design are rebuilt from the Simply Static export of cmmachshop.com
 (services, machinery, about, contact, brand colors, Geist font, logo) plus the
 replacement-parts catalog for VFFS (vertical form fill seal) packaging machines under `/shop/`.
-`npm run prelaunch` lists everything still left before DNS can point here.
+`npm run prelaunch` lists everything still left before DNS can point here (every `TODO` and `CONFIRM` in the config,
+the pages and the content), then prints, for information only, the owner work it cannot block on: parts with
+`oemVerify`, parts with owner `flags`, parts without a photo, draft service-area pages and empty social links.
 
 ## Local development
 
@@ -36,11 +38,14 @@ SHOW_DRAFTS=1 npm run build   # production build including drafts, for review
 | Home page sections, FAQ, work gallery | `src/pages/index.astro` |
 | City pages (one file each) | `src/content/areas/*.md` |
 | Colors, fonts, spacing | tokens at the top of `src/styles/global.css` |
+| OEM part number index (`/shop/part-numbers/`) and catalog CSV (`/shop/catalog.csv`) | `src/pages/shop/part-numbers/index.astro`, `src/pages/shop/catalog.csv.ts`; both read `src/lib/catalog.ts` |
+| How to order page (`/how-to-order/`) and its FAQ | `src/pages/how-to-order.astro` (facts from `src/config/site.ts`) |
+| IndexNow key and submit script | `indexNowKey` in `src/config/site.ts`, `public/<key>.txt`, `scripts/indexnow.mjs` |
 | Old URL → new URL redirects | `public/_redirects` |
 | Security and cache headers | `public/_headers` |
 | Build checks | `scripts/check-dist.mjs` |
 | Browser smoke tests | `tests/smoke.spec.ts`, `playwright.config.ts` |
-| Bulk-paste parser and redirect-rule tests (no browser) | `tests/bulk-parse.spec.ts`, `tests/redirects.spec.ts` |
+| Bulk-paste parser, redirect-rule and IndexNow wiring tests (no browser) | `tests/bulk-parse.spec.ts`, `tests/redirects.spec.ts`, `tests/indexnow.spec.ts` |
 | CI and the optional GitHub Actions deploy | `.github/workflows/ci.yml` |
 
 ### Adding or editing a part
@@ -150,8 +155,8 @@ and back to `true` to show it.
 
 **While it is `false`** (the build output, not just the links):
 
-- No `/shop/` pages are generated: no catalog, section or part pages and no
-  `search-index.json`. The build also deletes anything left in `dist/shop/`,
+- No `/shop/` pages are generated: no catalog, section or part pages, no OEM part number
+  index (`/shop/part-numbers/`), no `catalog.csv` and no `search-index.json`. The build also deletes anything left in `dist/shop/`,
   keeps `/shop/` out of the sitemap, and deletes the part photos and shop
   scripts and styles that no page uses from `dist/_astro/`, plus
   `shop-early.js` (the store home's search script) at the site root, so none of
@@ -162,19 +167,50 @@ and back to `true` to show it.
   in `public/_redirects` are rewritten in `dist/_redirects` to `302` straight to
   `/quote/` too, so no redirect names a shop path).
 - Nothing else points at the shop: the Shop nav item, header button and footer
-  column, the home page search, Parts Store section and VFFS parts FAQ, the
+  column (with its OEM part number index link), the home page search, Parts Store section and VFFS parts FAQ, the
   VFFS parts section and FAQ on the food processing page, the quote page's catalog
   wording and bulk paste, `llms.txt`, and the 404 and thank-you buttons.
 - The red header button reads "Get a Quote" and the quote page does not fetch
   the catalog: a `?part=` number is added to the quote list as a plain line for
   the shop to look up.
 - Quotes, the part-number request form, services and everything else work as
-  before.
+  before. `/how-to-order/` stays, and reads as a services and part request guide: it leaves out the
+  catalog, the quote list and bulk paste and links nothing under `/shop/`.
 
 **Preview the shop while it is off:** set `enabled: true` locally and run
 `npm run dev`, or push a branch with it set to `true` and use the Cloudflare
 preview build for that branch. Do not merge that to `main` until you want the
 shop public.
+
+## OEM part number index, catalog CSV and how to order
+
+**`/shop/part-numbers/`** (parts shop on only) is one accessible table of every part: OEM #, C&M #,
+part name, section. It is sorted by OEM number as text (so `03187A0897` sits with the other `0318…` numbers);
+parts that share an OEM number go by C&M number, and parts with no OEM number come last, by C&M number.
+Each row links to the part page. It is plain HTML with no script of its own, so it works with Ctrl-F and
+on a slow phone: from 640px it is a table with a sticky header, below that every row stacks into a card
+(OEM # and C&M # on one line, then the part name as the link, then the section). The ARIA table roles are
+repeated on purpose, so the stacked rows keep their table meaning in every browser. The page links to bulk
+paste, carries the part request form and the trademark disclaimer, and is linked from `/shop/`, the machine
+page, the footer Shop column and `llms.txt`.
+
+**`/shop/catalog.csv`** (parts shop on only) is the same list as a download: columns `OEM part number`,
+`C&M number`, `Part name`, `Section`, `URL` (absolute), UTF-8 **with a BOM** so Excel opens it as UTF-8,
+RFC 4180 (CRLF line ends, a field with a comma or a double quote is quoted, quotes are doubled). It never
+carries `flags`, `nameRaw` or any other owner-only field (`src/lib/catalog.ts` copies only public fields),
+and the build stops if a value starts with `=`, `+`, `-` or `@` (a spreadsheet would run it as a formula).
+`public/_headers` sets `Content-Type: text/csv; charset=utf-8` and a 5-minute cache; with the shop off the
+build removes that rule along with the file. Both the page and the CSV come from `getCatalogRows()` in
+`src/lib/catalog.ts`, so they cannot disagree.
+
+**`/how-to-order/`** explains how a part or job gets quoted: quote-only (no online checkout, no prices), what to
+send (part number, sample, photo or drawing, quantity, needed by, pickup or shipping with ZIP), the quote
+list, bulk paste and the part request form, the reply time, local pickup (address and hours from the
+`site.hours` helpers), shipping (`site.store.shipping`), phone and email, and a six-question FAQ. The FAQ is
+rendered once and feeds both the visible `<details>` and the FAQPage JSON-LD, so they always match. Every fact
+comes from `src/config/site.ts` or from what the quote and part request forms already say: when you change
+the reply time, hours, pickup or shipping there, this page follows. It is linked from the footer Company column,
+the quote page ("How ordering works"), `/shop/`, `llms.txt` and the sitemap.
 
 ## Quote form (Web3Forms)
 
@@ -196,6 +232,13 @@ on the Web3Forms free plan; see the plan in the PR if customers need them.
 If JavaScript fails, the form still posts directly to Web3Forms and redirects
 to `/quote/thanks/`. If the request fails, the customer sees a prefilled
 `mailto:` fallback.
+
+The quote, contact and part request forms need a name and at least one of email or phone. Neither is
+`required` in the HTML (that would force both, and the form must still post without JavaScript). The
+two inputs sit in a `<fieldset data-reach id="...">`; `src/scripts/web3forms-submit.ts` shows one error
+for the pair ("Enter an email or a phone number so we can reply.") when both are empty, tied to both
+fields with `aria-invalid` and `aria-describedby`. An email that is typed is still checked as an email,
+and an empty email is left out of the Web3Forms request (Web3Forms uses `email` as the reply-to).
 
 ## Checks
 
@@ -226,14 +269,26 @@ exits with code 1 when it finds:
   script, an inline event handler, an inline `<style>`, or a resource from
   another site;
 - with the shop on: a part page without a Product JSON-LD with a `sku`, a part
-  page that does not match `parts.json`, or a broken `search-index.json`; with
+  page that does not match `parts.json`, a broken `search-index.json`, an OEM part number
+  index whose rows are not one per part in order and linking each part page, or a
+  `catalog.csv` that has no BOM, is not valid RFC 4180, does not match `parts.json` row for row
+  (absolute URLs that resolve), carries a `flags` note, a `nameRaw` or a formula-like cell, or lacks its
+  `_headers` rule; with
   the shop off: anything left of `/shop/`, a link that still points there, or a
   `/shop` rule in `_redirects` that is not a `302` to `/quote/`;
+- two indexable pages with the same meta description, a title over 65 characters on
+  `/how-to-order/` or `/shop/part-numbers/`, or the IndexNow key file missing from `dist/` or not
+  holding the key;
+- a fact that drifted from `src/config/site.ts`: JSON-LD `geo` while the config has no pin, a LocalBusiness
+  `hasMap` or any Google Maps link that is not `site.maps`, a stated number of years ("20 years") in a page or
+  in `llms.txt` (only the founding year is stated), or a FAQPage question or answer that is not also on the page
+  as visible text;
 - the manufacturer's name (case-insensitive, owner request Oct 2026) in any served
   file: every file under `dist/` is scanned (HTML, XML, TXT, JSON, JS, CSS, SVG, webmanifest,
   and images and fonts as raw bytes, so a new file type is covered too), also when the name is
   spelled with entities, `\u` escapes or markup in the middle, and in a file name.
-  `_redirects` and `_headers` are not served, so they are excluded. A logo drawn inside a
+  `_redirects` and `_headers` are not served, so they are excluded. `shop/catalog.csv` is scanned
+  like every other file (also with its CSV quotes taken out). A logo drawn inside a
   part photo cannot be found by text: look at the photos once.
 
 It prints a short report; warnings (for example a link to an `#id` that does not
@@ -246,7 +301,13 @@ the first 40 of each kind).
 home page and navigation, shop search (also with "OEM" or any other word in front
 of a number), adding a part to the quote list from a part page and from
 `/quote/?part=10097A2083&qty=2`, sending the quote form and the contact form,
-and a console-error check of the main pages. `tests/bulk-parse.spec.ts` checks
+the OEM part number index (146 rows in order, every link answers, no JavaScript needed, stacked rows and no sideways
+scroll on a phone, head tags and breadcrumb), the catalog CSV (downloaded through its link: BOM, 147 lines,
+RFC 4180 quoting, matches `parts.json`, no owner-only text), `/how-to-order/` (facts from the config, the FAQ matching
+its JSON-LD, both shop states) and the footer, quote page, shop and `llms.txt` links, and a console-error
+check of the main pages. With the shop off the part-number and CSV tests skip and one test checks they are not
+built. `tests/indexnow.spec.ts` checks the IndexNow wiring as data (it never runs the script).
+`tests/bulk-parse.spec.ts` checks
 the bulk-paste parser against the built search index (no browser).
 `tests/redirects.spec.ts` reads `public/_redirects` (and `dist/_redirects` with
 the shop off) as data and checks the old catalog path, the renamed part ids, the
@@ -279,7 +340,8 @@ with Node 24 and runs `check:dist` and the Playwright tests; the **shop on** leg
 runs `npm run check` (`astro check`, which type-checks `.astro` files too), and the
 **shop off** leg first rewrites the `enabled: true, // Parts shop switch` line in
 `src/config/site.ts` to `false` inside the job (nothing is committed). A failed leg
-uploads its Playwright report. The optional `deploy` job waits for both legs.
+uploads its Playwright report. The optional `deploy` job waits for both legs, deploys, and then runs
+`npm run indexnow` as a best-effort step (see "IndexNow").
 
 ## Deploying (Cloudflare Workers)
 
@@ -348,16 +410,57 @@ Do these at launch; they matter more than anything in the code:
    and make sure search/assistant crawlers are allowed.
 2. **Cloudflare: turn on Crawler Hints** (Caching > Configuration). It
    pings IndexNow, which Bing, and through it Copilot and ChatGPT search,
-   use to pick up changes fast.
+   use to pick up changes fast. `npm run indexnow` (below) does the same on
+   demand, from this repo.
 3. **Google Business Profile**: claim or verify it, category "Machine
    shop", the same name/address/phone as the site, hours, photos, and the
-   website link. Then put its URL in `site.social.googleBusiness` and the
-   map pin in `site.geo`.
+   website link. The listing link is already in `site.maps` (footer and contact address links, schema.org
+   `hasMap`; it joins `sameAs` once the owner has opened it and confirmed it is the C&M listing). No `geo` coordinates are published: add them to `site.ts` and the LocalBusiness
+   in `src/lib/schema.ts` only from the real pin on the Business Profile, never a guess. A profile URL
+   of its own goes in `site.social.googleBusiness`.
 4. **Bing Places** and **Apple Business Connect**: same details. Bing data
    feeds ChatGPT search and Copilot; Apple feeds Siri and Maps.
 5. **Search Console and Bing Webmaster Tools**: submit `/sitemap-index.xml`.
 6. **Reviews**: ask happy customers for Google reviews. Ratings were
    removed from the site until real reviews exist.
+
+### IndexNow
+
+[IndexNow](https://www.indexnow.org) is an open protocol: a site tells the participating search engines
+(Bing, Yandex, Naver, Seznam, Yep) which URLs exist or changed, and they crawl them within hours instead
+of waiting for their next visit. Bing's index also feeds Copilot and ChatGPT search. Google does not take part.
+Sending a list costs nothing and changes no ranking by itself: it only gets the pages looked at sooner.
+
+- **The key.** A random 32-hex-character key proves the list comes from the site's owner. It is
+  `indexNowKey` in `src/config/site.ts`, and the site serves it as `https://cmmachshop.com/<key>.txt`
+  (the file `public/<key>.txt`, containing only the key). It is public by design. To rotate it, generate
+  a new one (`node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"`), rename the file,
+  put the same key in the file and in `site.ts`; `npm run check:dist` fails if the two disagree.
+- **The script.** `scripts/indexnow.mjs` reads the URLs from `dist/sitemap-*.xml` (or, given a site
+  address, from that site's live `sitemap-index.xml`) and POSTs `host`, `key`, `keyLocation` and
+  `urlList` (up to 10,000 per request) to `https://api.indexnow.org/indexnow`, then prints the HTTP status
+  (200 or 202 is success). Before sending it fetches the key file from the site, as IndexNow itself will.
+  It exits `0` with a plain message when there is no network, when the site is not live yet (the key file
+  is not served) or when IndexNow is busy; it exits `1` only for a mistake in this repo (bad argument, no key,
+  a key file that does not match) or when IndexNow rejects the request (400, 403, 422).
+- **Never in tests.** No test and no `package.json` script calls it, it refuses to run inside a
+  Playwright worker or with `NODE_ENV=test`, and `--dry-run` prints what it would send without any network.
+- **GitHub Actions deploy.** The `deploy` job runs `npm run indexnow` right after `wrangler deploy`
+  (`continue-on-error`, so it can never fail a deploy).
+
+**After a Workers Builds deploy** (the Cloudflare Git integration, which cannot run it for you), run it by hand
+once the new version is live, from a checkout of `main`:
+
+```bash
+npm ci && npm run build        # writes dist/sitemap-*.xml
+npm run indexnow               # sends every URL in the sitemap
+npm run indexnow -- --dry-run  # prints what would be sent, sends nothing
+```
+
+or, without a build, straight from the live sitemap: `npm run indexnow -- https://cmmachshop.com`.
+If it says the key file is not served yet, wait for the deploy to finish and run it again. Run it after a
+deploy that adds or changes pages (a new catalog part, a copy change); there is no need after every
+small fix, and sending the same list twice is harmless.
 
 ## Content source
 

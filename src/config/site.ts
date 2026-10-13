@@ -19,6 +19,12 @@ export const site = {
   url: 'https://cmmachshop.com',
   founded: 2002,
 
+  // IndexNow (README "IndexNow"): the key that proves to Bing and other engines that this site's owner
+  // sent the list of changed URLs. The same 32 characters are the file name and the content of
+  // public/<key>.txt, so the site serves https://cmmachshop.com/<key>.txt. It is public by design.
+  // Changing it means renaming that file too. scripts/indexnow.mjs reads it from this line.
+  indexNowKey: '059aeccbd8c669fec2b6b4589146be3e',
+
   phone: '(831) 753-7092',
   phoneE164: '+18317537092',
   email: 'cmoreno@cmmachshop.com',
@@ -31,11 +37,18 @@ export const site = {
     postalCode: '93901',
     country: 'US',
   },
-  geo: { lat: 0, lng: 0 }, // TODO from the Google Business Profile pin
+  // Google Maps short link, relayed as the owner's listing (Oct 2026). Used for the footer and contact
+  // address links and schema.org hasMap (not sameAs until it is confirmed). CONFIRM: open it once in a
+  // browser and check it is the C&M Machine Shop listing (it could not be opened from the build sandbox),
+  // then delete this note and add site.maps to the sameAs list in src/lib/schema.ts.
+  // Exact pin coordinates are not known, so no `geo` is published:
+  // add `geo: { lat, lng }` here and to the LocalBusiness in src/lib/schema.ts only from a real pin.
+  maps: 'https://maps.app.goo.gl/EKDM2Z9xNLYdjyB39',
 
   // Every visible hours line (footer, contact, store, llms.txt) and the
   // JSON-LD render from this list via src/lib/hours.ts.
-  // Saturday 10-2 per the owner ("I think"): CONFIRM before launch.
+  // Saturday 10 to 2 was relayed as the owner's answer (Oct 2026); nothing in the repo records it.
+  // CONFIRM with the owner in writing before launch, then delete this note.
   hours: [
     { days: ['Mo', 'Tu', 'We', 'Th', 'Fr'], opens: '07:00', closes: '16:00' },
     { days: ['Sa'], opens: '10:00', closes: '14:00' },
@@ -52,7 +65,7 @@ export const site = {
   store: {
     enabled: true, // Parts shop switch (see README "Parts shop on/off")
     pickup: 'Local pickup at 772 Vertin Ave, Salinas',
-    shipping: 'Shipping available: ask on your quote', // CONFIRM carrier/policy with owner
+    shipping: 'Shipping available: ask on your quote', // CONFIRM carrier/policy wording with the owner (relayed Oct 2026, not recorded)
     leadTime: null as string | null,
     leadTimeFallback: 'Lead time confirmed on your quote',
     madeTo: 'Made to match your part number, sample or print',

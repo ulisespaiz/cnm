@@ -3,6 +3,9 @@
 // and the visitor goes to /quote/thanks/; without it the form still posts and
 // Web3Forms redirects to the thank-you page. Submit logic is shared with the
 // other forms in src/scripts/web3forms-submit.ts.
+// A reply needs an email or a phone number, at least one. Neither input is `required` (the form must
+// still post without JavaScript); the <fieldset data-reach> is checked by the shared script, which
+// shows one error tied to both fields.
 import { site } from '../config/site';
 import { forms } from '../config/forms';
 
@@ -50,29 +53,33 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
       <input id={`${kind}-name`} name="name" autocomplete="name" required />
     </div>
     <div class="field">
-      <label for={`${kind}-email`}>{isQuote ? 'Email Address' : 'Email'} <span class="req" aria-hidden="true">*</span></label>
-      <input id={`${kind}-email`} name="email" type="email" autocomplete="email" required />
-    </div>
-  </div>
-
-  <div class="field-row">
-    <div class="field">
-      <label for={`${kind}-phone`}>{isQuote ? 'Phone Number' : 'Phone'} {isQuote && <span class="req" aria-hidden="true">*</span>}</label>
-      <input
-        id={`${kind}-phone`}
-        name="phone"
-        type="tel"
-        autocomplete="tel"
-        inputmode="tel"
-        placeholder="(555) 000-0000"
-        required={isQuote}
-      />
-    </div>
-    <div class="field">
       <label for={`${kind}-company`}>Company / Organization <span class="opt">(optional)</span></label>
       <input id={`${kind}-company`} name="company" autocomplete="organization" />
     </div>
   </div>
+
+  <fieldset class="field reach" id={`${kind}-reach`} data-reach>
+    <legend>Email or phone <span class="req" aria-hidden="true">*</span></legend>
+    <p class="reach__hint" id={`${kind}-reach-hint`}>Fill in at least one, so we can reply.</p>
+    <div class="field-row">
+      <div class="field">
+        <label for={`${kind}-email`}>{isQuote ? 'Email Address' : 'Email'}</label>
+        <input id={`${kind}-email`} name="email" type="email" autocomplete="email" aria-describedby={`${kind}-reach-hint`} />
+      </div>
+      <div class="field">
+        <label for={`${kind}-phone`}>{isQuote ? 'Phone Number' : 'Phone'}</label>
+        <input
+          id={`${kind}-phone`}
+          name="phone"
+          type="tel"
+          autocomplete="tel"
+          inputmode="tel"
+          placeholder="(555) 000-0000"
+          aria-describedby={`${kind}-reach-hint`}
+        />
+      </div>
+    </div>
+  </fieldset>
 
   {isQuote && (
     <>
@@ -169,8 +176,8 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
         const lines = [
           isQuote ? `Quote reference: ${data.get('quote_ref') ?? ''}` : '',
           `Name: ${data.get('name') ?? ''}`,
-          `Email: ${data.get('email') ?? ''}`,
-          `Phone: ${data.get('phone') ?? ''}`,
+          data.get('email') ? `Email: ${data.get('email')}` : '',
+          data.get('phone') ? `Phone: ${data.get('phone')}` : '',
           data.get('company') ? `Company: ${data.get('company')}` : '',
           data.get('po') ? `PO: ${data.get('po')}` : '',
           data.get('needed_by') ? `Needed by: ${data.get('needed_by')}` : '',

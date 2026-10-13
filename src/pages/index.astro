@@ -5,6 +5,7 @@ import FeaturedParts from '../components/FeaturedParts.astro';
 import { site } from '../config/site';
 import { getEquipment, getServices, serviceUrl } from '../lib/content';
 import { getParts, getSections, MAIN_MACHINE, sectionUrl } from '../lib/parts';
+import { leadTime } from '../components/store';
 import { faqPage } from '../lib/schema';
 import banner from '../assets/work/our-work-2.jpg';
 import shopPhoto from '../assets/site/front-office-cnm.jpeg';
@@ -27,8 +28,6 @@ const sections = shopOn
       count: parts.filter((p) => p.data.section.id === s.id).length,
     }))
   : [];
-// Owner's headline: "25 years of precision" (fixed, not computed).
-const yearsInBusiness = 25;
 
 // Real C&M shop photos only, each captioned for the machine it shows. `alt` says what the
 // photo looks like; the caption beside it already names the machine, so the alt must not repeat it.
@@ -49,7 +48,7 @@ const faqs = [
   ...(shopOn
     ? [
         {
-          q: 'Do you sell replacement parts for VFFS packaging machines?',
+          q: 'Do you make replacement parts for VFFS packaging machines?',
           a: `Yes. Our parts catalog lists ${parts.length} replacement parts for vertical form fill seal (VFFS) packaging machines, matched by OEM part number and searchable by OEM part number or C&M number. If your part is not listed, send us the number and we will quote it.`,
         },
       ]
@@ -66,7 +65,7 @@ const faqs = [
   },
   {
     q: 'What is your typical turnaround time?',
-    a: 'Our standard turnaround time depends on the complexity of the project. We strive to complete orders efficiently, with custom quotes provided for rush orders.',
+    a: `Turnaround depends on the complexity of the project. ${leadTime()}.`,
   },
 ];
 ---
@@ -79,7 +78,7 @@ const faqs = [
   <section class="hero">
     <div class="container">
       <p class="eyebrow">Founded in {site.founded} · {site.address.city}, {site.address.region}</p>
-      <h1>{yearsInBusiness} years of <span class="mark">precision.</span><br /> Still your machine shop.</h1>
+      <h1>Precision machining since <span class="mark">{site.founded}.</span><br /> Still your machine shop.</h1>
       <p class="lead">
         {shopOn ? (
           <>
@@ -119,8 +118,8 @@ const faqs = [
         )}
       </div>
       <dl class:list={['stats', { 'stats--3': !shopOn }]}>
-        <div><dt>Years in business</dt><dd>{yearsInBusiness}+</dd></div>
-        <div><dt>Precision machines</dt><dd>{machines.length}</dd></div>
+        <div><dt>Founded</dt><dd>{site.founded}</dd></div>
+        <div><dt>Key machines</dt><dd>{machines.length}</dd></div>
         <div><dt>Core services</dt><dd>{services.length}</dd></div>
         {shopOn && <div class="stats__live"><dt>Parts in the store</dt><dd>{parts.length}</dd></div>}
       </dl>
@@ -190,7 +189,7 @@ const faqs = [
         <div class="bento">
           <article class="bento__card">
             <h3>Save time without sacrificing quality</h3>
-            <p class="muted">Skip the middleman. Order directly from a machine shop founded in {site.founded}. {site.store.madeTo}.</p>
+            <p class="muted">Skip the middleman. Request a quote directly from a machine shop founded in {site.founded}. {site.store.madeTo}.</p>
           </article>
           <article class="bento__card">
             <h3>3 steps to your part</h3>
@@ -202,13 +201,13 @@ const faqs = [
           </article>
           <article class="bento__card">
             <h3>Quote support</h3>
-            <p class="muted">{site.replyTime} for quotes, orders, and custom part requests.</p>
+            <p class="muted">{site.replyTime} for quotes and custom part requests.</p>
           </article>
           <article class="bento__card bento__card--blue">
             <h3>Focus on running your operation, not hunting for parts</h3>
             <ul class="ticks ticks--light">
               <li>No complicated ordering system</li>
-              <li>Fully customizable orders</li>
+              <li>Custom part requests welcome</li>
               <li>Local pickup, or ask about shipping</li>
             </ul>
             <a class="btn btn--light" href="/shop/">Shop All Parts</a>
@@ -222,7 +221,7 @@ const faqs = [
     <div class="container about-split">
       <div>
         <p class="eyebrow">Who we are</p>
-        <h2>Precision-driven expertise, backed by 30+ years of industry experience, focused on <span class="text-blue">manufacturing excellence</span></h2>
+        <h2>Precision-driven expertise, in business since {site.founded}, focused on <span class="text-blue">manufacturing excellence</span></h2>
         <p class="lead">
           {site.legalName} delivers tailored, high-quality solutions that exceed expectations. From water-jet cutting
           and laser cutting to custom fabrication and blueprint-based projects, we handle work of any scale and
@@ -279,7 +278,7 @@ const faqs = [
         <h2>Every cut, every part, every deadline — machined to your <span class="text-blue">exact specifications</span></h2>
         <p class="lead">At {site.legalName} we are committed to being your trusted partner, offering craftsmanship, innovation and reliability in every project.</p>
       </div>
-      <ul class="gallery" tabindex="0" aria-label="Recent work samples">
+      <ul class="gallery" tabindex="0" aria-label="Machines in our shop">
         {work.map((w) => (
           <li>
             <Image src={w.src} alt={w.alt} widths={[360, 560]} sizes="(min-width: 900px) 360px, 80vw" />

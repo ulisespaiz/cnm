@@ -58,6 +58,11 @@ const jsonLd = [
       <a class="shop__cant-list" href="/quote/#bulk">Paste a list</a>
     </div>
 
+    <p class="shop__more" data-ps-under>
+      <a href="/shop/part-numbers/">OEM part number index</a>
+      <a href="/how-to-order/">How ordering works</a>
+    </p>
+
     <div class="shop__trust" data-ps-under>
       <TrustStrip />
     </div>
@@ -92,7 +97,8 @@ const jsonLd = [
     order: 2;
   }
 
-  .shop__cant {
+  .shop__cant,
+  .shop__more {
     order: 3;
   }
 
@@ -188,6 +194,22 @@ const jsonLd = [
     text-decoration: underline !important;
   }
 
+  /* Two plain links under the "can't find it" strip: the number index and the ordering guide */
+  .shop__more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 20px;
+    margin: -4px 0 0;
+    padding-inline: 4px;
+  }
+
+  .shop__more a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
+  }
+
   @media (min-width: 900px) {
     .shop {
       gap: 20px;
@@ -217,7 +239,8 @@ const jsonLd = [
       order: 3;
     }
 
-    .shop__cant {
+    .shop__cant,
+    .shop__more {
       order: 4;
     }
 

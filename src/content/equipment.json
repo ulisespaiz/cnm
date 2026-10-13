@@ -44,7 +44,7 @@
   },
   {
     "id": "tb-2060vs-cnc-turning",
-    "name": "TB-2060VSCNC Turning Machine",
+    "name": "TB-2060VS CNC Turning Machine",
     "text": "An integral part of our manufacturing process, offering high-precision machining with exceptional efficiency. This robust CNC lathe is engineered to handle complex turning operations seamlessly, enabling us to produce custom components that meet stringent standards across a variety of industries.",
     "image": "./../assets/equipment/TB-2060VSCNC-CNC-Turning-Machine.jpg",
     "featuresLabel": "Key Features",
@@ -66,7 +66,7 @@
       { "name": "Custom Metal Cutting", "text": "Stainless steel, aluminum, brass, and mild steel to exact specifications." },
       { "name": "High-Precision Work", "text": "Perfect for detailed designs and complex geometries with exceptional accuracy." },
       { "name": "Material Versatility", "text": "Works with various metals and thicknesses, accommodating both small and large projects." },
-      { "name": "Quick Turnaround", "text": "Timely delivery without compromising on quality, backed by skilled professionals." }
+      { "name": "Lead Time", "text": "Lead time is confirmed on your quote." }
     ],
     "order": 5
   }
