@@ -6,7 +6,6 @@
   --store-header: 73px; /* sticky site header height */
   --store-bar: 65px; /* sticky search bar under the header */
   --store-stick: var(--store-header); /* where the list's sticky parts stick; see html:has(.storebar) below */
-  --oem-font: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 }
 
 /* ---------- photo box: always 3:4, contained, never cropped ---------- */

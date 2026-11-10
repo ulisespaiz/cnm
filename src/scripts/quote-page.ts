@@ -89,12 +89,13 @@ function buildRow(item: QuoteItem) {
 
   const noteId = `note-${key.replace(/[^\w-]/g, '_')}`;
   const noteToggle = h('button', { type: 'button', class: 'qi__link', 'aria-expanded': 'false', 'aria-controls': noteId, 'data-action': 'note' });
-  const noteInput = h('input', {
+  // Two lines, so a longer note (such as the one on a shared OEM number line) shows in full.
+  const noteInput = h('textarea', {
     id: noteId,
     class: 'qi__note',
-    type: 'text',
+    rows: 2,
     maxlength: 300,
-    placeholder: 'Note (left-hand, material)', // short: a placeholder cannot wrap, and this row is only 220px wide inside at 320px
+    placeholder: 'Note (left-hand, material)',
     'aria-label': `Note for ${name}`,
     autocomplete: 'off',
   });
@@ -156,7 +157,7 @@ function updateRow(li: HTMLLIElement, item: QuoteItem) {
   const qty = li.querySelector<HTMLInputElement>('.qi__qty'); // none on a service line
   if (qty && document.activeElement !== qty) qty.value = String(item.qty);
 
-  const note = q<HTMLInputElement>('.qi__note');
+  const note = q<HTMLTextAreaElement>('.qi__note');
   const toggle = q<HTMLButtonElement>('[data-action="note"]');
   if (document.activeElement !== note) note.value = item.note ?? '';
   const open = !note.hidden || !!item.note;
@@ -233,7 +234,7 @@ list.addEventListener('click', (event) => {
   if (action === 'plus') setQty(key, item.qty + 1);
   else if (action === 'minus') setQty(key, item.qty - 1);
   else if (action === 'note') {
-    const note = li.querySelector<HTMLInputElement>('.qi__note')!;
+    const note = li.querySelector<HTMLTextAreaElement>('.qi__note')!;
     const open = note.hidden;
     note.hidden = !open;
     btn.setAttribute('aria-expanded', String(open));

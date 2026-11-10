@@ -6,7 +6,7 @@
 // Links into this page:
 //   /quote/?service=<service id>#details   from a service page: that service becomes a line of the list
 //                                          (once) and the page opens at the form. The ids and titles come
-//                                          from the services collection, on the early script's data-services.
+//                                          from the services collection, on the early script's data-services (src/layouts/Base.astro).
 //   /quote/?part=<number>[&qty=n]          adds a part by number (src/scripts/quote-page.ts)
 //   #details (the form), #bulk (paste a list), #cant-find (the part request form)
 import Base from '../../layouts/Base.astro';
@@ -14,10 +14,6 @@ import QuoteForm from '../../components/QuoteForm.astro';
 import QuoteItems from '../../components/QuoteItems.astro';
 import PartRequestForm from '../../components/PartRequestForm.astro';
 import { site } from '../../config/site';
-import { getServices } from '../../lib/content';
-
-// { machining: 'Machining', … }: the only values ?service= accepts
-const services = Object.fromEntries((await getServices()).map((s) => [s.id, s.data.title]));
 ---
 
 <Base
@@ -28,7 +24,6 @@ const services = Object.fromEntries((await getServices()).map((s) => [s.id, s.da
   noindex
   hideMobileBar
 >
-  <script is:inline src="/quote-early.js" slot="head" data-services={JSON.stringify(services)}></script>
   <section class="section quote-page" data-shop={site.store.enabled ? undefined : 'off'}>
     <div class="container">
       <p class="eyebrow">C&amp;M MACHINE SHOP</p>
