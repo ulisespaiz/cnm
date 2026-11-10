@@ -8,13 +8,22 @@ export interface SubmitConfig {
   /** Validate and enrich the data. Return an error message to stop the send. */
   prepare?: (data: FormData) => string | void;
   /** Plain-text body for the mailto fallback shown when the send fails. */
-  fallbackBody?: (data: FormData) => string;
+  fallbackBody?: (data: FormData) => string | FallbackBody;
   /** Called after Web3Forms accepted the message. */
   onSuccess: (data: FormData) => void;
   /** Button label while sending. */
   busyLabel?: string;
   /** Keep the button locked after a successful send, for a form whose onSuccess leaves the page. */
   lockOnSuccess?: boolean;
+}
+
+/**
+ * A fallback body with a list at its end (the quote list). The link has room for about 1,800 characters:
+ * what the customer wrote goes in `text` and is kept, and `list` lines that do not fit are left out and counted.
+ */
+export interface FallbackBody {
+  text: string;
+  list: string[];
 }
 
 type Field = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -27,7 +36,12 @@ const REACH_NAME = 'Email or phone'; // how the group is named in the "Please fi
 
 const SEND_TIMEOUT = 20000; // ms: a send that has not answered by then is reported as unconfirmed
 const MAILTO_MAX = 1800; // characters: longer mailto: links are cut or refused by browsers and mail apps
-const MAILTO_MORE = '… (list continues, see the quote page)';
+// Notes written into the draft where it was cut. The customer reads them before sending and the shop
+// reads them if they were left in, so they say what is missing and ask for it, in words both understand.
+const plural = (n: number) => (n === 1 ? 'line' : 'lines');
+const listCutNote = (left: number) => `[${left} more ${plural(left)} did not fit in this email link. Please paste the rest of your list here before you send.]`;
+const textCutNote = (list: number) =>
+  `[Cut here: this email link could not hold the rest. Please add the rest of your message${list ? ` and your list (${list} ${plural(list)})` : ''} before you send.]`;
 
 // `assertive` is for a problem the visitor has to notice at once (role=alert); everything else
 // waits its turn in the polite live region.
@@ -251,8 +265,12 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
     }
     data.delete('redirect'); // JS keeps the visitor on-site
     data.delete('botcheck');
-    // Web3Forms uses "email" as the reply-to address: an empty one (phone only) is left out of the request.
-    if (!String(data.get('email') ?? '').trim()) data.delete('email');
+    // Fields left empty are not sent: the email the shop reads lists only what the customer filled in.
+    // Web3Forms also uses "email" as the reply-to address, so an empty one (phone only) must stay out.
+    // Rebuilt rather than deleted by name, so a name used twice keeps its filled-in values, in order.
+    const kept = [...data.entries()].filter(([, value]) => typeof value !== 'string' || value.trim());
+    for (const name of new Set(data.keys())) data.delete(name);
+    for (const [name, value] of kept) data.append(name, value);
 
     sending = true;
     const label = button?.textContent ?? '';
@@ -282,9 +300,10 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
       console.error('Form submit failed', err);
       // If onSuccess itself broke, the message did go out: do not tell the visitor it failed.
       if (!delivered) {
-        let body = '';
+        let body: FallbackBody = { text: '', list: [] };
         try {
-          body = fallbackBody?.(data) ?? '';
+          const made = fallbackBody?.(data) ?? '';
+          body = typeof made === 'string' ? { text: made, list: [] } : made;
         } catch (bodyErr) {
           console.error('Form fallback failed', bodyErr);
         }
@@ -303,15 +322,23 @@ export function bindWeb3Form({ form, prepare, fallbackBody, onSuccess, busyLabel
   });
 }
 
-// mailto: link with the request in the body. Over MAILTO_MAX the body is cut at a whole line
-// and says so, because a link that is too long opens nothing.
-function mailtoHref(to: string, subject: string, body: string) {
-  const build = (text: string) => `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
-  const full = build(body);
-  if (full.length <= MAILTO_MAX) return full;
+// mailto: link with the request in the body. A link that is too long opens nothing, so over MAILTO_MAX
+// the body is shortened and says so: list lines are dropped from the end first (`left` counts them), and
+// only a text that is too long on its own is cut, at a whole line.
+function mailtoHref(to: string, subject: string, { text, list }: FallbackBody) {
+  const build = (body: string) => `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const join = (...parts: string[]) => parts.filter(Boolean).join('\n');
 
-  const cut = (text: string) => [text.trimEnd(), MAILTO_MORE].filter(Boolean).join('\n');
-  const chars = Array.from(body); // by code point: a cut never splits a surrogate pair
+  const full = build(join(text, ...list));
+  if (full.length <= MAILTO_MAX) return { href: full, left: 0 };
+
+  for (let kept = list.length - 1; kept >= 0; kept--) {
+    const href = build(join(text, ...list.slice(0, kept), listCutNote(list.length - kept)));
+    if (href.length <= MAILTO_MAX) return { href, left: list.length - kept };
+  }
+
+  const cut = (kept: string) => join(kept.trimEnd(), textCutNote(list.length));
+  const chars = Array.from(text); // by code point: a cut never splits a surrogate pair
   let lo = 0;
   let hi = chars.length;
   while (lo < hi) {
@@ -322,16 +349,19 @@ function mailtoHref(to: string, subject: string, body: string) {
   let kept = chars.slice(0, lo).join('');
   const lastLine = kept.lastIndexOf('\n');
   if (lastLine > 0) kept = kept.slice(0, lastLine);
-  return build(cut(kept));
+  return { href: build(cut(kept)), left: list.length };
 }
 
-function showFallback(form: HTMLFormElement, status: HTMLElement | null, data: FormData, body: string) {
+function showFallback(form: HTMLFormElement, status: HTMLElement | null, data: FormData, body: FallbackBody) {
   if (!status) return;
+  const { href, left } = mailtoHref(form.dataset.fallbackEmail ?? '', String(data.get('subject') ?? ''), body);
   const link = document.createElement('a');
-  link.href = mailtoHref(form.dataset.fallbackEmail ?? '', String(data.get('subject') ?? ''), body);
+  link.href = href;
   link.textContent = 'email your request';
   // An aborted send may still have been delivered, so this does not say it failed.
   setStatus(status, 'error', '', true);
   status.replaceChildren('We could not confirm that this was sent. Please call us or ', link, '.');
+  // The draft says the same where the list stops; said here too, before the mail app opens.
+  if (left) status.append(` The email has room for only part of your list: ${left} ${left === 1 ? 'line is' : 'lines are'} left out, so please add ${left === 1 ? 'it' : 'them'} before you send.`);
   reveal(status);
 }

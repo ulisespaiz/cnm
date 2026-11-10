@@ -345,7 +345,7 @@ test('the quote form posts to Web3Forms and lands on the thank-you page', async 
   await form.getByLabel(/Full Name/).fill('Test Customer');
   await form.getByLabel(/Email Address/).fill('test.customer@example.com');
   await form.getByLabel(/Phone Number/).fill('(831) 555-0100');
-  await form.getByLabel(/Additional Notes/).fill('Smoke test, please ignore.');
+  await form.getByLabel(/Describe the job/).fill('Smoke test, please ignore.');
   await form.getByRole('button', { name: /Send Quote Request/ }).click();
 
   await expect(page).toHaveURL(/\/quote\/thanks\/$/);
@@ -365,6 +365,231 @@ test('the quote form posts to Web3Forms and lands on the thank-you page', async 
   // The list is emptied after a send, and the thank-you page shows the reference
   await expect(quoteBadge(page)).toBeHidden();
   await expect(page.locator('[data-ref-box]')).toContainText(sent.quote_ref);
+});
+
+test.describe('quote-flow: a clear form, with or without a list', () => {
+  const PHONE = { width: 390, height: 844 };
+  const seed = (page: Page, items: object[]) =>
+    page.evaluate((list) => localStorage.setItem('quote-list-v2', JSON.stringify({ ref: 'Q-260101-TEST', items: list })), items);
+  // A number typed by hand: the same kind of line in both shop states.
+  const custom = (n: number, note = '') => ({
+    key: `custom:9999${n}`,
+    kind: 'custom',
+    id: `custom:9999${n}`,
+    title: `OEM # 9999${n}`,
+    oem: `9999${n}`,
+    options: {},
+    qty: 2,
+    ...(note && { note }),
+  });
+  const fillContact = async (form: Locator) => {
+    await form.getByLabel(/Full Name/).fill('Test Customer');
+    await form.getByLabel(/Email Address/).fill(CUSTOMER_EMAIL);
+  };
+
+  test('an empty list is one short note on a phone, and the form starts on the first screen', async ({ page }) => {
+    await page.setViewportSize(PHONE);
+    await page.goto('/quote/');
+    const empty = page.locator('[data-quote-empty]');
+    await expect(empty).toContainText('A part number, a sample or a print is enough');
+    await expect(empty.getByRole('link', { name: 'Our services' })).toHaveAttribute('href', '/services/');
+    if (shopOn) {
+      await expect(empty.getByRole('link', { name: 'Browse parts' })).toHaveAttribute('href', '/shop/');
+      await expect(empty.getByRole('link', { name: 'Paste a list' })).toHaveAttribute('href', '#bulk');
+    } else {
+      await expect(empty.locator('a[href^="/shop"], a[href="#bulk"]')).toHaveCount(0);
+    }
+
+    const form = page.locator('form[data-kind="quote"]');
+    const first = (await form.getByLabel(/Full Name/).boundingBox())!;
+    expect(first.y, 'first form field on the first 844px screen').toBeLessThan(700);
+    const notes = form.getByLabel('Describe the job or notes');
+    await expect(notes).toHaveAttribute('name', 'message');
+    await expect(notes).toHaveAttribute('placeholder', /No part number\?/);
+    // The drawing advice follows the form instead
+    await expect(form.getByText('Have a drawing or photo of the part?')).toBeVisible();
+
+    if (shopOn) {
+      await empty.getByRole('link', { name: 'Paste a list' }).click();
+      await expect(page.locator('#bulk')).toHaveJSProperty('open', true);
+      await expect(page.locator('#bulk [data-bulk-text]')).toBeVisible();
+    }
+  });
+
+  test('/quote/?service=<id> adds that service once, with no quantity, and opens at the form', async ({ page }) => {
+    await page.goto('/quote/?service=machining#details');
+    await expect(quoteRows(page)).toHaveCount(1);
+    await expect(quoteRows(page).first()).toContainText('Machining');
+    await expect(quoteRows(page).first().locator('.qi__qty, .qi__stepper')).toHaveCount(0);
+    await expect(page).toHaveURL(/\/quote\/#details$/);
+    await expect(page.locator('#details')).toBeInViewport();
+    await expect(page.locator('[data-count-line]')).toHaveText('1 item');
+
+    // Again, and with an id that is not a service: nothing more is added
+    await page.goto('/quote/?service=machining#details');
+    await page.goto('/quote/?service=not-a-service');
+    await expect(page).toHaveURL(/\/quote\/$/);
+    await expect(quoteRows(page)).toHaveCount(1);
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('quote-list-v2')!).items);
+    expect(stored).toEqual([expect.objectContaining({ kind: 'service', id: 'service:machining', qty: 1 })]);
+  });
+
+  test('a long list has "Skip to your details" in its header on a phone', async ({ page }) => {
+    await page.goto('/');
+    await seed(page, Array.from({ length: 12 }, (_, n) => custom(n)));
+    await page.setViewportSize(PHONE);
+    await page.goto('/quote/');
+    const skip = page.getByRole('link', { name: 'Skip to your details' });
+    await expect(skip).toBeVisible();
+    await expect(page.locator('#details')).not.toBeInViewport();
+    await skip.click();
+    await expect(page.locator('#info-title')).toBeInViewport();
+  });
+
+  test('the request posts contact details and message first, the list last, and no empty fields', async ({ page, web3forms }) => {
+    await page.goto('/quote/?service=cutting');
+    const form = page.locator('form[data-kind="quote"]');
+    await fillContact(form);
+    await form.getByLabel('Describe the job or notes').fill('Smoke test, please ignore.');
+    await form.getByRole('button', { name: /Send Quote Request/ }).click();
+    await expect(page).toHaveURL(/\/quote\/thanks\/$/);
+
+    const fields = Object.keys(web3forms[0].fields);
+    expect(fields.slice(-2)).toEqual(['products', 'quote_ref']);
+    expect(fields.indexOf('name')).toBeLessThan(fields.indexOf('message'));
+    for (const empty of ['phone', 'company', 'po', 'needed_by']) expect(fields).not.toContain(empty);
+    expect(web3forms[0].fields.products).toContain('SERVICE | Cutting Services');
+
+    // A described job with no list sends no products field
+    await page.goto('/quote/');
+    await fillContact(form);
+    await form.getByLabel('Describe the job or notes').fill('A bracket like the one in my photo, 4 pieces.');
+    await form.getByRole('button', { name: /Send Quote Request/ }).click();
+    await expect(page).toHaveURL(/\/quote\/thanks\/$/);
+    expect(Object.keys(web3forms[1].fields)).not.toContain('products');
+    expect(web3forms[1].fields.subject).toMatch(/^Quote request Q-\d{6}-[A-Z0-9]{4} from Test Customer$/);
+
+    // The contact form has no list to send
+    await page.goto('/contact/');
+    const contact = page.locator('form[data-kind="contact"]');
+    await contact.getByLabel(/^Name/).fill('Test Customer');
+    await contact.getByLabel(/^Email/).fill(CUSTOMER_EMAIL);
+    await contact.getByLabel(/^Message/).fill('Smoke test, please ignore.');
+    await contact.getByRole('button', { name: /Send Message/ }).click();
+    await expect(contact.locator('[data-form-status]')).toContainText('Thanks, we got your message');
+    expect(Object.keys(web3forms[2].fields)).not.toContain('products');
+    expect(Object.keys(web3forms[2].fields)).not.toContain('quote_ref');
+  });
+
+  test('after a failed send, the email link keeps the message and counts the list lines left out', async ({ page, problems }) => {
+    await page.route('https://api.web3forms.com/**', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{"success":false}' }),
+    );
+    await page.goto('/');
+    await seed(page, Array.from({ length: 30 }, (_, n) => custom(n, 'Same as the one we ordered last spring, please')));
+    await page.goto('/quote/');
+    const form = page.locator('form[data-kind="quote"]');
+    await fillContact(form);
+    await form.getByLabel('Describe the job or notes').fill('MESSAGE FIRST');
+    await form.getByRole('button', { name: /Send Quote Request/ }).click();
+
+    const status = form.locator('[data-form-status]');
+    const link = status.getByRole('link', { name: 'email your request' });
+    await expect(link).toBeVisible();
+    const href = (await link.getAttribute('href'))!;
+    expect(href.length).toBeLessThanOrEqual(1800);
+    const body = decodeURIComponent(/[?&]body=([^&]*)/.exec(href)![1]);
+    expect(body.indexOf('MESSAGE FIRST')).toBeGreaterThan(-1);
+    expect(body.indexOf('MESSAGE FIRST')).toBeLessThan(body.indexOf('Items (30):'));
+    expect(body).toContain('1. 2 x OEM # 99990');
+    const left = Number(/\[(\d+) more lines did not fit in this email link\. Please paste the rest of your list here/.exec(body)?.[1]);
+    expect(left).toBeGreaterThan(0);
+    expect(body).not.toContain(`${30 - left + 1}. 2 x`);
+    await expect(status).toContainText(`${left} lines are left out`);
+    expect(body).not.toContain('quote page');
+
+    // The failure is the point of this test
+    const expected = /Form submit failed|status of 500/;
+    problems.splice(0, problems.length, ...problems.filter((p) => !expected.test(p)));
+  });
+
+  test('a browser that cannot save the list says so once, with the phone number and the part request form', async ({ page }) => {
+    await page.addInitScript(() => {
+      const setItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (key: string, value: string) {
+        if (this === window.localStorage) throw new DOMException('blocked', 'QuotaExceededError');
+        return setItem.call(this, key, value);
+      };
+    });
+    await page.goto('/quote/?service=machining');
+    const toast = page.locator('#toast-region .toast');
+    await expect(toast).toContainText('This browser is not saving your quote list');
+    await expect(toast.getByRole('link', { name: configString('phone') })).toHaveAttribute('href', `tel:${configString('phoneE164')}`);
+    await expect(toast.getByRole('link', { name: 'send us the part number' })).toHaveAttribute('href', '/quote/#cant-find');
+    await toast.getByRole('link', { name: 'send us the part number' }).click();
+    await expect(page.locator('#cant-find')).toHaveJSProperty('open', true);
+
+    // Once per visit: another line on another page view says nothing more
+    await page.goto('/quote/?service=cutting');
+    await expect(toast).toContainText('Cutting Services added');
+    await page.waitForTimeout(300);
+    await expect(page.locator('#toast-region')).not.toContainText('not saving');
+  });
+
+  test('a toast goes away on a tap outside it, and the region still announces', async ({ page }) => {
+    await page.goto('/quote/?service=metal-work');
+    const toast = page.locator('#toast-region .toast');
+    await expect(toast).toContainText('Metal Work added to your request');
+    await expect(page.locator('#toast-region')).toHaveAttribute('role', 'status');
+    await page.getByRole('heading', { level: 1 }).click();
+    // Well before its own 4 seconds are up
+    await expect(toast).toHaveCount(0, { timeout: 1500 });
+  });
+
+  test('another tab sees the list change', async ({ page }) => {
+    await page.goto('/');
+    await expect(quoteBadge(page)).toBeHidden();
+    const other = await page.context().newPage();
+    await other.goto('/quote/?service=machining');
+    await expect(other.locator('[data-quote-items] .qi')).toHaveCount(1);
+    await expect(quoteBadge(page)).toHaveText('1');
+    await other.close();
+  });
+
+  test('a number that is not in the catalog is still quoted, in plain words', async ({ page }) => {
+    await page.goto('/quote/?part=99999Z9999');
+    await expect(quoteRows(page)).toHaveCount(1);
+    const row = quoteRows(page).first();
+    await expect(row).toContainText(/we'll check it and quote it\./i);
+    if (shopOn) await expect(row).toContainText('Not in our catalog yet');
+    await expect(row).not.toContainText(/fits|in stock/i);
+  });
+
+  test('the thank-you page offers parts (shop on), services and home', async ({ page }) => {
+    await page.goto('/quote/thanks/');
+    const links = page.locator('.thanks__links a');
+    await expect(links).toHaveText(shopOn ? ['Browse parts', 'Our services', 'Back to home'] : ['Our services', 'Back to home']);
+    const hrefs = await links.evaluateAll((as) => as.map((a) => a.getAttribute('href')));
+    expect(hrefs).toEqual(shopOn ? ['/shop/', '/services/', '/'] : ['/services/', '/']);
+  });
+
+  test('with reduced motion, adding a pasted list jumps to it without animating', async ({ page }) => {
+    test.skip(!shopOn, 'bulk paste is part of the parts shop');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.setViewportSize(PHONE);
+    await page.goto('/quote/#bulk');
+    await page.locator('#bulk [data-bulk-text]').fill(PART);
+    await page.locator('#bulk').getByRole('button', { name: 'Check list' }).click();
+    await expect(page.locator('#bulk').getByRole('button', { name: /Add 1 line to quote/ })).toBeVisible();
+    const inView = await page.evaluate(() => {
+      window.scrollTo(0, document.documentElement.scrollHeight);
+      [...document.querySelectorAll<HTMLButtonElement>('#bulk button')].find((b) => /Add 1 line/.test(b.textContent ?? ''))!.click();
+      // Measured at once: a smooth scroll would not have moved yet
+      const box = document.querySelector('[data-quote-items]')!.getBoundingClientRect();
+      return box.bottom > 0 && box.top < window.innerHeight;
+    });
+    expect(inView).toBe(true);
+  });
 });
 
 test('the contact form shows a success message', async ({ page, web3forms }) => {
@@ -415,7 +640,7 @@ const reachForms: ReachForm[] = [
     },
     fill: async (form) => {
       await form.getByLabel(/Full Name/).fill('Test Customer');
-      await form.getByLabel(/Additional Notes/).fill('Smoke test, please ignore.');
+      await form.getByLabel(/Describe the job/).fill('Smoke test, please ignore.');
     },
     send: (form) => form.getByRole('button', { name: /Send Quote Request/ }).click(),
     expectSent: async (page) => {

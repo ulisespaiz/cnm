@@ -5,6 +5,13 @@
 // catalog to match against, so the empty state points to the services instead
 // and the bulk paste panel is left out. A returning visitor's list is flagged
 // before first paint by public/quote-early.js (html[data-quote="filled"]).
+//
+// An empty list is one short note, not a step to complete: most visitors who want a job or a part
+// quoted have no list, and the form is all they need. Where the form sits under this card (one
+// column, under 900px) the empty card is only that note, so the form starts on the first screen:
+// the header, the reassurances, the drawing box (QuoteForm.astro repeats it after the form) and the
+// closed bulk paste panel are left out there. All of it is CSS on html[data-quote], which is known
+// before first paint, so nothing moves once the page is drawn.
 import { site } from '../config/site';
 import QuoteSummary from './QuoteSummary.astro';
 import BulkPaste from './BulkPaste.astro';
@@ -16,38 +23,33 @@ const shopOn = site.store.enabled;
   <header class="qcard__head">
     <h2 id="items-title" class="qcard__title qcard__title--red" tabindex="-1">{shopOn ? 'Items in Your Request' : 'Your Request'}</h2>
     <p class="qref">Reference <strong data-quote-ref>Q-</strong></p>
+    {/* One column, list filled: the form is under the whole list, however long it is */}
+    <a class="qskip" href="#details">Skip to your details <span aria-hidden="true">↓</span></a>
   </header>
 
   <div class="qcard__body">
     <div class="qempty" data-quote-empty>
-      <h3 tabindex="-1" data-quote-empty-title>{shopOn ? 'Your quote list is empty' : 'Nothing added yet'}</h3>
-      {shopOn ? (
-        <p class="muted">
-          Add replacement parts for VFFS packaging machines from the catalog, or describe what you need in the form and we'll quote it. For
-          machining, cutting or fabrication, see our <a href="/services/">services</a>.
-        </p>
-      ) : (
-        <p class="muted">
-          Just fill in the form and tell us what you need, or add a service from our <a href="/services/">services</a> pages.
-        </p>
-      )}
-      <div class="qempty__actions">
+      {/* Takes focus when the last line is removed, so it says what just happened to a screen reader */}
+      <p class="qempty__text" tabindex="-1" data-quote-empty-title>
+        <span class="visually-hidden">Your quote list is empty. </span>
         {shopOn ? (
-          <>
-            <a class="btn" href="/shop/">Browse the catalog</a>
-            <a class="btn btn--outline" href="#bulk">Paste a list</a>
-          </>
+          <><strong>No parts list needed.</strong> A part number, a sample or a print is enough: just fill in the form.</>
         ) : (
-          <a class="btn" href="/services/">See our services</a>
+          <>A part number, a sample or a print is enough: just fill in the form and tell us what you need.</>
         )}
-      </div>
+      </p>
+      <p class="qempty__links">
+        {shopOn && <a href="/shop/">Browse parts</a>}
+        {shopOn && <a href="#bulk">Paste a list</a>}
+        <a href="/services/">Our services</a>
+      </p>
     </div>
 
     <div data-quote-filled hidden>
       <ul class="qi-list" data-quote-items></ul>
       <button type="button" class="qclear" data-clear-all>Clear all items</button>
       <!-- Phones stack the form under the list, past the summary and the drawing box: a way straight to it -->
-      <a class="btn btn--block qcontinue" href="#info-title">Continue: your details</a>
+      <a class="btn btn--block qcontinue" href="#details">Continue: your details</a>
     </div>
 
     <QuoteSummary />
@@ -113,7 +115,7 @@ const shopOn = site.store.enabled;
     border-radius: 6px;
     background: var(--color-bg);
     color: var(--color-text);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: var(--oem-font, ui-monospace, monospace);
     font-size: 0.875rem;
     letter-spacing: 0.02em;
     white-space: nowrap;
@@ -124,7 +126,7 @@ const shopOn = site.store.enabled;
   }
 
   .qempty {
-    padding: 16px 0 12px;
+    padding: 14px 0 0;
   }
 
   .qempty[hidden],
@@ -143,14 +145,52 @@ const shopOn = site.store.enabled;
     display: block;
   }
 
-  .qempty h3 {
-    margin-bottom: 8px;
+  .qempty__text {
+    margin: 0;
   }
 
-  .qempty__actions {
-    display: grid;
-    gap: 10px;
-    margin-top: 16px;
+  /* Small secondary links, each a 44px tap target */
+  .qempty__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 18px;
+    margin: 2px 0 0;
+    font-size: 0.95rem;
+  }
+
+  .qempty__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
+  }
+
+  .qskip {
+    display: none;
+  }
+
+  @media (max-width: 899.98px) {
+    :global(html[data-quote='filled']) .qskip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 44px;
+      margin-bottom: -12px; /* the header's own padding is under it */
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    /* Empty list, one column: only the note (see the top of this file). The bulk paste panel comes back
+       when "Paste a list" opens it, or when the address ends in #bulk. */
+    :global(html:not([data-quote='filled']) .qcard--items > .qcard__head),
+    :global(html:not([data-quote='filled']) .qcard--items .qdrop),
+    :global(html:not([data-quote='filled']) .qcard--items #bulk:not([open]):not(:target)) {
+      display: none;
+    }
+
+    :global(html:not([data-quote='filled']) .qcard--items > .qcard__body) {
+      padding: 0 16px 4px;
+    }
   }
 
   .qi-list {
@@ -297,6 +337,11 @@ const shopOn = site.store.enabled;
     gap: 12px;
   }
 
+  /* A service line has no quantity: its only control stays on the right */
+  .qi-list :global(.qi--service .qi__controls) {
+    justify-content: flex-end;
+  }
+
   .qi-list :global(.qi__stepper) {
     display: inline-flex;
     align-items: center;
@@ -403,5 +448,18 @@ const shopOn = site.store.enabled;
     margin: 0;
     font-size: 0.95rem;
     overflow-wrap: anywhere;
+  }
+
+  .qdrop strong {
+    font-family: var(--oem-font, ui-monospace, monospace);
+    white-space: nowrap;
+  }
+
+  /* quote-page.ts puts the reference (13 characters) where the word "above" is. With JavaScript, which
+     html[data-quote] shows, its room is kept from the start, so the sentence does not rewrap and push
+     the form down under a visitor who came in at #details. */
+  :global(html[data-quote]) .qdrop strong {
+    display: inline-block;
+    min-width: 13ch;
   }
 </style>
