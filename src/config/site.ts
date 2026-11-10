@@ -123,7 +123,7 @@ export const serviceAreas = [
 export const nav = [
   { label: 'About', href: '/about/' },
   { label: 'Services', href: '/services/' },
-  ...(site.store.enabled ? [{ label: 'Shop', href: '/shop/' }] : []),
+  ...(site.store.enabled ? [{ label: 'Parts', href: '/shop/' }] : []),
   { label: 'Our Machinery', href: '/our-machinery/' },
   { label: 'Contact', href: '/contact/' },
 ] as const;

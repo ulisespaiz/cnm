@@ -113,7 +113,7 @@ test('home renders with the main navigation', async ({ page }) => {
   for (const name of ['Home', 'About', 'Services', 'Our Machinery', 'Contact']) {
     await expect(nav.getByRole('link', { name, exact: true })).toBeVisible();
   }
-  const shop = nav.getByRole('link', { name: 'Shop', exact: true });
+  const shop = nav.getByRole('link', { name: 'Parts', exact: true });
   if (shopOn) await expect(shop).toHaveAttribute('href', '/shop/');
   else await expect(shop).toHaveCount(0);
   await expect(page.locator('.cart-btn')).toHaveAttribute('href', '/quote/');
@@ -871,7 +871,7 @@ test.describe('OEM part number index', () => {
       await expect(page.locator('main').getByRole('link', { name: /OEM part number index/ }).first(), url).toHaveAttribute('href', '/shop/part-numbers/');
     }
     await page.goto('/');
-    await expect(page.locator('footer').getByRole('navigation', { name: 'Shop' }).getByRole('link', { name: 'OEM part number index' })).toHaveAttribute('href', '/shop/part-numbers/');
+    await expect(page.locator('footer').getByRole('navigation', { name: 'Parts' }).getByRole('link', { name: 'OEM part number index' })).toHaveAttribute('href', '/shop/part-numbers/');
   });
 });
 
@@ -1357,11 +1357,120 @@ test.describe('stated facts', () => {
   });
 });
 
+test.describe('chrome: header buttons, print, short screens and reduced motion', () => {
+  const header = (page: Page) => page.locator('header.site-header');
+  const saveOneLine = (page: Page) =>
+    page.evaluate(() =>
+      localStorage.setItem('quote-list-v2', JSON.stringify({ ref: 'Q-261110-TEST', items: [{ key: 'x', id: 'x', title: 'Test line', qty: 1, kind: 'service' }] })),
+    );
+
+  test('desktop: one coloured button, "Get a Quote" when the list is empty and "Quote list" with the count when it is not', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/about/');
+    const quote = header(page).locator('.cart-btn');
+    await expect(quote).toBeVisible();
+    await expect(header(page).getByRole('link', { name: 'Get a Quote', exact: true })).toBeVisible();
+    await expect(header(page).locator('.shop-btn')).toBeHidden(); // the nav link is enough
+    if (shopOn) await expect(page.getByRole('navigation', { name: 'Main', exact: true }).getByRole('link', { name: 'Parts', exact: true })).toBeVisible();
+    const empty = await quote.boundingBox();
+
+    await saveOneLine(page);
+    await page.reload();
+    await expect(quote).toHaveAttribute('data-quote-has-items', 'true');
+    await expect(header(page).getByRole('link', { name: 'Quote list 1', exact: true })).toBeVisible();
+    await expect(quoteBadge(page)).toHaveText('1');
+    expect((await quote.boundingBox())!.width, 'the button keeps its width').toBe(empty!.width);
+  });
+
+  test('a saved list is flagged before first paint, so the header word is right before quote-store runs', async ({ page }) => {
+    await page.goto('/about/');
+    await saveOneLine(page);
+    // Empty the bundled scripts, so quote-store never runs: only public/quote-early.js may set the state.
+    await page.route('**/_astro/*.js', (route) => route.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-quote', 'filled');
+    await expect(header(page).locator('.cart-btn')).toHaveAttribute('data-quote-has-items', '');
+    await expect(header(page).locator('.cart-btn .qlabel__full')).toBeVisible();
+    await expect(header(page).locator('.cart-btn .qlabel__empty')).toBeHidden();
+  });
+
+  test('phones: no quote button in the header, a labelled Parts button and the menu link names the list', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/about/');
+    await expect(header(page).locator('.cart-btn')).toBeHidden();
+    await expect(page.locator('.mobile-bar').getByRole('link', { name: 'Get a Quote' })).toBeVisible();
+    const parts = header(page).locator('.shop-btn');
+    if (shopOn) {
+      await expect(parts).toBeVisible();
+      await expect(parts).toHaveText('Parts');
+      await expect(parts).toHaveClass(/btn--outline/);
+    } else await expect(parts).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Menu' }).click();
+    const menu = page.getByRole('navigation', { name: 'Main mobile' });
+    await expect(menu.getByRole('link', { name: 'Get a Quote', exact: true })).toBeVisible();
+    if (shopOn) await expect(menu.getByRole('link', { name: 'Parts', exact: true })).toHaveAttribute('href', '/shop/');
+
+    await saveOneLine(page);
+    await page.reload();
+    await page.getByRole('button', { name: 'Menu' }).click();
+    await expect(menu.getByRole('link', { name: 'Quote list (1)', exact: true })).toBeVisible();
+  });
+
+  test('the footer parts column is labelled Parts and goes with the shop', async ({ page }) => {
+    await page.goto('/');
+    const column = page.locator('footer').getByRole('navigation', { name: 'Parts', exact: true });
+    if (shopOn) await expect(column.getByRole('link', { name: 'Parts catalog' })).toHaveAttribute('href', '/shop/');
+    else await expect(column).toHaveCount(0);
+    await expect(page.locator('footer .cta .btn--red')).toHaveCount(1);
+    await expect(page.locator('footer').locator('.btn--dark, .btn--light')).toHaveCount(0);
+  });
+
+  test('print hides the header, bars, footer band and buttons and keeps the content on white', async ({ page, request }) => {
+    const urls = ['/quote/'];
+    if (shopOn) urls.push((await findPart(request)).u);
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const url of urls) {
+      await page.goto(url);
+      await page.emulateMedia({ media: 'print' });
+      for (const sel of ['.site-header', '.storebar', '.mobile-bar', '.addbar', 'main .btn']) {
+        for (const el of await page.locator(sel).all()) await expect(el, `${url} ${sel}`).toBeHidden();
+      }
+      await expect(page.locator('body')).toHaveCSS('background-image', 'none');
+      await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      if (url !== '/quote/') await expect(page.locator('.ident__oem')).toBeVisible();
+      await page.emulateMedia({ media: 'screen' });
+    }
+  });
+
+  for (const size of [
+    { width: 320, height: 256 },
+    { width: 844, height: 390 },
+  ]) {
+    test(`short screens (${size.width}x${size.height}): the header and the bottom bar scroll with the page`, async ({ page }) => {
+      await page.setViewportSize(size);
+      await page.goto('/about/');
+      await expect(page.locator('.site-header')).toHaveCSS('position', 'static');
+      await expect(page.locator('.mobile-bar')).toHaveCSS('position', 'static');
+      await expect(page.locator('body')).toHaveCSS('padding-bottom', '0px');
+      await expect(page.locator('html')).toHaveCSS('scroll-padding-top', 'auto');
+    });
+  }
+
+  test('reduced motion: no transitions and no smooth scrolling', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/industries/food-processing-agriculture/');
+    await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'auto');
+    await expect(page.locator('.card').first()).toHaveCSS('transition-duration', '0s');
+  });
+});
+
 test.describe('shared pages follow the parts shop switch', () => {
   test('llms.txt and the footer list the number index and the CSV only with the shop on', async ({ page, request }) => {
     const llms = await (await request.get('/llms.txt')).text();
     await page.goto('/');
-    const shopColumn = page.locator('footer').getByRole('navigation', { name: 'Shop' });
+    const shopColumn = page.locator('footer').getByRole('navigation', { name: 'Parts' });
     if (shopOn) {
       expect(llms).toContain(`(${SITE_ORIGIN}/shop/part-numbers/)`);
       expect(llms).toContain(`(${SITE_ORIGIN}/shop/catalog.csv)`);
