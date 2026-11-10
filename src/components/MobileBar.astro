@@ -12,8 +12,9 @@ import { site } from '../config/site';
     >
     Call
   </a>
-  <!-- quote-store's renderCount() flips data-quote-has-items and fills the count. -->
-  <a class="mobile-bar__quote" href="/quote/" data-quote-has-items="false">
+  <!-- quote-store's renderCount() flips data-quote-has-items and fills the count. Until it runs,
+       html[data-quote] (public/quote-early.js, loaded in Base.astro's head) picks the word. -->
+  <a class="mobile-bar__quote" href="/quote/" data-quote-has-items="">
     <span class="mb-empty">Get a Quote</span>
     <span class="mb-full">Review quote (<span data-quote-count hidden>0</span>)</span>
   </a>
@@ -56,8 +57,22 @@ import { site } from '../config/site';
   }
 
   .mobile-bar__quote[data-quote-has-items='true'] .mb-empty,
-  .mobile-bar__quote[data-quote-has-items='false'] .mb-full {
+  .mobile-bar__quote[data-quote-has-items='false'] .mb-full,
+  .mobile-bar__quote[data-quote-has-items=''] .mb-full,
+  :global(html[data-quote='filled']) .mobile-bar__quote[data-quote-has-items=''] .mb-empty {
     display: none;
+  }
+
+  :global(html[data-quote='filled']) .mobile-bar__quote[data-quote-has-items=''] .mb-full {
+    display: inline;
+  }
+
+  /* Short landscape screens and 400% zoom: the bar sits at the end of the page instead of over it. */
+  @media (max-height: 500px) {
+    .mobile-bar {
+      position: static;
+      box-shadow: none;
+    }
   }
 
   @media (min-width: 768px) {

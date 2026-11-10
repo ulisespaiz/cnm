@@ -6,11 +6,6 @@
   --store-header: 73px; /* sticky site header height */
   --store-bar: 65px; /* sticky search bar under the header */
   --store-stick: var(--store-header); /* where the list's sticky parts stick; see html:has(.storebar) below */
-  --oem-font: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
-}
-
-.container--wide {
-  max-width: 1320px;
 }
 
 /* ---------- photo box: always 3:4, contained, never cropped ---------- */
@@ -187,9 +182,20 @@
   white-space: nowrap;
 }
 
-.padd__add[data-state='added'] {
+.padd .padd__add[data-state='added'] {
   background: var(--color-success);
   border-color: var(--color-success);
+  color: #fff;
+}
+
+/* A row's Add (outline) sits on a white row */
+.prow .padd__add {
+  min-width: 88px;
+  background: #fff;
+}
+
+.prow .padd__add:hover {
+  background: var(--color-primary);
 }
 
 /* ---------- list ---------- */
@@ -430,12 +436,64 @@
   display: none;
 }
 
+/* Below the desktop table: about 100px a row. Add sits at the end of the number line and the C&M # goes under
+   the OEM #. On phones the quantity is set in the quote list, so the row has no stepper there; tablets keep it.
+   The part page keeps its stepper everywhere. */
+@media (max-width: 1199px) {
+  .prow {
+    grid-template-columns: 60px minmax(0, 1fr) auto;
+    grid-template-areas:
+      'thumb main main'
+      'thumb oem add'
+      'thumb cm add';
+    gap: 0 10px;
+    padding: 8px 12px;
+    /* content-box height: about 100px a row with 8px padding top and bottom and a 1px border */
+    contain-intrinsic-size: auto 84px;
+  }
+
+  .prow__name {
+    min-height: 32px;
+    padding-block: 2px;
+  }
+
+  .prow__cm {
+    margin-top: -4px;
+    font-size: 0.875rem;
+  }
+
+  .prow .padd {
+    grid-area: add;
+    align-self: center;
+    margin-top: 0;
+  }
+
+  .prow .padd__add {
+    flex: none;
+    min-width: 72px;
+    height: 44px;
+    min-height: 44px;
+    padding-inline: 14px;
+  }
+
+  .prow .qty__btn,
+  .prow .qty__input {
+    height: 44px;
+  }
+}
+
+@media (max-width: 767px) {
+  .prow .qty {
+    display: none;
+  }
+}
+
 /* The five-column table needs about 1200px with the filter sidebar beside it: below that the name
    column shrinks to nothing, so tablets and small laptops keep the compact row above. */
 @media (min-width: 1200px) {
   .plist__rows,
   .plist__head {
-    --cols: 72px minmax(0, 1fr) 196px 88px 300px;
+    --cols: 64px minmax(0, 1fr) 168px 84px 232px;
   }
 
   .plist__head {
@@ -500,7 +558,7 @@
   }
 
   .prow .padd__add {
-    min-width: 150px;
+    min-width: 88px;
   }
 }
 
@@ -528,6 +586,83 @@
 
 .pempty[hidden] {
   display: none;
+}
+
+.pempty p {
+  max-width: 60ch;
+  margin-inline: auto;
+}
+
+.pempty__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 20px;
+  margin: 8px auto 0;
+}
+
+.pempty__links a,
+.pmore__paste {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+/* The end of every parts list: "Don't see your part number?" with the request button */
+.pmore {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-top: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-accent);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.pmore[hidden],
+.pdown[hidden] {
+  display: none;
+}
+
+.pmore__title {
+  margin: 0 0 4px;
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+}
+
+.pmore__text p {
+  margin: 0;
+  color: #333;
+}
+
+.pmore__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 20px;
+}
+
+/* Search requested but the index did not load: say so above the (whole) list */
+.pdown {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border: 1px solid #f3c4bf;
+  border-radius: var(--radius);
+  background: #fff8f8;
+}
+
+.pdown p {
+  flex: 1 1 22rem;
+  margin: 0;
 }
 
 /* "Searching…" stands in for the rows until the search index is ready (see html[data-q] below) */
@@ -720,6 +855,39 @@ html:has(.storebar) {
   html:has(.storebar--static) {
     --store-stick: var(--store-header);
   }
+
+  /* Phones, on list pages with the sticky search bar (section pages, the machine hub): the site header scrolls
+     away with the page, so only the search bar (top) and the Call / quote bar (bottom) stay on screen. The
+     header keeps its stacking (position: relative), so its menu still opens over the page. */
+  html:has(.storebar:not(.storebar--static)) {
+    --store-header: 0px;
+  }
+
+  html:has(.storebar:not(.storebar--static)) .site-header {
+    position: relative;
+  }
+}
+
+/* Short screens (a phone on its side, or a page zoomed to 400%): the search bar and the part page's add bar
+   scroll with the page instead of covering half of it. */
+@media (max-height: 500px) {
+  .storebar {
+    position: static;
+  }
+
+  html:has(.storebar) {
+    --store-stick: var(--store-header);
+  }
+
+  .addbar {
+    position: static !important;
+    margin-inline: calc(-1 * var(--gutter));
+    box-shadow: none;
+  }
+
+  body:has(.addbar) {
+    padding-bottom: 0 !important;
+  }
 }
 
 html:has([data-plist] .phead) {
@@ -754,6 +922,7 @@ html[data-q]:not([data-q-ready]) .plist__searching {
 }
 
 html[data-q]:not([data-q-ready]) .plist__rows,
+html[data-q]:not([data-q-ready]) .pmore,
 html[data-q]:not([data-q-ready]) .shop__request {
   display: none;
 }
@@ -982,6 +1151,66 @@ html[data-ps-open] [data-ps-under] {
   margin-top: 12px;
 }
 
+.ps-empty__actions .btn {
+  overflow-wrap: anywhere;
+}
+
+.ps-empty__call {
+  margin: 10px 0 0 !important;
+  color: #333;
+}
+
+.ps-empty__call a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+/* A link inside a sentence: 44px to tap without opening up the line */
+.ps-empty--down p a,
+.pdown p a {
+  display: inline-block;
+  padding-block: 10px;
+  margin-block: -10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Last row of a list of results: "Not the part you need? Request a quote for <query>" */
+.ps-ask {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 0;
+  border-top: 1px solid #eee;
+  background: #fff;
+  color: #333;
+  font: 500 0.95rem/1.35 var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ps-ask:hover {
+  background: var(--color-tint);
+}
+
+.ps-ask:focus-visible {
+  outline-offset: -3px;
+}
+
+.ps-ask__go {
+  color: var(--color-accent-hover);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.ps-ask__q {
+  font-family: var(--oem-font);
+  overflow-wrap: anywhere;
+}
+
 /* ---------- misc ---------- */
 .back-link {
   display: inline-flex;
@@ -1007,10 +1236,20 @@ html[data-ps-open] [data-ps-under] {
 }
 
 .store-disclaimer {
+  max-width: 70ch;
   margin: 0;
   color: #555;
   font-size: 0.8125rem;
   line-height: 1.5;
+}
+
+/* Shop pages without JavaScript: where the parts and the quote request still work */
+.store-noscript {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #fff;
 }
 
 .store-hint {

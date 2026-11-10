@@ -4,20 +4,30 @@ import { render } from 'astro:content';
 import { Image, getImage } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
-import AddToQuote from '../../components/AddToQuote.astro';
 import { site } from '../../config/site';
-import { getServices, serviceUrl } from '../../lib/content';
+import { getEquipment, getServices, serviceHeading, serviceTeaser, serviceUrl } from '../../lib/content';
 import { areaServed, breadcrumbs, faqPage } from '../../lib/schema';
 
 export const getStaticPaths = (async () => {
   const services = await getServices();
-  return services.map((service) => ({ params: { slug: service.id }, props: { service, services } }));
+  const equipment = await getEquipment();
+  return services.map((service) => ({
+    params: { slug: service.id },
+    // The machines whose `service` (src/content/equipment.json) is this one: the page links to each on /our-machinery/.
+    props: { service, services, machines: equipment.filter((m) => m.data.service?.id === service.id) },
+  }));
 }) satisfies GetStaticPaths;
 
-const { service, services } = Astro.props;
+const { service, services, machines } = Astro.props;
 const { data } = service;
 const { Content } = await render(service);
+// The summary is the page's lead paragraph; the Markdown body holds only what it adds (it may be empty).
+const hasBody = Boolean(service.body?.trim());
 const url = serviceUrl(service);
+// h1 and on-page headings ("CNC Machining"); breadcrumbs, cards and JSON-LD keep data.title ("Machining").
+const heading = serviceHeading(service);
+// The quote form reads ?service=<id> and #details is its details form (src/pages/quote/index.astro).
+const quoteUrl = `/quote/?service=${service.id}#details`;
 const others = services.filter((s) => s.id !== service.id);
 const crumbs = [
   { name: 'Home', path: '/' },
@@ -67,42 +77,64 @@ const serviceSchema = {
       <Breadcrumbs items={crumbs} />
       <div class="service">
         <div>
-          <p class="eyebrow">Services</p>
-          <h1>{data.title}</h1>
+          <p class="eyebrow">Services · {site.address.city}, {site.address.region}</p>
+          <h1>{heading}</h1>
+          <p class="lead">{data.summary}</p>
           {data.image && (
             <Image class="service__image" src={data.image} alt={data.imageAlt ?? data.title} widths={[480, 680, 800, 1100]} sizes="(min-width: 900px) 700px, calc(100vw - 32px)" loading="eager" fetchpriority="high" />
           )}
-          <div class="prose">
-            <Content />
-          </div>
+          {hasBody && (
+            <div class="prose">
+              <Content />
+            </div>
+          )}
 
           {data.capabilities.length > 0 && (
-            <ul class="capabilities">
-              {data.capabilities.map((c) => (
-                <li>
-                  <h2 class="h3">{c.name}</h2>
-                  <p>{c.text}</p>
-                </li>
-              ))}
-            </ul>
+            <>
+              <h2 class="service__h2">Capabilities</h2>
+              <ul class="capabilities">
+                {data.capabilities.map((c) => (
+                  <li>
+                    <h3>{c.name}</h3>
+                    <p>{c.text}</p>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
 
           {data.materials.length > 0 && (
             <>
-              <h2 class="h3">{data.materialsLabel}</h2>
+              <h2 class="service__h2">{data.materialsLabel}</h2>
               <ul class="chips">
                 {data.materials.map((m) => <li>{m}</li>)}
               </ul>
             </>
           )}
 
+          {machines.length > 0 && (
+            <>
+              <h2 class="service__h2">Machines we use</h2>
+              <ul class="chips chips--links">
+                {machines.map((m) => <li><a href={`/our-machinery/#${m.id}`}>{m.data.name}</a></li>)}
+              </ul>
+            </>
+          )}
+
+          <ul class="service__more">
+            <li><a href="/our-machinery/">{machines.length > 0 ? 'See all our machinery' : 'See our machinery'}</a></li>
+            <li><a href="/industries/food-processing-agriculture/">How we serve food processing &amp; agriculture</a></li>
+          </ul>
         </div>
 
-        <aside class="service__quote">
-          <h2 class="h3">Request a quote</h2>
-          <p class="muted">Add this service to your quote list, then send the details.</p>
-          <AddToQuote id={`service:${service.id}`} title={data.title} url={url} label="Add to Quote" />
-          <p class="muted service__call">Or call <a href={`tel:${site.phoneE164}`}>{site.phone}</a></p>
+        <aside class="service__quote" aria-labelledby="service-quote-title">
+          <h2 class="h3" id="service-quote-title">Have a job for us?</h2>
+          <p class="muted">Tell us about the part or project, or call the shop.</p>
+          <div class="service__actions">
+            <a class="btn btn--red" href={quoteUrl}>Request a quote</a>
+            <a class="btn btn--outline" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
+          </div>
+          <p class="service__reply">{site.replyTime}.</p>
           <p class="muted service__areas">Based in {site.address.city}. <a href="/service-areas/">See the areas we serve</a></p>
         </aside>
       </div>
@@ -112,7 +144,7 @@ const serviceSchema = {
   {data.faqs.length > 0 && (
     <section class="section">
       <div class="container faq-wrap">
-        <h2>{data.title}: common questions</h2>
+        <h2>{heading}: common questions</h2>
         {data.faqs.map((f, i) => (
           <details class="faq" open={i === 0}>
             <summary>{f.q}</summary>
@@ -132,7 +164,7 @@ const serviceSchema = {
             <a class="card" href={serviceUrl(s)}>
               <div class="card__body">
                 <h3>{s.data.title}</h3>
-                <p class="muted">{s.data.summary}</p>
+                <p class="muted">{serviceTeaser(s)}</p>
               </div>
             </a>
           ))}
@@ -190,8 +222,22 @@ const serviceSchema = {
     box-shadow: var(--shadow);
   }
 
-  .service__call {
-    margin-top: 12px;
+  /* Quote and Call side by side while both fit on one line each; stacked, full width, when they do not. */
+  .service__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .service__actions .btn {
+    flex: 1 1 auto;
+    padding-inline: 14px;
+    white-space: nowrap;
+  }
+
+  .service__reply {
+    margin: 14px 0 12px;
+    font-weight: 600;
   }
 
   .service__areas {
@@ -207,16 +253,30 @@ const serviceSchema = {
     margin-bottom: 24px;
   }
 
+  .service .lead {
+    margin-bottom: 24px;
+  }
+
   .h3 {
     font-size: 1.2rem;
+  }
+
+  /* Section headings inside the service column: h2 in the outline, sized as sub-headings (as .service .prose h2 is) */
+  .service__h2 {
+    margin-top: 1.5em;
+    font-size: 1.5rem;
   }
 
   .capabilities {
     display: grid;
     gap: 16px;
     padding: 0;
-    margin: 24px 0;
+    margin: 0 0 24px;
     list-style: none;
+  }
+
+  .capabilities h3 {
+    font-size: 1.15rem;
   }
 
   @media (min-width: 640px) {
@@ -250,5 +310,39 @@ const serviceSchema = {
     border: 1px solid var(--color-border);
     border-radius: 999px;
     font-size: 0.95rem;
+  }
+
+  /* Chips that are links (the machines): the whole chip is the tap target, 44px tall */
+  .chips--links li {
+    padding: 0;
+  }
+
+  .chips--links a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 6px 16px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .chips--links a:hover {
+    text-decoration: underline;
+  }
+
+  .service__more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 24px;
+    margin: 24px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .service__more a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
   }
 </style>

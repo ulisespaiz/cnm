@@ -44,6 +44,8 @@ const photos = await Promise.all(d.images.map(photoOf));
 const add = await addData(part, sectionTitle);
 const related = relatedParts(part, all, 4);
 const { prev, next } = neighbours(part, all);
+// Parts that share this part's OEM number (the owner marked them oemVerify): each page links to the other.
+const sameNumber = d.oemKey ? all.filter((p) => p.id !== part.id && p.data.oemKey === d.oemKey) : [];
 
 // With no lead time on file the shop's standing line ("Lead time confirmed on your quote") would repeat the row's label.
 const askLeadTime = leadTime() === site.store.leadTimeFallback ? 'Confirmed on your quote' : leadTime();
@@ -59,6 +61,9 @@ const specs: { label: string; value: string; mono?: boolean }[] = [
   ...(d.attrs.width ? [{ label: 'Width', value: `${d.attrs.width}″` }] : []),
   ...(d.attrs.side ? [{ label: 'Side', value: d.attrs.side === 'LH' ? 'Left (LH)' : 'Right (RH)' }] : []),
   ...(d.attrs.size ? [{ label: 'Size', value: d.attrs.size }] : []),
+  // Other names and other spellings of the number, from the catalog (never the owner's notes or the raw name)
+  ...(d.aka.length ? [{ label: 'Also called', value: d.aka.join(', ') }] : []),
+  ...(d.oemAlt.length ? [{ label: 'Also written as', value: d.oemAlt.join(', '), mono: true }] : []),
   ...(d.note ? [{ label: 'Note', value: d.note }] : []),
   { label: 'Lead time', value: availability },
 ];
@@ -170,10 +175,16 @@ const jsonLd = [
   hideMobileBar
 >
   <div class="storebar storebar--static">
-    <div class="container container--wide"><PartSearch variant="bar" /></div>
+    <div class="container"><PartSearch variant="bar" /></div>
   </div>
 
-  <div class="container container--wide part-page">
+  <div class="container part-page">
+    <noscript>
+      <p class="store-noscript">
+        Search and Add to Quote need JavaScript. Find your number in the <a href="/shop/part-numbers/">OEM part number index</a>
+        and send it to us on the <a href="/quote/">quote page</a>.
+      </p>
+    </noscript>
     <div class="crumbs-desktop">
       <Breadcrumbs items={crumbs} />
     </div>
@@ -204,7 +215,22 @@ const jsonLd = [
                 </button>
               </p>
             ) : (
-              <p class="ident__none">This part has no OEM number. Give us the C&amp;M number when you ask for a quote.</p>
+              <p class="ident__none">This part has no OEM part number. Give us the C&amp;M number when you ask for a quote.</p>
+            )
+          }
+          {
+            sameNumber.length > 0 && (
+              <p class="ident__shared">
+                {sameNumber.length === 1 ? 'Another part uses' : `${sameNumber.length} other parts use`} this OEM part number:{' '}
+                {sameNumber.map((p, n) => (
+                  <>
+                    {n > 0 && ', '}
+                    <a href={partUrl(p)}>
+                      {p.data.name} <span class="nowrap">({p.data.cm})</span>
+                    </a>
+                  </>
+                ))}
+              </p>
             )
           }
         </div>
@@ -225,6 +251,11 @@ const jsonLd = [
           <PartAdd data={add} variant="page" />
         </div>
         <StickyAddBar data={add} />
+        {/* For a visitor on the wrong part, or after one the catalog does not have */}
+        <ul class="part__other">
+          <li>Not the part you need? <a href="#request" data-request-part data-query="">Send us your part number</a></li>
+          <li>Need something that is not in the catalog? <a href="/services/machining/">We machine parts to a sample or a print.</a></li>
+        </ul>
 
         <TrustStrip variant="list" limit={3} />
         <a class="part__call btn btn--outline" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
@@ -241,13 +272,6 @@ const jsonLd = [
           }
         </dl>
 
-        {
-          d.aka.length > 0 && (
-            <p class="part__aka">
-              <strong>Also known as:</strong> {d.aka.join(', ')}
-            </p>
-          )
-        }
       </div>
     </article>
 
@@ -491,8 +515,36 @@ const jsonLd = [
     font-weight: 700;
   }
 
-  .part__aka {
+  .ident__shared {
+    margin: 10px 0 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border);
+    color: #333;
+    font-size: 0.95rem;
+  }
+
+  .ident__shared a {
+    font-weight: 600;
+  }
+
+  .ident__shared .nowrap {
+    white-space: nowrap;
+  }
+
+  .part__other {
+    display: grid;
+    gap: 2px;
     margin: 0;
+    padding: 0;
+    list-style: none;
+    color: #333;
+  }
+
+  .part__other a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
   }
 
   .rel {

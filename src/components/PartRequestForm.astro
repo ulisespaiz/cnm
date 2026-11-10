@@ -9,6 +9,9 @@
 // without JavaScript): the <fieldset data-reach> is checked by src/scripts/web3forms-submit.ts.
 import { site } from '../config/site';
 import { forms } from '../config/forms';
+import { replyParts } from './store';
+
+const reply = replyParts();
 
 interface Props {
   compact?: boolean;
@@ -26,7 +29,12 @@ const Heading = compact ? 'h3' : 'h2';
 
 <section class:list={['part-request', { 'part-request--compact': compact }]} id="request" data-part-request-box>
   <Heading class="part-request__title">{heading}</Heading>
-  <p class="pr__lead">{shopOn ? <>Send us the OEM part number and we'll check it.</> : <>Send us the part number and we'll check it and quote it.</>} {site.replyTime}.</p>
+  {/* The offer first (site.store.madeTo and the reply time from src/config/site.ts), then the short form */}
+  <p class="pr__offer">{site.store.madeTo}.</p>
+  <p class="pr__lead">
+    {shopOn ? <>Send us the OEM part number and we'll check it and quote it.</> : <>Send us the part number and we'll check it and quote it.</>}{' '}
+    <strong class="pr__reply">{reply[0]}<span class="nowrap">{reply[1]}</span>{reply[2]}.</strong>
+  </p>
 
   <form
     class="pr__form"
@@ -103,7 +111,7 @@ const Heading = compact ? 'h3' : 'h2';
       </div>
     </fieldset>
 
-    <button class="btn btn--block" type="submit" data-submit>Send part request →</button>
+    <button class="btn btn--red btn--block" type="submit" data-submit>Send part request →</button>
     <p class="pr__status" role="status" aria-live="polite" data-form-status></p>
   </form>
 
@@ -143,9 +151,26 @@ const Heading = compact ? 'h3' : 'h2';
     font-size: 1.2rem;
   }
 
+  .pr__offer {
+    margin: 0 0 2px;
+    color: #111;
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .part-request--compact .pr__offer {
+    font-size: 1rem;
+  }
+
   .pr__lead {
     margin-bottom: 16px;
-    color: var(--color-muted);
+    color: #444;
+  }
+
+  .pr__reply {
+    color: #222;
+    font-weight: 600;
   }
 
   .req {

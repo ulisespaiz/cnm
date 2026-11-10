@@ -38,7 +38,10 @@ export interface ParsedLine {
 }
 
 export interface Matcher {
+  /** The first part the text names (catalog order), or null. */
   find(text: string): IndexRecord | null;
+  /** Every part the text names: two parts can share one OEM number, and neither may be dropped. */
+  findAll(text: string): IndexRecord[];
 }
 
 const nameKey = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -50,13 +53,18 @@ const MAX_LEAD_WORDS = 2;
 const wordsOf = (s: string) => s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
 
 export function buildMatcher(index: IndexRecord[]): Matcher {
-  const byKey = new Map<string, IndexRecord>();
+  // Every record per key: a number that two parts share (the owner marked them oemVerify) keeps both, in
+  // catalog order, so a pasted line or a ?part= link can never quietly stand for only one of them.
+  const byKey = new Map<string, IndexRecord[]>();
   const numberKeys = new Set<string>();
   const byCm = new Map<string, IndexRecord>();
   const known = new Set<string>(); // every word some part name, other name or section uses
   const put = (key: string, rec: IndexRecord, isNumber = false) => {
     if (!key) return;
-    if (!byKey.has(key)) byKey.set(key, rec);
+    const list = byKey.get(key);
+    if (!list) byKey.set(key, [rec]);
+    // A name never joins a number's list (numbers go in first), and a name keeps its first part.
+    else if (isNumber && numberKeys.has(key) && !list.includes(rec)) list.push(rec);
     if (isNumber) numberKeys.add(key);
   };
   // Part numbers first so a name can never shadow a number. A part with no OEM
@@ -82,28 +90,44 @@ export function buildMatcher(index: IndexRecord[]): Matcher {
     }
   }
 
-  return {
-    find(text) {
-      const full = text.trim();
-      let rest = full;
-      for (let skipped = 0; ; skipped++) {
-        const cm = cmKey(rest);
-        if (cm) return byCm.get(cm) ?? null;
-        // A name may be matched after skipping words only when no part uses those words; a number always may.
-        const nameOk = wordsOf(full.slice(0, full.length - rest.length)).every((w) => !known.has(w));
-        for (const v of queryVariants(rest)) {
-          const hit = byKey.get(v);
-          if (hit && (nameOk || numberKeys.has(v))) return hit;
-        }
-        const nk = nameKey(rest);
-        const byName = nameOk && nk ? byKey.get(nk) : undefined;
-        if (byName) return byName;
-        const next = rest.replace(LEAD_WORD, '');
-        if (skipped >= MAX_LEAD_WORDS || next === rest) return null;
-        rest = next;
+  function findAll(text: string): IndexRecord[] {
+    const full = text.trim();
+    let rest = full;
+    for (let skipped = 0; ; skipped++) {
+      const cm = cmKey(rest);
+      if (cm) {
+        const rec = byCm.get(cm);
+        return rec ? [rec] : [];
       }
-    },
+      // A name may be matched after skipping words only when no part uses those words; a number always may.
+      const nameOk = wordsOf(full.slice(0, full.length - rest.length)).every((w) => !known.has(w));
+      for (const v of queryVariants(rest)) {
+        const hit = byKey.get(v);
+        if (hit && (nameOk || numberKeys.has(v))) return [...hit];
+      }
+      const nk = nameKey(rest);
+      const byName = nameOk && nk ? byKey.get(nk) : undefined;
+      if (byName) return [...byName];
+      const next = rest.replace(LEAD_WORD, '');
+      if (skipped >= MAX_LEAD_WORDS || next === rest) return [];
+      rest = next;
+    }
+  }
+
+  return {
+    findAll,
+    find: (text) => findAll(text)[0] ?? null,
   };
+}
+
+/** A pasted line, or a typed number, that looks like a part number: worth quoting even when the catalog does
+ * not list it. A C&M number, or four digits or more in a run of 5 to 20 letters and digits. A line of words
+ * ("thanks", "see attached") is not. */
+export function looksLikePartNumber(text: string): boolean {
+  if (cmKey(text)) return true;
+  const key = oemKey(text);
+  const digits = (key.match(/\d/g) ?? []).length;
+  return key.length >= 5 && key.length <= 20 && digits >= 4 && text.trim().split(/\s+/).length <= 3;
 }
 
 interface Candidate {
@@ -165,15 +189,16 @@ function candidates(raw: string): Candidate[] {
   return out;
 }
 
-// Longest run of leading words that is a known part ("03187 A0897 Rail guide").
-function matchCandidate(c: Candidate, matcher: Matcher): { rec: IndexRecord; note?: string; qty: number } | null {
-  const whole = matcher.find(c.text);
-  if (whole) return { rec: whole, note: c.note, qty: c.qty };
+// Longest run of leading words that is a known part ("03187 A0897 Rail guide"). recs holds more than one
+// part when the number is one that several parts share.
+function matchCandidate(c: Candidate, matcher: Matcher): { recs: IndexRecord[]; note?: string; qty: number } | null {
+  const whole = matcher.findAll(c.text);
+  if (whole.length) return { recs: whole, note: c.note, qty: c.qty };
   if (!c.prefix) return null;
   const words = c.text.split(/\s+/);
   for (let n = Math.min(words.length - 1, 4); n >= 1; n--) {
-    const rec = matcher.find(words.slice(0, n).join(' '));
-    if (!rec) continue;
+    const recs = matcher.findAll(words.slice(0, n).join(' '));
+    if (!recs.length) continue;
     let rest = words.slice(n);
     let qty = c.qty;
     // "03187A0897 x2, Rail guide": a quantity right after the number
@@ -182,7 +207,7 @@ function matchCandidate(c: Candidate, matcher: Matcher): { rec: IndexRecord; not
       qty = Number(q[1]);
       rest = rest.slice(1);
     }
-    return { rec, qty, note: [rest.join(' '), c.note].filter(Boolean).join(' ') || undefined };
+    return { recs, qty, note: [rest.join(' '), c.note].filter(Boolean).join(' ') || undefined };
   }
   return null;
 }
@@ -195,18 +220,32 @@ export interface MatchedLine {
   lines: number[]; // source line numbers merged into this row
 }
 
-export interface UnmatchedLine {
-  kind: 'miss';
-  /** The part number as typed (what "Add anyway" will use). */
-  text: string;
+/** A number that more than one part shares: the visitor chooses, and nothing is chosen for them. */
+export interface ChoiceLine {
+  kind: 'choose';
+  recs: IndexRecord[]; // two or more parts, in catalog order
   qty: number;
   note?: string;
   lines: number[];
 }
 
+export interface UnmatchedLine {
+  kind: 'miss';
+  /** The part number as typed (what "Add anyway" will use). */
+  text: string;
+  /** It has the shape of a part number (see looksLikePartNumber): offered ticked, to be checked and quoted. */
+  likely: boolean;
+  qty: number;
+  note?: string;
+  lines: number[];
+}
+
+export type BulkRow = MatchedLine | ChoiceLine | UnmatchedLine;
+
 export interface BulkResult {
-  rows: (MatchedLine | UnmatchedLine)[];
+  rows: BulkRow[];
   matched: number;
+  choose: number; // rows whose number several parts share
   missing: number;
   merged: number; // lines folded into an earlier duplicate
   tooMany: boolean;
@@ -253,10 +292,10 @@ export function parseBulk(text: string, matcher: Matcher): BulkResult {
     .split(/\r?\n/)
     .map((raw, i) => ({ raw: raw.trim(), line: i + 1 }))
     .filter((l) => l.raw);
-  const result: BulkResult = { rows: [], matched: 0, missing: 0, merged: 0, tooMany: lines.length > MAX_LINES, total: lines.length };
+  const result: BulkResult = { rows: [], matched: 0, choose: 0, missing: 0, merged: 0, tooMany: lines.length > MAX_LINES, total: lines.length };
   if (result.tooMany) return result;
 
-  const byRec = new Map<string, MatchedLine>();
+  const byRec = new Map<string, MatchedLine | ChoiceLine>(); // one part's id, or the ids of the parts that share a number
   const byText = new Map<string, UnmatchedLine>();
 
   for (const { raw, line } of lines) {
@@ -269,14 +308,18 @@ export function parseBulk(text: string, matcher: Matcher): BulkResult {
 
     if (hit) {
       const q = clampQty(hit.qty);
-      const prev = byRec.get(hit.rec.i);
+      const key = hit.recs.map((r) => r.i).join(' ');
+      const prev = byRec.get(key);
       if (prev) {
         prev.qty = clampQty(prev.qty + q);
         prev.lines.push(line);
         result.merged++;
       } else {
-        const row: MatchedLine = { kind: 'match', rec: hit.rec, qty: q, note: hit.note, lines: [line] };
-        byRec.set(hit.rec.i, row);
+        const row: MatchedLine | ChoiceLine =
+          hit.recs.length > 1
+            ? { kind: 'choose', recs: hit.recs, qty: q, note: hit.note, lines: [line] }
+            : { kind: 'match', rec: hit.recs[0], qty: q, note: hit.note, lines: [line] };
+        byRec.set(key, row);
         result.rows.push(row);
       }
       continue;
@@ -290,13 +333,20 @@ export function parseBulk(text: string, matcher: Matcher): BulkResult {
       prev.lines.push(line);
       result.merged++;
     } else {
-      const row: UnmatchedLine = { kind: 'miss', text: g.text, qty: clampQty(g.qty), note: g.note, lines: [line] };
+      const row: UnmatchedLine = { kind: 'miss', text: g.text, likely: looksLikePartNumber(g.text), qty: clampQty(g.qty), note: g.note, lines: [line] };
       byText.set(key, row);
       result.rows.push(row);
     }
   }
 
   result.matched = result.rows.filter((r) => r.kind === 'match').length;
-  result.missing = result.rows.length - result.matched;
+  result.choose = result.rows.filter((r) => r.kind === 'choose').length;
+  result.missing = result.rows.length - result.matched - result.choose;
   return result;
+}
+
+/** The note on a line for a number several parts share, when the visitor did not say which: it names them all,
+ * by name and C&M number, so the shop can confirm which one is meant. */
+export function sharedNote(recs: IndexRecord[]): string {
+  return `${recs.length} parts share this OEM #: ${recs.map((r) => `${r.n} (${r.c})`).join(' or ')}. We'll confirm which one you need.`;
 }

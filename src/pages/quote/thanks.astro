@@ -29,19 +29,11 @@ import { site } from '../../config/site';
 
         <section class="tcard" aria-labelledby="more-title">
           <h2 id="more-title" class="tcard__title">Need anything else?</h2>
+          {/* Three places to go, each a different page: parts (shop on), services, home */}
           <div class="thanks__links">
-            {site.store.enabled ? (
-              <>
-                <a class="btn" href="/shop/">Browse the catalog</a>
-                <a class="btn btn--outline" href="/shop/">Search by part number</a>
-                <a class="btn btn--outline" href="/">Back to home</a>
-              </>
-            ) : (
-              <>
-                <a class="btn" href="/">Back to home</a>
-                <a class="btn btn--outline" href="/services/">Our services</a>
-              </>
-            )}
+            {site.store.enabled && <a class="btn" href="/shop/">Browse parts</a>}
+            <a class:list={['btn', { 'btn--outline': site.store.enabled }]} href="/services/">Our services</a>
+            <a class="btn btn--outline" href="/">Back to home</a>
           </div>
         </section>
       </div>
@@ -135,7 +127,7 @@ import { site } from '../../config/site';
   }
 
   .thanks__ref strong {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: var(--oem-font, ui-monospace, monospace);
     font-size: 1.15rem;
     letter-spacing: 0.03em;
   }

@@ -80,6 +80,26 @@ test.describe('public/_redirects', () => {
     }
   });
 
+  // A visitor (and a crawler) must reach the page in one redirect. A rule whose target is matched by
+  // another rule's source would be followed by a second redirect.
+  test('no rule redirects to an address that another rule redirects again', () => {
+    // A source pattern as a regular expression: * matches anything, :name matches one path segment.
+    const pattern = (from: string) => {
+      const body = from
+        .replace(/[.+?^$()|[\]{}\\]/g, '\\$&')
+        .replace(/\*/g, '.*')
+        .replace(/:[a-z]+/g, '[^/]+');
+      return new RegExp('^' + body + '$');
+    };
+    const matchers = source.map((r) => ({ rule: r, re: pattern(r.from) }));
+    for (const rule of source) {
+      // A target with placeholders is checked with sample values in their place.
+      const target = rule.to.replace(':splat', 'a/b/').replace(/:[a-z]+/g, 'a');
+      const again = matchers.find((m) => m.re.test(target));
+      expect(again?.rule.from, `${rule.from} -> ${rule.to} is redirected again by line ${again?.rule.line}`).toBeUndefined();
+    }
+  });
+
   test('with the shop off, every shop rule in dist/_redirects is a 302 to /quote/', () => {
     test.skip(shopOn || !existsSync('dist/_redirects'), 'the parts shop is on in this build');
     const built = rulesOf('dist/_redirects');

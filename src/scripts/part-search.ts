@@ -190,10 +190,17 @@ export const esc = (s: string) =>
 
 /* ---------- "Request this part" ---------- */
 
+// Opens the page's part request form (#request), prefilled with the query. A page without that form sends the
+// visitor to the quote page with the number, where it becomes a line of the quote list.
 export function requestPart(query: string) {
-  document.dispatchEvent(new CustomEvent('part-request:prefill', { detail: { query } }));
   const target = document.getElementById('request');
-  target?.closest('details')?.setAttribute('open', '');
+  if (!target) {
+    const q = query.trim();
+    location.href = q ? `/quote/?part=${encodeURIComponent(q)}` : '/quote/#cant-find';
+    return;
+  }
+  document.dispatchEvent(new CustomEvent('part-request:prefill', { detail: { query } }));
+  target.closest('details')?.setAttribute('open', '');
   scrollToEl(target);
 }
 
@@ -220,7 +227,12 @@ function initBox(root: HTMLElement) {
   let hits: Hit[] = [];
 
   const phone = { label: root.dataset.phone ?? '', tel: root.dataset.tel ?? '' };
-  const reply = root.dataset.reply ?? '';
+  const range = root.dataset.replyRange ?? '';
+  // "We reply within <span class=nowrap>1–2 business days</span>.": the range never breaks after its dash
+  const replyText = esc(root.dataset.reply ?? '');
+  const reply = range ? replyText.replace(esc(range), () => `<span class="nowrap">${esc(range)}</span>`) : replyText;
+  const madeTo = root.dataset.madeTo ?? '';
+  let failed = false; // the search index could not be loaded (the last try failed)
 
   const links = () => [...list.querySelectorAll<HTMLElement>('.ps-hit__link')];
 
@@ -263,8 +275,16 @@ function initBox(root: HTMLElement) {
       return show(false);
     }
     if (!entries.length) {
-      // index still loading: results appear as soon as it arrives
-      return;
+      // The index is still loading: results appear as soon as it arrives. If it could not load, say so here,
+      // where the visitor is typing, with the two ways to reach the shop that need no search.
+      if (!failed) return;
+      list.innerHTML = '';
+      list.hidden = true;
+      status.textContent = 'Search is unavailable right now';
+      extra.innerHTML = `<div class="ps-empty ps-empty--down" data-ps-down><p class="ps-empty__title">Search is unavailable right now</p>
+        <p>Call <a href="tel:${esc(phone.tel)}">${esc(phone.label)}</a>, or send us the part number and we'll check it. ${reply}</p>
+        <div class="ps-empty__actions"><button type="button" class="btn btn--red btn--block" data-request-part data-query="${esc(q)}">Request a quote for ${esc(q)}</button></div></div>`;
+      return show(true);
     }
     hits = search(q);
     list.hidden = !hits.length;
@@ -272,10 +292,11 @@ function initBox(root: HTMLElement) {
       list.innerHTML = '';
       if (q.length < 2) return show(false);
       status.textContent = `No match for ${q}`;
+      // Nothing found is the moment to ask: the request is the one big action, with the reason to send it.
       extra.innerHTML = `<div class="ps-empty"><p class="ps-empty__title">No match for “${esc(q)}”</p>
-        <p>Request this part by number. ${esc(reply)}</p>
-        <div class="ps-empty__actions"><button type="button" class="btn btn--red" data-request-part data-query="${esc(q)}">Request this part</button>
-        <a class="btn btn--outline" href="tel:${esc(phone.tel)}">Call ${esc(phone.label)}</a></div></div>`;
+        <p><strong>${esc(madeTo)}.</strong> Send us the number and we'll check it and quote it. ${reply}</p>
+        <div class="ps-empty__actions"><button type="button" class="btn btn--red btn--block" data-request-part data-query="${esc(q)}">Request a quote for ${esc(q)}</button></div>
+        <p class="ps-empty__call">Or call <a href="tel:${esc(phone.tel)}">${esc(phone.label)}</a></p></div>`;
       return show(true);
     }
     // A plain list: each result is a link plus its own Add button, both reached with Tab;
@@ -291,10 +312,10 @@ function initBox(root: HTMLElement) {
         <button type="button" class="ps-hit__add" data-ps-add="${n}" aria-label="Add ${esc(h.rec.o || h.rec.c)} ${esc(h.rec.n)} to quote">Add</button></li>`,
       )
       .join('');
-    extra.innerHTML =
-      hits.length > MAX
-        ? `<button type="button" class="ps-more" data-ps-all>See all ${hits.length} results</button>`
-        : '';
+    // Last row: results that are not the part are still a request, so the way to send one is always there.
+    extra.innerHTML = `${
+      hits.length > MAX ? `<button type="button" class="ps-more" data-ps-all>See all ${hits.length} results</button>` : ''
+    }<button type="button" class="ps-ask" data-request-part data-query="${esc(q)}">Not the part you need? <span class="ps-ask__go">Request a quote for <span class="ps-ask__q">${esc(q)}</span></span></button>`;
     status.textContent = `${hits.length} ${hits.length === 1 ? 'result' : 'results'}`;
     show(true);
   }
@@ -330,7 +351,15 @@ function initBox(root: HTMLElement) {
   // from under the pointer mid-click.
   const ensure = () => {
     if (entries.length) return;
-    void loadIndex().then(render).catch(() => {});
+    void loadIndex()
+      .then(() => {
+        failed = false;
+        render();
+      })
+      .catch(() => {
+        failed = true; // loadIndex forgets a failed load, so the next keystroke tries again
+        render();
+      });
   };
 
   input.addEventListener('focus', () => {

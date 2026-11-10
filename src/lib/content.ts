@@ -25,4 +25,10 @@ export async function getAreas() {
 
 export const serviceUrl = (s: CollectionEntry<'services'>) => `/services/${s.id}/`;
 
+// The service page's h1 ("CNC Machining"); cards, breadcrumbs and the nav use data.title.
+export const serviceHeading = (s: CollectionEntry<'services'>) => s.data.heading ?? s.data.title;
+
+// The one-sentence text for a service card on another page; the full summary stays on the service's own page.
+export const serviceTeaser = (s: CollectionEntry<'services'>) => s.data.teaser ?? s.data.summary;
+
 export const areaUrl = (a: CollectionEntry<'areas'>) => `/service-areas/${a.id}/`;

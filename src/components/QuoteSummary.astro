@@ -1,6 +1,8 @@
 ---
 // Count line, TOTAL and the three reassurances under the items list.
 // Filled in by src/scripts/quote-page.ts ([data-count-line]).
+// With an empty list on a one-column screen the reassurances are left out, like the rest of the
+// items card (QuoteItems.astro): the form comes first there.
 import { site } from '../config/site';
 
 const checks = ['No payment required: quote only', "We'll send you a detailed quote", site.replyTime];
@@ -83,5 +85,11 @@ const checks = ['No payment required: quote only', "We'll send you a detailed qu
     border-radius: 4px;
     background: var(--color-primary);
     color: #fff;
+  }
+
+  @media (max-width: 899.98px) {
+    :global(html:not([data-quote='filled'])) .qs__checks {
+      display: none;
+    }
   }
 </style>

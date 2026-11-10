@@ -5,6 +5,7 @@
 // give way to the results, see store.css); html[data-q-ready] says the index-filtered list is
 // on screen, or that the index failed. public/shop-early.js sets data-q before first paint.
 import { loadIndex, search } from './part-search';
+import { scrollBehavior } from './scroll-to';
 
 const FACETS = ['section', 'type', 'width', 'side'] as const;
 type Facet = (typeof FACETS)[number];
@@ -48,6 +49,9 @@ function init(root: HTMLElement) {
   const emptyTitle = root.querySelector<HTMLElement>('[data-empty-title]')!;
   const emptyRequest = root.querySelector<HTMLElement>('[data-empty-request]')!;
   const emptyClear = root.querySelector<HTMLElement>('[data-empty-clear]')!;
+  const moreEl = root.querySelector<HTMLElement>('[data-more]');
+  const downEl = root.querySelector<HTMLElement>('[data-search-down]');
+  const sideHost = root.querySelector<HTMLElement>('[data-side-host]');
   const toolbar = root.querySelector<HTMLElement>('.plist__toolbar')!;
   const filterBtn = root.querySelector<HTMLElement>('[data-open-filters]');
   const filterN = root.querySelector<HTMLElement>('[data-filter-n]');
@@ -64,6 +68,7 @@ function init(root: HTMLElement) {
   };
 
   let ready = false;
+  let failed = false; // the search index could not be loaded: the list is shown whole, and says why
   let reordered = false;
 
   const hasFacet = (f: Facet) => !!form?.querySelector(`input[name="${f}"]`);
@@ -84,6 +89,7 @@ function init(root: HTMLElement) {
     for (const r of rows) r.el.hidden = !shown.has(r);
 
     // facet counts (each group ignores its own selection)
+    let groupsShown = 0;
     if (form) {
       for (const f of FACETS) {
         const group = form.querySelector<HTMLElement>(`[data-fgroup="${f}"]`);
@@ -97,8 +103,11 @@ function init(root: HTMLElement) {
           if (!label.hidden) any++;
         });
         group.hidden = any === 0;
+        if (!group.hidden) groupsShown++;
       }
     }
+    // The desktop sidebar holds nothing when no group has an option left (a search with no results): hide the box.
+    if (sideHost) sideHost.hidden = !groupsShown;
 
     // order
     const sort = state.sort ?? (state.q ? 'best' : 'catalog');
@@ -132,9 +141,19 @@ function init(root: HTMLElement) {
     const n = visible.length;
     const noun = (k: number) => (k === 1 ? 'part' : 'parts');
     const filtered = n !== total;
-    countEl.textContent = filtered ? `Showing ${n} of ${total} ${noun(total)}` : `Showing all ${total} ${noun(total)}`;
+    const down = !!state.q && failed;
+    countEl.textContent = down
+      ? `Search is unavailable right now: showing all ${total} ${noun(total)}`
+      : filtered
+        ? `Showing ${n} of ${total} ${noun(total)}`
+        : `Showing all ${total} ${noun(total)}`;
+    if (downEl) {
+      downEl.hidden = !down;
+      downEl.querySelector<HTMLElement>('[data-request-part]')?.setAttribute('data-query', state.q);
+    }
     if (showBtn) showBtn.textContent = n ? `Show ${n} ${noun(n)}` : 'No parts match';
     emptyEl.hidden = n > 0;
+    if (moreEl) moreEl.hidden = !n; // the empty state asks the same question
     if (!n) {
       emptyTitle.textContent = state.q ? `No match for “${state.q}”` : 'No parts match these filters';
       emptyRequest.dataset.query = state.q;
@@ -238,8 +257,19 @@ function init(root: HTMLElement) {
     const html = document.documentElement;
     if (state.q) html.dataset.q = '1';
     else delete html.dataset.q;
-    // A failed index shows the list as it is: do not leave it behind "Searching…"
-    if (state.q && !ready) void loadIndex().then(() => ((ready = true), update())).catch(() => (html.dataset.qReady = ''));
+    // A failed index shows the list as it is, and says the search is down: do not leave it behind "Searching…"
+    if (state.q && !ready)
+      void loadIndex()
+        .then(() => {
+          ready = true;
+          failed = false;
+          update();
+        })
+        .catch(() => {
+          failed = true;
+          html.dataset.qReady = '';
+          update();
+        });
     update();
   }
 
@@ -270,12 +300,11 @@ function init(root: HTMLElement) {
 
   document.addEventListener('partsearch:apply', ((e: CustomEvent<{ query: string; fromInput?: boolean }>) => {
     setQuery(e.detail.query, false);
-    if (e.detail.query && !e.detail.fromInput) reveal('smooth');
+    if (e.detail.query && !e.detail.fromInput) reveal(scrollBehavior());
   }) as EventListener);
 
   // Mobile: the filter panel lives in a bottom sheet; desktop: in the sidebar.
-  if (form && sheet) {
-    const sideHost = root.querySelector<HTMLElement>('[data-side-host]')!;
+  if (form && sheet && sideHost) {
     const sheetHost = root.querySelector<HTMLElement>('[data-sheet-host]')!;
     const mq = matchMedia('(min-width: 1024px)');
     const place = () => {

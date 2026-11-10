@@ -84,6 +84,9 @@ export default defineConfig({
   build: { format: 'directory' },
   // The CSP is script-src 'self': never let Vite inline a small bundled script into the HTML.
   vite: { build: { assetsInlineLimit: 0 } },
+  // Links marked data-astro-prefetch (the part links in the parts lists) are fetched when the visitor
+  // points at or focuses them, so the part page opens without a wait. Nothing else is prefetched.
+  prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
   integrations: [
     sitemap({
       // The quote page and its thank-you page are noindex, so keep them out of the sitemap.

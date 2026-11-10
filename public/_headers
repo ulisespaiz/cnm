@@ -5,7 +5,7 @@
   X-Frame-Options: DENY
   Strict-Transport-Security: max-age=31536000
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; style-src-attr 'unsafe-inline'; script-src 'self'; connect-src 'self' https://api.web3forms.com; form-action 'self' https://api.web3forms.com; frame-ancestors 'none'; base-uri 'self'
+  Content-Security-Policy: default-src 'self'; object-src 'none'; img-src 'self' data:; style-src 'self'; style-src-attr 'unsafe-inline'; script-src 'self'; connect-src 'self' https://api.web3forms.com; form-action 'self' https://api.web3forms.com; frame-ancestors 'none'; base-uri 'self'
 
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
@@ -17,8 +17,12 @@
 /shop/catalog.csv
   Content-Type: text/csv; charset=utf-8
   Cache-Control: public, max-age=300, must-revalidate
+  X-Robots-Tag: noindex
 
 /favicon-*
+  Cache-Control: public, max-age=86400
+
+/favicon.ico
   Cache-Control: public, max-age=86400
 
 /apple-touch-icon.png

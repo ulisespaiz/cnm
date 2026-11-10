@@ -2,6 +2,13 @@
 // /quote/: the items card (QuoteItems) and the details form (QuoteForm) side by side, the part request below.
 // public/quote-early.js (a classic script from 'self': the CSP allows no inline ones) flags a returning
 // visitor's saved list before first paint, so the empty state never flashes.
+//
+// Links into this page:
+//   /quote/?service=<service id>#details   from a service page: that service becomes a line of the list
+//                                          (once) and the page opens at the form. The ids and titles come
+//                                          from the services collection, on the early script's data-services (src/layouts/Base.astro).
+//   /quote/?part=<number>[&qty=n]          adds a part by number (src/scripts/quote-page.ts)
+//   #details (the form), #bulk (paste a list), #cant-find (the part request form)
 import Base from '../../layouts/Base.astro';
 import QuoteForm from '../../components/QuoteForm.astro';
 import QuoteItems from '../../components/QuoteItems.astro';
@@ -17,7 +24,6 @@ import { site } from '../../config/site';
   noindex
   hideMobileBar
 >
-  <script is:inline src="/quote-early.js" slot="head"></script>
   <section class="section quote-page" data-shop={site.store.enabled ? undefined : 'off'}>
     <div class="container">
       <p class="eyebrow">C&amp;M MACHINE SHOP</p>
@@ -30,7 +36,7 @@ import { site } from '../../config/site';
           <QuoteItems />
         </div>
 
-        <section class="qcard qp__form" aria-labelledby="info-title">
+        <section class="qcard qp__form" id="details" aria-labelledby="info-title">
           <header class="qcard__head">
             <h2 id="info-title" class="qcard__title">Your Information</h2>
           </header>
@@ -148,9 +154,10 @@ import { site } from '../../config/site';
     padding: 22px 20px 20px;
   }
 
-  /* "Continue: your details" jumps here. html's scroll-padding-top (80px) already clears the sticky
-     header; the margin adds a little air, 88px from the top edge in all. */
-  #info-title {
+  /* "Skip to your details", "Continue: your details" and the service pages' quote links jump here.
+     html's scroll-padding-top (80px) already clears the sticky header; the margin adds a little air,
+     88px from the top edge in all. */
+  #details {
     scroll-margin-top: 8px;
   }
 

@@ -5,6 +5,8 @@
 // v2 adds part numbers, per-line notes, custom lines (parts not in the
 // catalog) and a stable quote reference. v1 lists are migrated on first read.
 
+import { showToast, type ToastPart } from './toast';
+
 export type QuoteKind = 'part' | 'service' | 'custom';
 
 export interface QuoteItem {
@@ -18,7 +20,7 @@ export interface QuoteItem {
   thumb?: string; // small image URL for the list
   url?: string; // absent for custom lines
   options: Record<string, string>;
-  qty: number; // 1-999
+  qty: number; // 1-999; a service has no quantity, so its line is always 1
   note?: string; // per-line note, max 300 chars
   noCatalog?: boolean; // custom line made while the parts shop is off: there is no catalog to be "not in"
 }
@@ -35,6 +37,10 @@ let memory: QuoteState | null = null;
 let persistFailed = false;
 
 const clampQty = (n: unknown) => Math.max(1, Math.min(999, Math.round(Number(n)) || 1));
+// A service is asked for, not counted: its line stays at 1 whatever was stored or passed in.
+const qtyFor = (kind: QuoteKind, n: unknown) => (kind === 'service' ? 1 : clampQty(n));
+// A number that was typed, not picked from the catalog, is named by the number alone.
+const customTitle = (oem: string) => `OEM # ${oem}`;
 
 function newRef() {
   const d = new Date();
@@ -59,19 +65,22 @@ function cleanItem(raw: unknown): QuoteItem | null {
   if (isObject(raw.options)) {
     for (const [k, v] of Object.entries(raw.options)) if (typeof v === 'string' || typeof v === 'number') options[k] = String(v);
   }
+  const kind: QuoteKind = KINDS.includes(raw.kind) ? (raw.kind as QuoteKind) : raw.id.startsWith('service:') ? 'service' : raw.id.startsWith('custom:') ? 'custom' : 'part';
   const item: QuoteItem = {
     key: raw.key,
-    kind: KINDS.includes(raw.kind) ? (raw.kind as QuoteKind) : raw.id.startsWith('service:') ? 'service' : raw.id.startsWith('custom:') ? 'custom' : 'part',
+    kind,
     id: raw.id,
     title: raw.title,
     options,
-    qty: clampQty(raw.qty),
+    qty: qtyFor(kind, raw.qty),
   };
   for (const field of ['oem', 'cm', 'section', 'thumb', 'url', 'note'] as const) {
     const v = raw[field];
     if (typeof v === 'string' && v) item[field] = v;
   }
   if (item.url) item.url = currentPartUrl(item.url);
+  // Lines saved earlier carried "(not in catalog)" in the title.
+  if (kind === 'custom' && item.oem) item.title = customTitle(item.oem);
   if (raw.noCatalog === true) item.noCatalog = true;
   return item;
 }
@@ -101,7 +110,7 @@ function cleanItems(list: unknown[]): QuoteItem[] {
     const item = cleanItem(raw);
     if (!item) continue;
     const prev = byIdentity.get(identity(item));
-    if (prev) prev.qty = clampQty(prev.qty + item.qty);
+    if (prev) prev.qty = qtyFor(prev.kind, prev.qty + item.qty);
     else byIdentity.set(identity(item), item);
   }
   return [...byIdentity.values()];
@@ -118,7 +127,12 @@ function parseState(raw: string): { state: QuoteState; fixed: boolean } | null {
   if (!isObject(data) || typeof data.ref !== 'string' || !data.ref || !Array.isArray(data.items)) return null;
   const items = cleanItems(data.items);
   const tidy = (i: unknown) =>
-    isObject(i) && isObject(i.options) && i.qty === clampQty(i.qty) && KINDS.includes(i.kind) && (typeof i.url !== 'string' || i.url === currentPartUrl(i.url));
+    isObject(i) &&
+    isObject(i.options) &&
+    i.qty === clampQty(i.qty) &&
+    KINDS.includes(i.kind) &&
+    (i.kind !== 'service' || i.qty === 1) &&
+    (typeof i.url !== 'string' || i.url === currentPartUrl(i.url));
   return { state: { ref: data.ref, items }, fixed: items.length !== data.items.length || !data.items.every(tidy) };
 }
 
@@ -186,8 +200,48 @@ function read(): QuoteState {
 function write(state: QuoteState) {
   memory = state;
   persist(state);
+  if (persistFailed && state.items.length) warnNotSaved();
   renderCount();
   document.dispatchEvent(new CustomEvent('quote:change'));
+}
+
+// ---------- A list this browser will not keep ----------
+// With site storage blocked or full the list lives in this page only: the next page starts empty, so
+// "Added" followed by "View quote" would lead to nothing. Say so, once, and offer the two ways that do
+// not need the list: the phone and the part request form on the quote page.
+const WARNED_KEY = 'quote-not-saved-told';
+let warned = false;
+
+// The phone number as the page shows it (header and footer render it from src/config/site.ts).
+function pagePhone(): ToastPart | null {
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('a[href^="tel:"]')];
+  for (const a of links) {
+    const shown = /\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/.exec(a.textContent ?? '')?.[0];
+    if (shown) return { label: shown, href: a.getAttribute('href')! };
+  }
+  return links.length ? { label: links[0].getAttribute('href')!.slice(4), href: links[0].getAttribute('href')! } : null;
+}
+
+function warnNotSaved() {
+  if (warned) return;
+  warned = true;
+  try {
+    // Session storage can still work when the list cannot be saved (a full quota): then once per visit, not per page.
+    if (sessionStorage.getItem(WARNED_KEY)) return;
+    sessionStorage.setItem(WARNED_KEY, '1');
+  } catch {
+    // no storage at all: once per page is the best there is
+  }
+  const phone = pagePhone();
+  const message: ToastPart[] = [
+    'This browser is not saving your quote list, so it will be gone when you leave this page. ',
+    ...(phone ? ['Call ', phone, ' or '] : ['You can ']),
+    { label: 'send us the part number', href: '/quote/#cant-find' },
+    '.',
+  ];
+  // After the click that caused it has run its course: the page's own "Added … View quote" toast comes
+  // first, and this notice takes its place.
+  window.setTimeout(() => showToast(message, { sticky: true, actionLabel: 'Close', onAction: () => {} }), 0);
 }
 
 const save = (items: QuoteItem[]) => write({ ...read(), items });
@@ -213,12 +267,12 @@ export function addItem(item: Omit<QuoteItem, 'key' | 'kind' | 'options'> & { ki
   const existing = items.find((i) => i.key === key) ?? items.find((i) => identity(i) === wanted);
   let line: QuoteItem;
   if (existing) {
-    existing.qty = clampQty(existing.qty + item.qty);
+    existing.qty = qtyFor(existing.kind, existing.qty + item.qty);
     // The same part added again from its current page: point the line at that page.
     if (existing.key !== key && item.url) existing.url = currentPartUrl(item.url);
     line = existing;
   } else {
-    line = { ...item, kind, options, key, qty: clampQty(item.qty) };
+    line = { ...item, kind, options, key, qty: qtyFor(kind, item.qty) };
     items.push(line);
   }
   save(items);
@@ -227,7 +281,7 @@ export function addItem(item: Omit<QuoteItem, 'key' | 'kind' | 'options'> & { ki
 
 // A part that is not in the catalog, identified only by the number typed.
 // `catalog: false` is for the parts shop being off: the line is just the number
-// to look up, with no "not in catalog" wording.
+// to look up, with no "not in catalog" wording (src/scripts/quote-page.ts words both).
 export function addCustom({ oem, qty = 1, note, catalog = true }: { oem: string; qty?: number; note?: string; catalog?: boolean }) {
   const clean = [...oem.trim().toUpperCase()].slice(0, 40).join('').trim(); // 40 characters is longer than any part number
   // A number with no letters or digits in it (only accents, symbols) still gets a line of its own.
@@ -235,7 +289,7 @@ export function addCustom({ oem, qty = 1, note, catalog = true }: { oem: string;
   return addItem({
     kind: 'custom',
     id: `custom:${k}`,
-    title: catalog ? `OEM # ${clean} (not in catalog)` : `OEM # ${clean}`,
+    title: customTitle(clean),
     oem: clean,
     qty,
     note,
@@ -244,7 +298,7 @@ export function addCustom({ oem, qty = 1, note, catalog = true }: { oem: string;
 }
 
 export function setQty(key: string, qty: number) {
-  save(getItems().map((i) => (i.key === key ? { ...i, qty: clampQty(qty) } : i)));
+  save(getItems().map((i) => (i.key === key ? { ...i, qty: qtyFor(i.kind, qty) } : i)));
 }
 
 export function setNote(key: string, note: string) {
@@ -290,18 +344,19 @@ export function renderCount() {
   });
 }
 
-// "3 parts (7 pieces)"
+// "3 items (7 pieces)". Services are lines but not pieces: a list of services alone is "1 item".
 export function countLabel(items = getItems()) {
   const lines = items.length;
-  const units = items.reduce((n, i) => n + i.qty, 0);
-  return `${lines} ${lines === 1 ? 'item' : 'items'} (${units} ${units === 1 ? 'piece' : 'pieces'})`;
+  const counted = items.filter((i) => i.kind !== 'service');
+  const units = counted.reduce((n, i) => n + i.qty, 0);
+  const head = `${lines} ${lines === 1 ? 'item' : 'items'}`;
+  return counted.length || !lines ? `${head} (${units} ${units === 1 ? 'piece' : 'pieces'})` : head;
 }
 
 // Plain-text summary that goes into the email body. Part numbers first so
-// the shop can read the order without opening links. `links: false` leaves the
-// page address of each line out (the mailto: fallback has little room).
-export function summarize(items = getItems(), { links = true } = {}) {
-  if (!items.length) return 'No items selected.';
+// the shop can read the order without opening links.
+export function summarize(items = getItems()) {
+  if (!items.length) return 'No items in the list: see the message.';
   const origin = typeof location !== 'undefined' ? location.origin : '';
   return items
     .map((i, n) => {
@@ -309,7 +364,7 @@ export function summarize(items = getItems(), { links = true } = {}) {
         i.kind === 'custom'
           ? `${n + 1}. [${i.noCatalog ? 'OEM # TO LOOK UP' : 'NOT IN CATALOG'}] ${i.oem ? `OEM # ${i.oem}` : i.title} | qty ${i.qty}`
           : i.kind === 'service'
-            ? `${n + 1}. SERVICE | ${i.title} | qty ${i.qty}`
+            ? `${n + 1}. SERVICE | ${i.title}`
             : `${n + 1}. ${i.oem ? `OEM # ${i.oem}` : 'no OEM #'} | ${i.cm ? `C&M # ${i.cm}` : 'no C&M #'} | ${i.title} | qty ${i.qty}`;
       const opts = Object.entries(i.options)
         .map(([k, v]) => `${k}: ${v}`)
@@ -319,10 +374,38 @@ export function summarize(items = getItems(), { links = true } = {}) {
         i.section ? `   Section: ${i.section}` : '',
         opts ? `   Options: ${opts}` : '',
         i.note ? `   Note: ${i.note}` : '',
-        links && i.url ? `   ${origin}${i.url}` : '',
+        i.url ? `   ${origin}${i.url}` : '',
       ]
         .filter(Boolean)
         .join('\n');
     })
     .join('\n');
+}
+
+// The same list with one short line per item, for the mailto: fallback after a failed send (the link
+// holds about 1,800 characters in all, and a line that does not fit is counted as left out). Plain ASCII
+// "x": a multiplication sign costs six characters once it is in a URL.
+export function summaryLines(items = getItems()): string[] {
+  return items.map((i) => {
+    const what =
+      i.kind === 'service'
+        ? `Service: ${i.title}`
+        : i.kind === 'custom'
+          ? `${i.qty} x ${i.oem ? `OEM # ${i.oem}` : i.title} (${i.noCatalog ? 'to look up' : 'not in catalog'})`
+          : `${i.qty} x ${[i.oem && `OEM # ${i.oem}`, i.cm && `C&M # ${i.cm}`, i.title].filter(Boolean).join(' | ')}`;
+    const opts = Object.entries(i.options)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
+    return [what, opts, i.note && `Note: ${i.note}`].filter(Boolean).join(' | ');
+  });
+}
+
+// Another tab changed the list (a null key means all site data was cleared): bring this tab's counts up
+// to date and tell the page, so whatever draws the list (src/scripts/quote-page.ts) draws it again.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key !== null && event.key !== STORAGE_KEY) return;
+    renderCount();
+    document.dispatchEvent(new CustomEvent('quote:change'));
+  });
 }

@@ -6,6 +6,9 @@
 // A reply needs an email or a phone number, at least one. Neither input is `required` (the form must
 // still post without JavaScript); the <fieldset data-reach> is checked by the shared script, which
 // shows one error tied to both fields.
+// The email the shop receives lists the fields in the order they are posted: who is asking and what
+// they wrote first, the quote list and its reference last (added by the script below), and nothing the
+// customer left empty (src/scripts/web3forms-submit.ts).
 import { site } from '../config/site';
 import { forms } from '../config/forms';
 
@@ -42,8 +45,6 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
   <input type="hidden" name="subject" value={isQuote ? `Quote request from ${site.name} website` : `Message from ${site.name} website`} />
   <input type="hidden" name="from_name" value={`${site.name} Website`} />
   <input type="hidden" name="redirect" value={thanks} />
-  <input type="hidden" name="products" value="" />
-  <input type="hidden" name="quote_ref" value="" />
   <!-- Honeypot: humans never see or tick this -->
   <input type="checkbox" name="botcheck" class="visually-hidden" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
@@ -121,27 +122,36 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
   )}
 
   <div class="field">
-    <label for={`${kind}-message`}>{isQuote ? 'Additional Notes' : 'Message'} {!isQuote && <span class="req" aria-hidden="true">*</span>}</label>
+    <label for={`${kind}-message`}>{isQuote ? 'Describe the job or notes' : 'Message'} {!isQuote && <span class="req" aria-hidden="true">*</span>}</label>
     <textarea
       id={`${kind}-message`}
       name="message"
       placeholder={isQuote
-        ? 'Describe specifications, tolerances, materials, quantities, deadlines, machine model/serial, or any other details that will help us prepare your quote…'
+        ? 'What the part is or does, material, size, how many and when you need it. No part number? Tell us about your sample, photo or drawing.'
         : 'How can we help?'}
       required={!isQuote}></textarea>
   </div>
 
-  <button class="btn btn--block quote-form__submit" type="submit" data-submit>
+  {/* Red is for the page's quote action; a message is not one */}
+  <button class:list={['btn btn--block quote-form__submit', { 'btn--red': isQuote }]} type="submit" data-submit>
     {isQuote ? 'Send Quote Request →' : 'Send Message →'}
   </button>
   <p class="form-alert" role="status" aria-live="polite" data-form-status></p>
   <p class="form-note">
     {site.replyTime}. Prefer to talk? Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>.
   </p>
+  {/* Phones with an empty list: the drawing box of the items card (QuoteItems.astro) is not shown above
+      the form there, so the same advice follows it. src/scripts/quote-page.ts fills in the reference. */}
+  {isQuote && (
+    <p class="form-note quote-form__drawing">
+      Have a drawing or photo of the part? Email it to{' '}
+      <a href={`mailto:${site.email}`} data-ref-mailto={site.email}>{site.email}</a> and put your quote reference <strong data-quote-ref></strong> in the subject.
+    </p>
+  )}
 </form>
 
 <script>
-  import { getItems, summarize, countLabel, quoteRef, clearItems } from '../scripts/quote-store';
+  import { getItems, summarize, summaryLines, countLabel, quoteRef, clearItems } from '../scripts/quote-store';
   import { bindWeb3Form, setStatus } from '../scripts/web3forms-submit';
 
   document.querySelectorAll<HTMLFormElement>('[data-quote-form]').forEach((form) => {
@@ -161,31 +171,43 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
         const notes = String(data.get('message') || '').trim();
         if (!items.length && !notes) {
           // With the parts shop off (data-shop="off") there is no catalog to add parts from.
-          return `Add a ${form.dataset.shop === 'off' ? '' : 'part or '}service to your quote, or describe what you need in the notes.`;
+          return `Describe the job or the part you need${form.dataset.shop === 'off' ? '' : ', or add parts to your list'}, so we know what to quote.`;
         }
         ref = quoteRef();
         const company = String(data.get('company') || '').trim();
-        data.set('quote_ref', ref);
-        data.set('products', summarize(items));
-        data.set('subject', `Quote request ${ref}: ${countLabel(items)} from ${name}${company ? ` (${company})` : ''}`);
+        // A request with no list is a described job: no "0 items" in the subject the shop reads.
+        data.set('subject', `Quote request ${ref}${items.length ? `: ${countLabel(items)}` : ''} from ${name}${company ? ` (${company})` : ''}`);
         if (data.get('delivery') !== 'Ship to me') data.delete('zip');
+        // FormData keeps the order its fields were added in, and that is the order of the email:
+        // the list (long) and its reference go after the contact details and the message. There are no
+        // hidden inputs for them (without JavaScript there is no list to send), and a request with no
+        // list sends no "products" field at all.
+        data.delete('products');
+        data.delete('quote_ref');
+        if (items.length) data.append('products', summarize(items));
+        data.append('quote_ref', ref);
       },
       fallbackBody(data) {
-        // The mailto: link is length-limited, so the item list goes without its page links.
-        const items = isQuote ? summarize(getItems(), { links: false }) : '';
-        const lines = [
-          isQuote ? `Quote reference: ${data.get('quote_ref') ?? ''}` : '',
-          `Name: ${data.get('name') ?? ''}`,
-          data.get('email') ? `Email: ${data.get('email')}` : '',
-          data.get('phone') ? `Phone: ${data.get('phone')}` : '',
-          data.get('company') ? `Company: ${data.get('company')}` : '',
-          data.get('po') ? `PO: ${data.get('po')}` : '',
-          data.get('needed_by') ? `Needed by: ${data.get('needed_by')}` : '',
-          data.get('delivery') ? `Delivery: ${data.get('delivery')}${data.get('zip') ? ` (${data.get('zip')})` : ''}` : '',
-          items ? `\nItems:\n${items}` : '',
-          `\n${data.get('message') ?? ''}`,
+        const value = (name: string) => String(data.get(name) ?? '').trim();
+        const head = [
+          isQuote ? `Quote reference: ${value('quote_ref')}` : '',
+          `Name: ${value('name')}`,
+          value('email') && `Email: ${value('email')}`,
+          value('phone') && `Phone: ${value('phone')}`,
+          value('company') && `Company: ${value('company')}`,
+          value('po') && `PO: ${value('po')}`,
+          value('needed_by') && `Needed by: ${value('needed_by')}`,
+          value('delivery') && `Delivery: ${value('delivery')}${value('zip') ? ` (${value('zip')})` : ''}`,
         ];
-        return lines.filter(Boolean).join('\n');
+        const message = value('message');
+        if (!isQuote) return [...head, message && `\n${message}`].filter(Boolean).join('\n');
+        // What the customer typed comes before the list: a mailto: link is short, and when it cannot
+        // hold everything it is list lines that are left out (and counted), never the message.
+        const list = summaryLines().map((line, n) => `${n + 1}. ${line}`);
+        return {
+          text: [...head, message && `\nMessage:\n${message}`, list.length ? `\nItems (${list.length}):` : ''].filter(Boolean).join('\n'),
+          list,
+        };
       },
       // A quote leaves for the thank-you page, so its button stays locked after the send.
       lockOnSuccess: isQuote,
@@ -323,6 +345,31 @@ if (!forms.accessKey && !import.meta.env.DEV) console.warn('[forms] No Web3Forms
     color: var(--color-muted);
     font-size: 0.9rem;
     text-align: center;
+  }
+
+  /* Shown only where the items card's drawing box is not: an empty list (html[data-quote], set before
+     first paint by public/quote-early.js) on a single-column screen. */
+  .quote-form__drawing {
+    display: none;
+    overflow-wrap: anywhere;
+  }
+
+  .quote-form__drawing strong {
+    color: var(--color-text);
+    font-family: var(--oem-font, ui-monospace, monospace);
+    white-space: nowrap;
+  }
+
+  /* Room for the reference (13 characters) before the script fills it in, so the lines do not rewrap */
+  :global(html[data-quote]) .quote-form__drawing strong {
+    display: inline-block;
+    min-width: 13ch;
+  }
+
+  @media (max-width: 899.98px) {
+    :global(html:not([data-quote='filled'])) .quote-form__drawing {
+      display: block;
+    }
   }
 
   .quote-form--contact .form-note {
