@@ -337,6 +337,279 @@ test.describe('bulk paste', () => {
   });
 });
 
+test.describe('shop: a visitor who does not find the part is asked for it', () => {
+  test.skip(!shopOn, 'the parts shop is off in this build');
+
+  interface ShopPart {
+    id: string;
+    machine: string;
+    section: string;
+    cm: string;
+    oem?: string;
+    name: string;
+    aka?: string[];
+    oemAlt?: string[];
+  }
+  const parts: ShopPart[] = JSON.parse(readFileSync('src/content/parts.json', 'utf8'));
+  const byCm = (cm: string) => parts.find((p) => p.cm === cm)!;
+  const pathOf = (cm: string) => {
+    const p = byCm(cm);
+    return `/shop/${p.machine}/${p.section}/${p.id}/`;
+  };
+  const MADE_TO = 'Made to match your part number, sample or print'; // site.store.madeTo
+  const SHARED = '03027A9240'; // CM-0039 and CM-0046 share it (the owner marked both oemVerify)
+  const named = (cm: string) => `${byCm(cm).name} (${cm})`;
+  const requestNumber = (page: Page) => page.locator('#request #pr-number');
+
+  test('the search panel ends with "Request a quote for <query>"; a search that finds nothing makes it the main button', async ({ page }) => {
+    await page.goto('/shop/');
+    const field = page.locator('.psearch--hero').getByRole('searchbox');
+    await field.fill('gear');
+    await expect(page.locator('.psearch--hero .ps-hit').first()).toBeVisible();
+    const ask = page.locator('.psearch--hero .ps-ask');
+    await expect(ask).toHaveText('Not the part you need? Request a quote for gear');
+    await ask.click();
+    await expect(requestNumber(page)).toHaveValue('gear');
+    await expect(page.locator('#request #pr-name')).toBeFocused();
+    await expect(page.locator('.psearch--hero [data-ps-panel]')).toBeHidden();
+
+    await field.fill('10097A9999');
+    const empty = page.locator('.psearch--hero .ps-empty');
+    await expect(empty).toContainText(MADE_TO);
+    await expect(empty).toContainText('We reply within');
+    const main = empty.getByRole('button', { name: 'Request a quote for 10097A9999' });
+    await expect(main).toHaveClass(/btn--red/);
+    await main.click();
+    await expect(requestNumber(page)).toHaveValue('10097A9999');
+  });
+
+  test('a page without the request form sends the number to the quote page', async ({ page }) => {
+    await page.goto('/shop/vffs/');
+    await page.evaluate(() => document.getElementById('request')?.remove());
+    await page.locator('.storebar').getByRole('searchbox').fill('10097A9999');
+    await page.locator('.storebar .ps-empty').getByRole('button', { name: 'Request a quote for 10097A9999' }).click();
+    await expect(page).toHaveURL(/\/quote\/$/);
+    await expect(quoteRows(page)).toHaveCount(1);
+    await expect(quoteRows(page).first()).toContainText('10097A9999');
+  });
+
+  test('every parts list ends with "Don\'t see your part number?", and its button opens the request form with the search', async ({ page }) => {
+    await page.goto('/shop/vffs/actuator/');
+    const more = page.locator('[data-more]');
+    await expect(more.getByRole('heading', { name: "Don't see your part number?" })).toBeVisible();
+    await expect(more).toContainText(MADE_TO);
+    await expect(more.getByRole('link', { name: 'Paste a list' })).toHaveAttribute('href', '/quote/#bulk');
+    const ask = more.getByRole('link', { name: 'Request a quote' });
+    await expect(ask).toHaveClass(/btn--red/);
+    await ask.click();
+    await expect(requestNumber(page)).toBeFocused();
+
+    await page.goto('/shop/vffs/actuator/?q=link');
+    await expect(page.locator('[data-rows] > li.prow:not([hidden])').first()).toBeVisible();
+    await page.locator('[data-more]').getByRole('link', { name: 'Request a quote' }).click();
+    await expect(requestNumber(page)).toHaveValue('link');
+  });
+
+  test('a search with no results asks for the number, and the empty filter box goes away', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/shop/vffs/actuator/');
+    await expect(page.locator('.plist__side')).toBeVisible();
+    await page.goto('/shop/vffs/actuator/?q=zzqqxx');
+    const empty = page.locator('[data-empty]');
+    await expect(empty).toContainText("Don't see your part number?");
+    await expect(empty).toContainText(MADE_TO);
+    await expect(empty.getByRole('link', { name: 'Paste a list' })).toHaveAttribute('href', '/quote/#bulk');
+    await expect(page.locator('[data-more]')).toBeHidden();
+    await expect(page.locator('.plist__side')).toBeHidden();
+    await empty.getByRole('button', { name: 'Request a quote' }).click();
+    await expect(requestNumber(page)).toHaveValue('zzqqxx');
+  });
+
+  test('the store home asks right after the section tiles', async ({ page }) => {
+    for (const width of [390, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/shop/');
+      const cant = page.locator('.shop__cant');
+      await expect(cant.getByRole('heading', { name: "Can't find your part?" })).toBeVisible();
+      await expect(cant).toContainText(MADE_TO);
+      const tiles = (await page.locator('.shop__tiles').boundingBox())!;
+      const box = (await cant.boundingBox())!;
+      expect(box.y - (tiles.y + tiles.height), `${width}px: the call-out follows the tiles`).toBeGreaterThanOrEqual(0);
+      expect(box.y - (tiles.y + tiles.height), `${width}px: nothing in between`).toBeLessThan(40);
+    }
+    await page.locator('.shop__cant').getByRole('link', { name: 'Request a quote' }).click();
+    await expect(requestNumber(page)).toBeFocused();
+  });
+
+  test('a part page offers the request form and machining next to Add to Quote', async ({ page }) => {
+    await page.goto(pathOf('CM-0111'));
+    const other = page.locator('.part__other');
+    await expect(other).toContainText('Not the part you need?');
+    await expect(other.getByRole('link', { name: 'We machine parts to a sample or a print.' })).toHaveAttribute('href', '/services/machining/');
+    await other.getByRole('link', { name: 'Send us your part number' }).click();
+    await expect(page.locator('#request-details')).toHaveJSProperty('open', true);
+    await expect(requestNumber(page)).toBeFocused();
+    await expect(requestNumber(page)).toHaveValue('');
+    // Button colours: the page's Add to Quote is its main quote action; a list row's Add is secondary
+    await expect(page.getByRole('button', { name: `Add to Quote: ${PART}` })).toHaveClass(/btn--red/);
+    await expect(page.locator('.rel .padd__add').first()).toHaveClass(/btn--outline/);
+  });
+
+  test('parts that share an OEM number link to each other; other names and spellings are in the specifications', async ({ page }) => {
+    await page.goto(pathOf('CM-0039'));
+    await expect(page.locator('.ident__shared')).toContainText('Another part uses this OEM part number');
+    await expect(page.locator('.ident__shared a')).toHaveAttribute('href', pathOf('CM-0046'));
+    await page.goto(pathOf('CM-0046'));
+    await expect(page.locator('.ident__shared a')).toHaveAttribute('href', pathOf('CM-0039'));
+    await page.goto(pathOf('CM-0111'));
+    await expect(page.locator('.ident__shared')).toHaveCount(0);
+
+    const alt = parts.find((p) => p.oemAlt?.length)!;
+    await page.goto(pathOf(alt.cm));
+    await expect(page.locator('.specs__row', { hasText: 'Also written as' })).toContainText(alt.oemAlt![0]);
+    const aka = parts.find((p) => p.aka?.length)!;
+    await page.goto(pathOf(aka.cm));
+    await expect(page.locator('.specs__row', { hasText: 'Also called' })).toContainText(aka.aka![0]);
+
+    await page.goto(pathOf(parts.find((p) => !p.oem)!.cm));
+    await expect(page.locator('.ident__none')).toContainText('This part has no OEM part number.');
+  });
+
+  test('bulk paste: a shared number is a choice with nothing chosen, and a line of words is not ticked', async ({ page }) => {
+    await page.goto('/quote/#bulk');
+    const bulk = page.locator('#bulk');
+    await bulk.locator('[data-bulk-text]').fill([`${SHARED} x2`, '03027A8608', '10097A9999', 'thanks for the help'].join('\n'));
+    await bulk.getByRole('button', { name: 'Check list' }).click();
+    await expect(bulk.locator('[data-bulk-summary]')).toContainText('0 matched · 2 not found · 2 to choose');
+
+    const choose = bulk.locator('.bk__row--choose');
+    await expect(choose).toHaveCount(2);
+    await expect(choose.first().getByRole('group', { name: '2 parts share this OEM #: choose one' })).toBeVisible();
+    await expect(choose.first().getByRole('radio')).toHaveCount(2);
+    for (const radio of await choose.getByRole('radio').all()) await expect(radio).not.toBeChecked();
+
+    const misses = bulk.locator('.bk__row--miss');
+    const number = misses.filter({ hasText: '10097A9999' });
+    await expect(number).toContainText("we'll check it and quote it");
+    await expect(number.getByRole('checkbox', { name: 'Add anyway' })).toBeChecked();
+    await expect(misses.filter({ hasText: 'thanks for the help' }).getByRole('checkbox', { name: 'Add anyway' })).not.toBeChecked();
+
+    // The second number gets a choice; the first is left for the shop to confirm.
+    await choose.nth(1).getByRole('radio', { name: new RegExp(byCm('CM-0044').name) }).check();
+    await bulk.getByRole('button', { name: 'Add 3 lines to quote' }).click();
+    await expect(quoteRows(page)).toHaveCount(3);
+    const stored: Record<string, unknown>[] = await page.evaluate(() => JSON.parse(localStorage.getItem('quote-list-v2') ?? 'null').items);
+    const shared = stored.find((i) => i.oem === SHARED)!;
+    expect(shared).toMatchObject({ kind: 'custom', qty: 2, noCatalog: true });
+    expect(shared.note).toContain(`${named('CM-0039')} or ${named('CM-0046')}`);
+    expect(stored.find((i) => i.cm === 'CM-0044')).toMatchObject({ kind: 'part', oem: '03027A8608' });
+    expect(stored.some((i) => i.cm === 'CM-0043'), 'never both parts of a shared number').toBe(false);
+    await expect(quoteRows(page).filter({ hasText: SHARED })).toContainText("We'll check it and quote it.");
+  });
+
+  test('/quote/?part= with a shared number adds one line that names both parts, and a toast that says so', async ({ page }) => {
+    await page.goto(`/quote/?part=${SHARED}&qty=2`);
+    await expect(quoteRows(page)).toHaveCount(1);
+    const row = quoteRows(page).first();
+    await expect(row).toContainText(`OEM # ${SHARED}`);
+    await expect(row.locator('.qi__qty')).toHaveValue('2');
+    await expect(row.locator('.qi__note')).toHaveValue(`2 parts share this OEM #: ${named('CM-0039')} or ${named('CM-0046')}. We'll confirm which one you need.`);
+    const toast = page.locator('#toast-region');
+    await expect(toast).toContainText('2 parts share this number');
+    await expect(toast).toContainText(named('CM-0039'));
+    await expect(toast).toContainText(named('CM-0046'));
+  });
+
+  test('when the search index cannot load, the search says so where the visitor typed', async ({ page }) => {
+    await page.route('**/shop/search-index.json', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: 'not json' }));
+    await page.goto('/shop/');
+    await page.locator('.psearch--hero').getByRole('searchbox').fill(PART);
+    const down = page.locator('.psearch--hero [data-ps-down]');
+    await expect(down).toContainText('Search is unavailable right now');
+    await expect(down.getByRole('link', { name: configString('phone') })).toHaveAttribute('href', `tel:${configString('phoneE164')}`);
+    await down.getByRole('button', { name: `Request a quote for ${PART}` }).click();
+    await expect(requestNumber(page)).toHaveValue(PART);
+
+    await page.goto(`/shop/vffs/actuator/?q=${PART}`);
+    await expect(page.locator('[data-count]')).toHaveText(/^Search is unavailable right now/);
+    const notice = page.locator('[data-search-down]');
+    await expect(notice.getByRole('link', { name: 'OEM part number index' })).toHaveAttribute('href', '/shop/part-numbers/');
+    await notice.getByRole('button', { name: 'Request a quote' }).click();
+    await expect(requestNumber(page)).toHaveValue(PART);
+  });
+
+  test('without JavaScript, shop pages point to the part number index and the quote page', async ({ request }) => {
+    for (const url of ['/shop/', '/shop/vffs/', '/shop/vffs/actuator/', pathOf('CM-0111')]) {
+      const html = await (await request.get(url)).text();
+      const noscript = /<noscript>([\s\S]*?)<\/noscript>/.exec(html)?.[1] ?? '';
+      expect(noscript, url).toContain('href="/shop/part-numbers/"');
+      expect(noscript, url).toContain('href="/quote/"');
+    }
+  });
+
+  test('phones: list rows have no stepper and are about 100px; the header scrolls away under the search bar', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/shop/vffs/actuator/');
+    const rows = page.locator('[data-rows] > li.prow');
+    const first = rows.first();
+    await expect(first.locator('.qty')).toBeHidden();
+    const add = first.getByRole('button', { name: /^Add to Quote: / });
+    await expect(add).toBeVisible();
+    // Add sits on the number line
+    const addBox = (await add.boundingBox())!;
+    const oemBox = (await first.locator('.prow__oem').boundingBox())!;
+    expect(addBox.y).toBeLessThan(oemBox.y + oemBox.height);
+    expect(addBox.y + addBox.height).toBeGreaterThan(oemBox.y);
+    const heights = await rows.evaluateAll((els) => els.slice(0, 6).map((el) => el.getBoundingClientRect().height));
+    expect(Math.max(...heights), heights.join(', ')).toBeLessThanOrEqual(125);
+    expect(heights.reduce((a, b) => a + b, 0) / heights.length, heights.join(', ')).toBeLessThanOrEqual(112);
+    await add.click();
+    await expect(quoteBadge(page)).toHaveText('1');
+
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    await expect.poll(() => page.locator('.site-header').evaluate((el) => el.getBoundingClientRect().bottom)).toBeLessThanOrEqual(0);
+    await expect.poll(() => page.locator('.storebar').evaluate((el) => el.getBoundingClientRect().top)).toBe(0);
+
+    // The store home has no search bar, so its header stays; the part page keeps its stepper (in the add bar).
+    await page.goto('/shop/');
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    await expect.poll(() => page.locator('.site-header').evaluate((el) => el.getBoundingClientRect().top)).toBe(0);
+    await page.goto(pathOf('CM-0111'));
+    await expect(page.locator('.addbar .qty')).toBeVisible();
+    await expect(page.locator('.addbar').getByRole('button', { name: `Add to Quote: ${PART}` })).toHaveClass(/btn--red/);
+  });
+
+  test('short screens: the search bar and the part page add bar scroll with the page', async ({ page }) => {
+    await page.setViewportSize({ width: 740, height: 360 });
+    await page.goto('/shop/vffs/actuator/');
+    await expect(page.locator('.storebar')).toHaveCSS('position', 'static');
+    await page.goto(pathOf('CM-0111'));
+    await expect(page.locator('.addbar')).toHaveCSS('position', 'static');
+    await page.setViewportSize({ width: 740, height: 800 });
+    await expect(page.locator('.addbar')).toHaveCSS('position', 'fixed');
+    await page.goto('/shop/vffs/actuator/');
+    await expect(page.locator('.storebar')).toHaveCSS('position', 'sticky');
+  });
+
+  test('shop pages line up with the header; list thumbnails are not high priority and part links can prefetch', async ({ page }) => {
+    for (const width of [1280, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/shop/vffs/actuator/');
+      const header = (await page.locator('.site-header__inner').boundingBox())!;
+      const main = (await page.locator('.sec').boundingBox())!;
+      expect(main.x, `${width}px`).toBe(header.x);
+      expect(main.width, `${width}px`).toBe(header.width);
+      expect((await page.locator('.sec > .store-disclaimer').boundingBox())!.width, 'the disclaimer keeps a readable line').toBeLessThan(760);
+    }
+    const row = page.locator('[data-rows] > li.prow').first();
+    await expect(row.locator('.padd__add')).toHaveClass(/btn--outline/);
+    await expect(row.locator('a.prow__name')).toHaveAttribute('data-astro-prefetch', '');
+    await expect(page.locator('[data-rows] img[fetchpriority]')).toHaveCount(0);
+    await page.goto('/shop/');
+    await expect(page.locator('.psearch__go'), 'search is blue, not the red quote colour').not.toHaveClass(/btn--red/);
+  });
+});
+
 test('the quote form posts to Web3Forms and lands on the thank-you page', async ({ page, web3forms }) => {
   await page.goto(`/quote/?part=${PART}&qty=2`);
   await expect(quoteRows(page)).toHaveCount(1);

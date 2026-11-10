@@ -50,6 +50,14 @@ export const openHours = () =>
     .map((r) => `${r.label} ${r.value}`)
     .join(' · ');
 
+// site.replyTime split around its range ("We reply within ", "1–2 business days", ""), so a page can keep the
+// range on one line (class "nowrap" in global.css): a line break after the en dash reads as "1–" and "2 days".
+export function replyParts(): [string, string, string] {
+  const at = site.replyTime.indexOf(site.replyTimeShort);
+  if (at < 0) return [site.replyTime, '', ''];
+  return [site.replyTime.slice(0, at), site.replyTimeShort, site.replyTime.slice(at + site.replyTimeShort.length)];
+}
+
 export const typeLabels = TYPE_LABELS;
 export const leadTime = () => site.store.leadTime ?? site.store.leadTimeFallback;
 

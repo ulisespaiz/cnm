@@ -12,12 +12,15 @@ function field(form: HTMLFormElement, name: string) {
   return form.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement;
 }
 
+// With no query (a "Request a quote" button pressed before any search) the form is opened and focused on the
+// part number field, which is still empty.
 function prefill(query: string, focus = true) {
   const q = query.trim();
-  if (!q) return;
   for (const form of forms()) {
-    field(form, 'part_number').value = q;
-    field(form, 'searched_for').value = q;
+    if (q) {
+      field(form, 'part_number').value = q;
+      field(form, 'searched_for').value = q;
+    }
     form.hidden = false;
     form.closest<HTMLElement>('[data-part-request-box]')?.querySelector<HTMLElement>('[data-pr-success]')?.setAttribute('hidden', '');
     // On part pages the form sits in a collapsed <details>.
@@ -31,7 +34,7 @@ function prefill(query: string, focus = true) {
   scrollToEl(box);
   if (focus) {
     // The part number is already filled in, so move to the first empty field.
-    const next = field(first, 'name');
+    const next = field(first, q ? 'name' : 'part_number');
     next.focus({ preventScroll: true });
   }
 }
@@ -86,5 +89,5 @@ for (const form of forms()) {
 
 // ?part=<number> prefills the form (the quote page uses the same parameter to
 // add the part to the quote list instead, so it opts out).
-const fromUrl = new URLSearchParams(location.search).get('part');
+const fromUrl = new URLSearchParams(location.search).get('part')?.trim();
 if (fromUrl && forms().some((f) => f.dataset.urlPrefill !== 'false')) prefill(fromUrl);

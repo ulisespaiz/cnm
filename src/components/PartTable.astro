@@ -5,7 +5,7 @@
 // reorders and counts rows in place.
 import PartRow from './PartRow.astro';
 import FilterPanel from './FilterPanel.astro';
-import { typeLabels } from './store';
+import { replyParts, typeLabels } from './store';
 import { sectionUrl, type Part, type Section } from '../lib/parts';
 import { site } from '../config/site';
 import '../styles/store.css';
@@ -19,6 +19,7 @@ interface Props {
 }
 
 const { parts, sections, grouped = false, lockSection = false, eager = 0 } = Astro.props;
+const reply = replyParts();
 const titles = new Map(sections.map((s) => [s.id, s.data.title]));
 
 const countBy = (pick: (p: Part) => string | undefined) => {
@@ -71,6 +72,14 @@ let lastSection = '';
     </div>
   </div>
   <div class="plist__chips" data-chips hidden></div>
+  {/* Shown by part-filter.ts when a search was asked for but the search index could not be loaded. */}
+  <div class="pdown" data-search-down hidden>
+    <p>
+      <strong>Search is unavailable right now.</strong> Call <a href={`tel:${site.phoneE164}`}>{site.phone}</a>, or send us the part
+      number and we'll check it. Every part is listed below, and by number in the <a href="/shop/part-numbers/">OEM part number index</a>.
+    </p>
+    <button type="button" class="btn btn--red" data-request-part>Request a quote</button>
+  </div>
 
   <div class="plist__body">
     <aside class="plist__side" data-side-host aria-label="Filters">
@@ -102,7 +111,7 @@ let lastSection = '';
                     </a>
                   </li>
                 )}
-                <PartRow part={p} sectionTitle={titles.get(p.data.section.id) ?? ''} eager={i < eager} priority={i < Math.min(eager, 4)} />
+                <PartRow part={p} sectionTitle={titles.get(p.data.section.id) ?? ''} eager={i < eager} />
               </>
             );
           })
@@ -110,11 +119,26 @@ let lastSection = '';
       </ol>
       <div class="pempty" data-empty hidden>
         <h2 data-empty-title>No parts match</h2>
-        <p>Send us the part number and we'll check it. {site.replyTime}.</p>
+        <p>Don't see your part number? <strong>{site.store.madeTo}.</strong> Send it to us and we'll check it and quote it. {reply[0]}<span class="nowrap">{reply[1]}</span>{reply[2]}.</p>
         <div class="pempty__actions">
-          <button type="button" class="btn btn--red" data-request-part data-empty-request>Request this part</button>
+          <button type="button" class="btn btn--red" data-request-part data-empty-request>Request a quote</button>
           <button type="button" class="btn btn--outline" data-clear data-empty-clear>Clear filters</button>
-          <a class="btn btn--outline" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
+        </div>
+        <p class="pempty__links">
+          <a href="/quote/#bulk">Paste a list</a>
+          <a href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
+        </p>
+      </div>
+      {/* The end of every list: a part that is not here is still a request. The button opens the part request
+          form on the page, filled in with the search (data-request-part, src/scripts/part-search.ts). */}
+      <div class="pmore" data-more>
+        <div class="pmore__text">
+          <h2 class="pmore__title">Don't see your part number?</h2>
+          <p>{site.store.madeTo}. {reply[0]}<span class="nowrap">{reply[1]}</span>{reply[2]}.</p>
+        </div>
+        <div class="pmore__actions">
+          <a class="btn btn--red" href="#request" data-request-part>Request a quote</a>
+          <a class="pmore__paste" href="/quote/#bulk">Paste a list</a>
         </div>
       </div>
     </div>
@@ -152,6 +176,10 @@ let lastSection = '';
     padding-inline: 18px;
   }
 
+  .plist__side[hidden] {
+    display: none !important;
+  }
+
   @media (min-width: 1024px) {
     .plist__body {
       display: grid;
@@ -174,6 +202,11 @@ let lastSection = '';
 
     .plist__filterbtn {
       display: none;
+    }
+
+    /* A search with no results leaves no filter to show: the empty box goes and the list takes its place */
+    .plist__body:has(> .plist__side[hidden]) {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 </style>

@@ -9,7 +9,7 @@
 import { addCustom, addItem, countLabel, getItems, quoteRef, removeItem, restoreItem, setNote, setQty, type QuoteItem } from './quote-store';
 import { showToast } from './toast';
 import { scrollBehavior } from './scroll-to';
-import { buildMatcher, parseBulk, type BulkResult, type IndexRecord, type Matcher } from './bulk-parse';
+import { buildMatcher, parseBulk, sharedNote, type BulkResult, type IndexRecord, type Matcher } from './bulk-parse';
 
 type Child = Node | string | null | undefined | false;
 
@@ -361,12 +361,20 @@ async function addFromUrl() {
   }
   // From here on a line is always added, so the list is never empty once the look-up is over.
   const found = await loadIndex().then(
-    (index) => ({ rec: index.find(part) }),
+    (index) => ({ recs: index.findAll(part) }),
     () => null, // the index could not load: keep the number rather than lose it
   );
   lookingUp = false;
-  if (found?.rec) {
-    const rec = found.rec;
+  if (found && found.recs.length > 1) {
+    // A number several parts share: never pick one silently. One line for the number, with a note that
+    // names every part it could be, and a toast that says so.
+    const recs = found.recs;
+    addCustom({ oem: recs[0].o, qty, note: sharedNote(recs), catalog: false });
+    showToast(`Added ${qty} × OEM # ${recs[0].o}. ${recs.length} parts share this number: ${recs.map((r) => `${r.n} (${r.c})`).join(' and ')}. We'll confirm which one you need.`, {
+      duration: 10000,
+    });
+  } else if (found?.recs.length) {
+    const rec = found.recs[0];
     addItem(lineFromRecord(rec, qty));
     showToast(`Added ${qty} × ${rec.o ? `OEM # ${rec.o}` : `C&M # ${rec.c}`} · ${rec.n}`);
   } else {
@@ -390,6 +398,7 @@ if (bulk) {
   let result: BulkResult | null = null;
   const qtys: number[] = [];
   const included: boolean[] = [];
+  const picks: number[] = []; // a shared number: the index of the part chosen, -1 while none is
 
   const openBulk = (scroll: boolean) => {
     bulk.open = true;
@@ -431,12 +440,17 @@ if (bulk) {
       message.hidden = true;
       qtys.length = 0;
       included.length = 0;
+      picks.length = 0;
       tbody.replaceChildren(
         ...res.rows.map((row, i) => {
           qtys[i] = row.qty;
-          included[i] = true;
+          // A line that is not in the catalog is ticked when it looks like a part number (it is checked and
+          // quoted); a line of words is not, so stray text from a pasted email stays out of the quote.
+          included[i] = row.kind !== 'miss' || row.likely;
+          picks[i] = -1;
           const qty = h('input', { class: 'bk__qty', type: 'number', min: 1, max: 999, inputmode: 'numeric', value: row.qty });
-          qty.setAttribute('aria-label', `Quantity of ${row.kind === 'match' ? row.rec.o || row.rec.c : row.text}`);
+          const qtyName = row.kind === 'match' ? row.rec.o || row.rec.c : row.kind === 'choose' ? row.recs[0].o : row.text;
+          qty.setAttribute('aria-label', `Quantity of ${qtyName}`);
           qty.addEventListener('change', () => {
             qtys[i] = Math.max(1, Math.min(999, Math.round(Number(qty.value)) || 1));
             qty.value = String(qtys[i]);
@@ -454,22 +468,58 @@ if (bulk) {
               qty,
             );
           }
-          const box = h('input', { type: 'checkbox', checked: true, id: `bulk-add-${i}` });
+          if (row.kind === 'choose') {
+            // Several parts share this number: list them all, choose none. A row left unchosen is still added,
+            // as one line that names them all (sharedNote), and the shop confirms which.
+            const oem = row.recs[0].o;
+            const group = `bulk-pick-${i}`;
+            const legend = h('legend', { class: 'bk__legend', text: `${row.recs.length} parts share this OEM #: choose one` });
+            const options = row.recs.map((rec, n) => {
+              const radio = h('input', { type: 'radio', name: group, value: n, id: `${group}-${n}` });
+              radio.addEventListener('change', () => {
+                if ((radio as HTMLInputElement).checked) picks[i] = n;
+              });
+              return h(
+                'label',
+                { class: 'bk__opt', for: `${group}-${n}` },
+                radio,
+                rec.p ? h('img', { src: rec.p, alt: '', width: 27, height: 36, loading: 'lazy' }) : h('span', { class: 'bk__ph bk__ph--sm' }),
+                h('span', { class: 'bk__optname' }, h('span', { text: rec.n }), h('span', { class: 'bk__optcm', text: `C&M # ${rec.c ?? ''}` })),
+              );
+            });
+            return h(
+              'li',
+              { class: 'bk__row bk__row--choose' },
+              h('span', { class: 'bk__ph' }),
+              h('div', { class: 'bk__what' }, h('strong', { text: oem }), h('span', { text: 'Not sure which? Leave it and we will confirm.' }), note, dup),
+              qty,
+              h('fieldset', { class: 'bk__pick' }, legend, ...options),
+            );
+          }
+          const box = h('input', { type: 'checkbox', checked: included[i], id: `bulk-add-${i}` });
           box.addEventListener('change', () => {
             included[i] = (box as HTMLInputElement).checked;
             updateAdd();
           });
           return h(
             'li',
-            { class: 'bk__row bk__row--miss' },
+            { class: `bk__row bk__row--miss${row.likely ? '' : ' bk__row--junk'}` },
             h('span', { class: 'bk__ph' }),
-            h('div', { class: 'bk__what' }, h('strong', { text: row.text }), h('span', { text: 'Not in the catalog' }), note, dup),
+            h(
+              'div',
+              { class: 'bk__what' },
+              h('strong', { text: row.text }),
+              h('span', { text: row.likely ? "Not in our catalog yet: we'll check it and quote it." : "This doesn't look like a part number." }),
+              note,
+              dup,
+            ),
             h('label', { class: 'bk__anyway', for: `bulk-add-${i}` }, box, ' Add anyway'),
             qty,
           );
         }),
       );
       const parts = [`${res.matched} matched`, `${res.missing} not found`];
+      if (res.choose) parts.push(`${res.choose} to choose`);
       if (res.merged) parts.push(`${res.merged} duplicate ${res.merged === 1 ? 'line' : 'lines'} merged`);
       summary.textContent = parts.join(' · ');
       preview.hidden = false;
@@ -488,7 +538,11 @@ if (bulk) {
     result.rows.forEach((row, i) => {
       if (!included[i]) return;
       if (row.kind === 'match') addItem(lineFromRecord(row.rec, qtys[i], row.note));
-      else addCustom({ oem: row.text, qty: qtys[i], note: row.note });
+      else if (row.kind === 'choose') {
+        const rec = row.recs[picks[i]];
+        if (rec) addItem(lineFromRecord(rec, qtys[i], row.note));
+        else addCustom({ oem: row.recs[0].o, qty: qtys[i], note: [sharedNote(row.recs), row.note].filter(Boolean).join(' '), catalog: false });
+      } else addCustom({ oem: row.text, qty: qtys[i], note: row.note });
       n++;
     });
     showToast(`Added ${n} ${n === 1 ? 'line' : 'lines'} to your quote`);

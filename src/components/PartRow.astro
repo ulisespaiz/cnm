@@ -9,11 +9,10 @@ import '../styles/store.css';
 interface Props {
   part: Part;
   sectionTitle: string;
-  eager?: boolean;
-  priority?: boolean; // first rows: fetchpriority high
+  eager?: boolean; // first rows: the photo loads at once (no fetchpriority: these are small thumbnails, not the LCP)
 }
 
-const { part, sectionTitle, eager = false, priority = false } = Astro.props;
+const { part, sectionTitle, eager = false } = Astro.props;
 const d = part.data;
 const url = partUrl(part);
 const thumb = await thumbOf(d.images[0]);
@@ -31,7 +30,7 @@ const add = await addData(part, sectionTitle);
   data-pn={d.oem ?? `ZZ-${d.cm}`}
   data-name={d.name}
 >
-  <a class="prow__thumb part-thumb" href={url} tabindex="-1" aria-hidden="true">
+  <a class="prow__thumb part-thumb" href={url} tabindex="-1" aria-hidden="true" data-astro-prefetch>
     {
       thumb ? (
         <img
@@ -40,7 +39,6 @@ const add = await addData(part, sectionTitle);
           height={thumb.height}
           alt=""
           loading={eager ? 'eager' : 'lazy'}
-          fetchpriority={priority ? 'high' : undefined}
           decoding="async"
         />
       ) : (
@@ -49,7 +47,7 @@ const add = await addData(part, sectionTitle);
     }
   </a>
   <div class="prow__main">
-    <a class="prow__name" href={url}>{d.name}<span class="visually-hidden"> ({d.oem ?? d.cm})</span></a>
+    <a class="prow__name" href={url} data-astro-prefetch>{d.name}<span class="visually-hidden"> ({d.oem ?? d.cm})</span></a>
     <div class="prow__meta">
       <span class="chip-sec">{sectionTitle}</span>
       {d.attrs.width && <span class="chip-attr">{d.attrs.width}″</span>}

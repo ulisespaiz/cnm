@@ -2,6 +2,9 @@
 // Quantity stepper + "Add to Quote". One component for rows, the part page and
 // the sticky bar: behaviour is a single delegated listener in part-add.ts.
 // The wrapper carries the part's data-* attributes (see store.ts addData).
+// Button colours: on the part page and its sticky bar Add to Quote is the page's main quote action (red);
+// in a list of parts each row's Add is a secondary action (outline), and it reads "Add" to stay compact.
+// The accessible name is always "Add to Quote: <number>".
 import '../styles/store.css';
 
 interface Props {
@@ -10,7 +13,8 @@ interface Props {
   label?: string;
 }
 
-const { data, variant = 'row', label = 'Add to Quote' } = Astro.props;
+const { data, variant = 'row' } = Astro.props;
+const label = Astro.props.label ?? (variant === 'row' ? 'Add' : 'Add to Quote');
 const uid = `${variant}-${data['data-id']}`;
 const oem = data['data-oem'] || data['data-cm']; // the part's main number, for screen-reader labels
 ---
@@ -32,7 +36,9 @@ const oem = data['data-oem'] || data['data-cm']; // the part's main number, for 
     />
     <button type="button" class="qty__btn" data-step="1" aria-label={`Increase quantity of ${oem}`}>+</button>
   </div>
-  <button type="button" class="btn padd__add" data-add aria-label={`${label}: ${oem}`}><span data-add-label>{label}</span></button>
+  <button type="button" class:list={['btn padd__add', variant === 'row' ? 'btn--outline' : 'btn--red']} data-add aria-label={`Add to Quote: ${oem}`}>
+    <span data-add-label>{label}</span>
+  </button>
 </div>
 
 <script>

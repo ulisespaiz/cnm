@@ -41,10 +41,16 @@ const jsonLd = [
   jsonLd={jsonLd}
 >
   <div class="storebar">
-    <div class="container container--wide"><PartSearch variant="bar" /></div>
+    <div class="container"><PartSearch variant="bar" /></div>
   </div>
 
-  <div class="container container--wide hub">
+  <div class="container hub">
+    <noscript>
+      <p class="store-noscript">
+        Search and Add to Quote need JavaScript. Find your number in the <a href="/shop/part-numbers/">OEM part number index</a>
+        and send it to us on the <a href="/quote/">quote page</a>.
+      </p>
+    </noscript>
     <div class="crumbs-desktop"><Breadcrumbs items={crumbs} /></div>
     <a class="back-link" href="/shop/">‹ Parts Store</a>
 

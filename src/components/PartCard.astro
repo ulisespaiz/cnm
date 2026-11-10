@@ -18,7 +18,7 @@ const photo = data.images[0];
 const section = await getEntry(data.section);
 ---
 
-<a class="part-card" href={partUrl(part)}>
+<a class="part-card" href={partUrl(part)} data-astro-prefetch>
   <span class="part-card__media">
     {
       photo ? (
@@ -124,7 +124,7 @@ const section = await getEntry(data.section);
   }
 
   .part-card__oem {
-    font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: var(--oem-font, ui-monospace, monospace);
     font-size: 1rem;
     font-weight: 700;
     color: #111;
