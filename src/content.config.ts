@@ -101,14 +101,21 @@ const areas = defineCollection({
   }),
 });
 
-// Shop services (machining, cutting, fabrication). Each page can be added to
-// the quote list like a product.
+// Shop services (machining, cutting, fabrication). Each service page links to the quote form
+// (/quote/?service=<id>#details).
 const services = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/services' }),
   schema: ({ image }) =>
     z.object({
+      // Short public name: cards, breadcrumbs, the footer, JSON-LD and the quote form.
       title: z.string(),
+      // The service page's h1, carrying the words its seoTitle targets ("CNC Machining"). Falls back to title.
+      heading: z.string().optional(),
+      // The full description: shown once, on the service's own page (and in llms.txt and JSON-LD).
       summary: z.string().max(220),
+      // One plain sentence for cards on other pages (services hub, "more services", industries, home).
+      // Only facts already in the same file. Falls back to summary.
+      teaser: z.string().max(120).optional(),
       image: image().optional(),
       imageAlt: z.string().optional(),
       // Sub-capabilities shown as cards on the service page and bullets on the home page.
@@ -132,6 +139,9 @@ const equipment = defineCollection({
       name: z.string(),
       text: z.string(),
       image: image().optional(),
+      // The service this machine performs, when the copy makes that plain. /our-machinery/ links the
+      // machine to that service page, and the service page links back to the machine.
+      service: reference('services').optional(),
       featuresLabel: z.string().default('Key Features'),
       features: z.array(z.object({ name: z.string(), text: z.string() })).default([]),
       order: z.number().default(0),

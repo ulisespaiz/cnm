@@ -1,26 +1,123 @@
 ---
 import Base from '../layouts/Base.astro';
 import { site } from '../config/site';
+
+// Parts shop switch (site.store.enabled): the part-number search and "Browse parts" exist only with the
+// shop on. Services, the quote form and the phone are offered in both states.
+const shopOn = site.store.enabled;
+// The part request form: on the shop index with the shop on, on the quote page with it off.
+const requestUrl = shopOn ? '/shop/#request' : '/quote/#cant-find';
+// site.store.madeTo ("Made to match your part number, sample or print") as the end of a sentence.
+const madeTo = site.store.madeTo.replace(/^Made/, 'made');
+const description = shopOn
+  ? `That page moved or no longer exists. Search parts by number, see our services, request a quote or call ${site.name} at ${site.phone}.`
+  : `That page moved or no longer exists. See the services ${site.name} offers in ${site.address.city}, CA, request a quote or call ${site.phone}.`;
 ---
 
-<Base
-  title="Page Not Found"
-  description={`That page moved or no longer exists. See the services ${site.name} offers in ${site.address.city}, CA, or ask for a quote.`}
-  canonical={false}
-  noindex
->
+<Base title="Page Not Found" description={description} canonical={false} noindex>
   <section class="section">
-    <div class="container prose">
-      <h1>Page not found</h1>
-      <p>That page moved or no longer exists.</p>
-      {site.store.enabled ? (
-        <p><a class="btn" href="/shop/">Browse products</a></p>
-      ) : (
-        <p class="btn-row">
-          <a class="btn" href="/services/">Our services</a>
-          <a class="btn btn--outline" href="/quote/">Get a quote</a>
+    <div class="container">
+      <div class="nf">
+        <h1>Page not found</h1>
+        <p class="lead">That page moved or no longer exists. Here is where to go next.</p>
+
+        {shopOn && (
+          <form class="part-search" action="/shop/" method="get" role="search">
+            <label for="nf-q">Search by OEM or C&amp;M part number</label>
+            <div class="part-search__row">
+              <input
+                id="nf-q"
+                name="q"
+                type="search"
+                placeholder="e.g. 03187A0897"
+                autocomplete="off"
+                autocapitalize="characters"
+                spellcheck="false"
+                enterkeyhint="search"
+              />
+              <button class="btn" type="submit">Search</button>
+            </div>
+          </form>
+        )}
+
+        <p class="btn-row nf__actions">
+          <a class="btn btn--red" href="/quote/">Get a Quote</a>
+          <a class="btn btn--outline" href="/services/">Our services</a>
+          {shopOn && <a class="btn btn--outline" href="/shop/">Browse parts</a>}
+          <a class="btn btn--outline" href={`tel:${site.phoneE164}`}>Call {site.phone}</a>
         </p>
-      )}
+
+        <p class="nf__part">
+          {shopOn ? "Can't find your part?" : 'Need a replacement part?'} Replacement parts are {madeTo}.{' '}
+          <a href={requestUrl}>Send us the part number</a>. {site.replyTime}.
+        </p>
+      </div>
     </div>
   </section>
 </Base>
+
+<style>
+  .nf {
+    max-width: 70ch;
+  }
+
+  .nf .lead {
+    margin-bottom: 28px;
+  }
+
+  /* Part number search: a plain GET form, as in the home page hero; the shop page runs the search */
+  .part-search {
+    max-width: 560px;
+    margin: 0 0 24px;
+  }
+
+  .part-search label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+
+  .part-search__row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .part-search input {
+    flex: 1;
+    min-width: 0;
+    min-height: var(--tap);
+    padding: 0 14px;
+    border: 2px solid var(--color-field-border);
+    border-radius: var(--radius);
+    background: #fff;
+    color: inherit;
+    font: 400 1rem/1.4 var(--font-body);
+  }
+
+  .part-search input:focus-visible {
+    border-color: var(--color-primary);
+    outline-offset: 0;
+  }
+
+  .nf__actions {
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 479px) {
+    .nf__actions .btn {
+      flex: 1 1 100%;
+    }
+  }
+
+  .nf__part {
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  /* The link sits in running text: padding makes its tap target 44px+ tall, the negative margin keeps the line where it was */
+  .nf__part a {
+    display: inline-block;
+    padding-block: 12px;
+    margin-block: -12px;
+  }
+</style>

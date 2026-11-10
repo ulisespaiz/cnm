@@ -36,11 +36,16 @@
   --font-heading: var(--font-body);
 
   --radius: 12px;
+  --radius-sm: 8px; /* chips, small buttons, highlighted words */
+  --radius-pill: 999px; /* count badges and other pills */
   --gutter: 16px;
   --max-width: 1200px;
   --tap: 48px;
   --mobile-bar-height: 68px;
   --shadow: 0 1px 3px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.06);
+
+  /* Part numbers (OEM #, C&M #, quote references): one monospace stack everywhere */
+  --oem-font: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 }
 
 *,
@@ -115,7 +120,7 @@ h2 {
 .mark {
   display: inline-block;
   padding: 0 0.18em;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--color-primary);
   color: #fff;
 }
@@ -131,7 +136,7 @@ h2 {
   gap: 10px;
   margin-bottom: 16px;
   padding: 8px 14px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   font-size: 0.9rem;
   font-weight: 600;
@@ -221,7 +226,12 @@ main:focus {
   outline: none;
 }
 
-/* Buttons */
+/* Buttons. One colour, one job:
+   - .btn--red: the page's main quote action only (Get a Quote, Request a quote, Send request,
+     Review quote, and Add to Quote on a part page and its sticky bar). One per view where possible.
+   - .btn (blue): search and navigation.
+   - .btn--outline: secondary actions, including the per-row Add buttons in parts lists.
+   There is no black or white button: do not add one. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -251,16 +261,6 @@ main:focus {
 .btn--red:hover {
   background: var(--color-accent-hover);
   border-color: var(--color-accent-hover);
-}
-
-.btn--dark {
-  background: #000;
-  border-color: #000;
-}
-
-.btn--dark:hover {
-  background: #222;
-  border-color: #222;
 }
 
 .btn--outline {
@@ -301,7 +301,7 @@ main:focus {
   display: inline-block;
   min-width: 22px;
   padding: 1px 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: #b5122a;
   color: #fff;
   font-size: 0.875rem;
@@ -555,7 +555,7 @@ textarea[aria-invalid='true'] {
   min-height: 44px;
   padding: 0 14px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: #fff;
   color: var(--color-primary);
   font: inherit;
@@ -563,4 +563,153 @@ textarea[aria-invalid='true'] {
   display: inline-flex;
   align-items: center;
   cursor: pointer;
+}
+
+/* Short landscape screens and 400% zoom (320x256 CSS px): the sticky header, the parts search bar and
+   the fixed call/quote bar would leave almost no room for the page. They scroll with it instead
+   (Header.astro and MobileBar.astro set their own position for this query), and the room kept for
+   them goes too. */
+@media (max-height: 500px) {
+  html {
+    scroll-padding: auto !important;
+    --store-stick: 0px !important;
+  }
+
+  body:not(.no-mobile-bar) {
+    padding-bottom: 0;
+  }
+
+  .storebar {
+    position: static !important;
+  }
+}
+
+/* Visitors who ask for less motion: no transitions, no hover lift, no smooth scrolling
+   (src/scripts/scroll-to.ts does the same for scripted scrolls). */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Hover lift on part cards (PartCard.astro) */
+  .part-card:hover {
+    transform: none !important;
+  }
+}
+
+/* Print: the page content on white, full width. No site header, search bar, bottom bars, footer
+   call-to-action, toasts, dialogs or buttons; tables, the part-number block and the quote list stay. */
+@media print {
+  @page {
+    margin: 15mm;
+  }
+
+  html {
+    scroll-padding: 0;
+  }
+
+  body,
+  body:not(.no-mobile-bar) {
+    padding: 0;
+    background: #fff !important;
+    background-image: none !important;
+    color: #000;
+    font-size: 11pt;
+  }
+
+  .skip-link,
+  .site-header,
+  .storebar,
+  .mobile-bar,
+  .addbar,
+  .site-footer .cta,
+  .toast-region,
+  dialog,
+  .btn,
+  button:not(.photo__main),
+  .photo__zoom,
+  .photo__thumbs,
+  .part__add,
+  .plist input {
+    display: none !important;
+  }
+
+  .container,
+  .container--wide {
+    max-width: none;
+    padding-inline: 0;
+  }
+
+  .section {
+    padding-block: 16px;
+  }
+
+  .section--alt,
+  .section--dark,
+  .card {
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+
+  a {
+    color: #000;
+  }
+
+  h1 {
+    font-size: 24pt;
+  }
+
+  h2 {
+    font-size: 16pt;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  table,
+  tr,
+  li,
+  img,
+  .ident,
+  .specs__row {
+    break-inside: avoid;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border: 1px solid #999;
+  }
+
+  /* Part numbers keep their monospace face and print dark */
+  .ident,
+  .ident__oem,
+  .ident__cm {
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  /* Sticky table and section headers would repeat over the content on paper */
+  .phead,
+  .plist__head,
+  .plist__side {
+    position: static !important;
+  }
 }

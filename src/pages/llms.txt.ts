@@ -64,7 +64,7 @@ ${partsBySection}
 
   const body = `# ${site.legalName}
 
-> Family-owned machine shop in ${site.address.city}, California, since ${site.founded}. Custom CNC machining, water-jet and laser cutting, welding, metal work and custom fabrication${catalogPitch}. Pricing is by quote.
+> Family-owned machine shop in ${site.address.city}, California, since ${site.founded}. Custom CNC machining, waterjet and laser cutting, welding, metal work and custom fabrication${catalogPitch}. Pricing is by quote.
 
 - Address: ${site.address.street}, ${site.address.city}, ${site.address.region} ${site.address.postalCode}
 - Phone: ${site.phone}

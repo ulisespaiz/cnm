@@ -113,10 +113,107 @@ test('home renders with the main navigation', async ({ page }) => {
   for (const name of ['Home', 'About', 'Services', 'Our Machinery', 'Contact']) {
     await expect(nav.getByRole('link', { name, exact: true })).toBeVisible();
   }
-  const shop = nav.getByRole('link', { name: 'Shop', exact: true });
+  const shop = nav.getByRole('link', { name: 'Parts', exact: true });
   if (shopOn) await expect(shop).toHaveAttribute('href', '/shop/');
   else await expect(shop).toHaveCount(0);
   await expect(page.locator('.cart-btn')).toHaveAttribute('href', '/quote/');
+});
+
+test.describe('home: services up top, a short parts block, quote paths and honest FAQ answers', () => {
+  const SERVICE_IDS = ['cutting', 'machining', 'metal-work', 'custom-fabrication'];
+  const siteConfig = readFileSync('src/config/site.ts', 'utf8');
+  const replyTime = /replyTime: '([^']+)'/.exec(siteConfig)![1];
+  const serviceFile = (id: string) => readFileSync(`src/content/services/${id}.md`, 'utf8');
+  const teaser = (id: string) => /^teaser:\s*"(.*)"\s*$/m.exec(serviceFile(id))![1];
+
+  test('the four service cards sit right under the hero on a phone, each linking to its page with its teaser', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    const cards = page.locator('#services .svc__card');
+    await expect(cards).toHaveCount(4);
+    for (const [i, id] of SERVICE_IDS.entries()) {
+      await expect(cards.nth(i)).toHaveAttribute('href', `/services/${id}/`);
+      await expect(cards.nth(i)).toContainText(teaser(id));
+    }
+    expect((await cards.first().boundingBox())!.y + (await page.evaluate(() => scrollY)), 'first service card within 1,600 px').toBeLessThan(1600);
+    expect(await page.evaluate(() => document.documentElement.scrollHeight), 'page height on a phone').toBeLessThan(8500);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  });
+
+  test('the hero keeps the headline and says what and where in the eyebrow and lead', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^Precision machining since 2002\.\s*Still your machine shop\.$/);
+    const hero = page.locator('.hero');
+    await expect(hero.locator('.eyebrow')).toHaveText('Machine shop in Salinas, CA · Since 2002');
+    const lead = hero.locator('.lead');
+    for (const words of ['CNC machining', 'waterjet and laser cutting', 'welding and metal work', 'custom metal fabrication']) await expect(lead).toContainText(words);
+  });
+
+  test('buttons follow the colour contract: red Get a Quote, outline second button, blue Search, nothing black', async ({ page }) => {
+    await page.goto('/');
+    const actions = page.locator('.hero .hero__actions .btn');
+    await expect(actions.first()).toHaveText('Get a Quote');
+    await expect(actions.first()).toHaveClass(/\bbtn--red\b/);
+    await expect(actions.nth(1)).toHaveClass(/\bbtn--outline\b/);
+    await expect(actions.nth(1)).toHaveText(shopOn ? 'Browse parts' : 'Our Services');
+    await expect(page.locator('main .btn--dark')).toHaveCount(0);
+    if (shopOn) {
+      const search = page.getByRole('button', { name: 'Search', exact: true });
+      await expect(search).toHaveClass(/\bbtn\b/);
+      await expect(search).not.toHaveClass(/\bbtn--red\b/);
+      await expect(page.locator('.store__count .btn--red')).toHaveCount(0);
+    }
+  });
+
+  test('a visitor whose part is not listed is sent to the quote page', async ({ page }) => {
+    test.skip(!shopOn, 'the parts search and the parts block exist only with the shop on');
+    await page.goto('/');
+    const miss = page.locator('.part-search__miss');
+    await expect(miss).toContainText('Part not listed?');
+    await expect(miss).toContainText(`${replyTime}.`);
+    await expect(miss.getByRole('link', { name: 'Send us the number, a sample or a print' })).toHaveAttribute('href', '/quote/');
+
+    const parts = page.locator('#parts');
+    await expect(parts.getByRole('link', { name: 'Browse all parts' })).toHaveCount(1);
+    await expect(parts.getByRole('link', { name: 'Browse all parts' })).toHaveAttribute('href', '/shop/');
+    await expect(parts.getByRole('list', { name: 'Parts sections' }).getByRole('link')).toHaveCount(8);
+    await expect(parts.locator('.store__miss').getByRole('link', { name: 'Request a quote' })).toHaveAttribute('href', '/quote/');
+    await expect(parts.locator('.store__miss')).toContainText(replyTime);
+    await expect(parts).toContainText('not affiliated with or endorsed by any machine manufacturer');
+  });
+
+  test('with the shop off there is no parts block', async ({ page }) => {
+    test.skip(shopOn, 'the parts shop is on in this build');
+    await page.goto('/');
+    await expect(page.locator('#parts')).toHaveCount(0);
+    await expect(page.locator('#hero-q')).toHaveCount(0);
+  });
+
+  test('the FAQ names all four services, only listed materials, and an honest turnaround', async ({ page }) => {
+    await page.goto('/');
+    const answer = (q: string) => page.locator('details.faq', { has: page.locator('summary', { hasText: q }) }).locator('p');
+    const services = await answer('What services do you offer?').textContent();
+    for (const words of ['CNC machining', 'cutting', 'welding', 'fabrication']) expect(services).toContain(words);
+
+    const materials = (await answer('What materials do you use?').textContent())!;
+    expect(materials).not.toMatch(/titanium|polymer|alloy/i);
+    const listed = SERVICE_IDS.flatMap((id) => JSON.parse(/^materials:\s*(\[.*\])\s*$/m.exec(serviceFile(id))![1]) as string[]).map((m) => m.toLowerCase());
+    for (const m of new Set(listed)) expect(materials, m).toContain(m);
+
+    const turnaround = (await answer('What is your typical turnaround time?').textContent())!;
+    expect(turnaround.endsWith(`${replyTime}.`)).toBe(true);
+    expect(turnaround).not.toMatch(/complexity/i);
+  });
+
+  test('the photo section says what it shows, the alt text does not double "shop", the banner loads lazily, "waterjet" is one word', async ({ page }) => {
+    await page.goto('/');
+    const main = page.getByRole('main');
+    await expect(main).not.toContainText('Proof of our quality');
+    await expect(main.locator('.eyebrow', { hasText: 'Inside our shop' })).toHaveCount(1);
+    for (const alt of await main.locator('img').evaluateAll((imgs) => imgs.map((i) => i.getAttribute('alt') ?? ''))) expect(alt).not.toMatch(/shop shop/i);
+    await expect(page.locator('.banner img')).toHaveAttribute('loading', 'lazy');
+    await expect(main).not.toContainText(/water-jet|water jet/i);
+  });
 });
 
 test.describe('parts shop', () => {
@@ -1272,7 +1369,7 @@ test.describe('OEM part number index', () => {
       await expect(page.locator('main').getByRole('link', { name: /OEM part number index/ }).first(), url).toHaveAttribute('href', '/shop/part-numbers/');
     }
     await page.goto('/');
-    await expect(page.locator('footer').getByRole('navigation', { name: 'Shop' }).getByRole('link', { name: 'OEM part number index' })).toHaveAttribute('href', '/shop/part-numbers/');
+    await expect(page.locator('footer').getByRole('navigation', { name: 'Parts' }).getByRole('link', { name: 'OEM part number index' })).toHaveAttribute('href', '/shop/part-numbers/');
   });
 });
 
@@ -1444,6 +1541,281 @@ test.describe('how to order', () => {
   });
 });
 
+test.describe('content: service pages, machinery, about, 404 and privacy', () => {
+  // title: cards, breadcrumbs, the footer and JSON-LD. heading: the service page's h1.
+  const SERVICES = [
+    { id: 'cutting', title: 'Cutting Services', heading: 'Waterjet & Laser Cutting' },
+    { id: 'machining', title: 'Machining', heading: 'CNC Machining' },
+    { id: 'metal-work', title: 'Metal Work', heading: 'Welding & Metal Work' },
+    { id: 'custom-fabrication', title: 'Custom Fabrication', heading: 'Custom Metal Fabrication' },
+  ];
+  // A quoted front-matter value from a service's Markdown file.
+  const frontMatter = (id: string, field: string) => new RegExp(`^${field}:\\s*"(.*)"\\s*$`, 'm').exec(readFileSync(`src/content/services/${id}.md`, 'utf8'))?.[1] ?? '';
+  const times = (text: string, part: string) => text.split(part).length - 1;
+  const mainText = async (page: Page) => squash(await page.getByRole('main').textContent());
+  // Claims nothing in the repo records: removed until the owner confirms them.
+  const UNCONFIRMED = /titanium|high-performance polymers|exotic alloys|specialty alloys|strict quality control|eco-friendly|any scale and complexity|ahead of industry standards|trusted by businesses across multiple industries/i;
+  const OLD_SPELLING = /water[- ]jet/i; // "waterjet" is one word
+
+  for (const s of SERVICES) {
+    test(`/services/${s.id}/ leads with "${s.heading}", lists each capability once and sends the visitor to the quote form`, async ({ page }) => {
+      await page.goto(`/services/${s.id}/`);
+      const main = page.getByRole('main');
+
+      // The h1 carries the words the title targets, the eyebrow names the city, the breadcrumb and JSON-LD keep the short title
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(s.heading);
+      expect(await page.title()).toContain(`${s.heading} in Salinas, CA`);
+      await expect(main.locator('.eyebrow').first()).toHaveText('Services · Salinas, CA');
+      const data = await jsonLd(page);
+      expect(data.find((d) => d['@type'] === 'BreadcrumbList').itemListElement.map((i: { name: string }) => i.name)).toEqual(['Home', 'Services', s.title]);
+      const service = data.find((d) => d['@type'] === 'Service');
+      expect(service, 'Service JSON-LD').toBeTruthy();
+      expect(service.name).toBe(s.title);
+      expect(service.url).toBe(`${SITE_ORIGIN}/services/${s.id}/`);
+      const summary = frontMatter(s.id, 'summary');
+      expect(summary.length).toBeGreaterThan(40);
+      expect(service.description).toBe(summary);
+
+      // The summary is on the page once (the lead), and every heading, capability names included, appears once
+      const text = await mainText(page);
+      expect(times(text, summary), 'the summary is shown once').toBe(1);
+      await expect(main.locator('.lead')).toHaveText(summary);
+      await expect(main.getByRole('heading', { level: 2, name: 'Capabilities', exact: true })).toHaveCount(1);
+      const capabilities = (await main.locator('.capabilities h3').allTextContents()).map(squash);
+      expect(capabilities.length).toBeGreaterThanOrEqual(2);
+      expect(service.hasOfferCatalog.itemListElement.map((o: { itemOffered: { name: string } }) => o.itemOffered.name)).toEqual(capabilities);
+      const headings = (await main.getByRole('heading').allTextContents()).map(squash);
+      expect(new Set(headings).size, `a heading is repeated: ${headings.join(' | ')}`).toBe(headings.length);
+      await expect(main.getByRole('heading', { name: `${s.heading}: common questions` })).toBeVisible();
+
+      // One red quote button and a full-size call button, with the reply time; no quote-list stepper
+      const aside = main.locator('.service__quote');
+      const quote = aside.getByRole('link', { name: 'Request a quote', exact: true });
+      await expect(quote).toHaveAttribute('href', `/quote/?service=${s.id}#details`);
+      await expect(quote).toHaveClass(/btn--red/);
+      const call = aside.getByRole('link', { name: `Call ${configString('phone')}` });
+      await expect(call).toHaveAttribute('href', `tel:${configString('phoneE164')}`);
+      await expect(call).toHaveClass(/btn--outline/);
+      await expect(aside).toContainText(`${configString('replyTime')}.`);
+      const [quoteBox, callBox] = [(await quote.boundingBox())!, (await call.boundingBox())!];
+      expect(quoteBox.height).toBeGreaterThanOrEqual(44);
+      expect(callBox.height).toBe(quoteBox.height);
+      expect(callBox.y, 'Call sits beside Request a quote on a desktop').toBe(quoteBox.y);
+      await expect(main.getByRole('button', { name: /add|quote/i })).toHaveCount(0);
+      await expect(main.locator('input, select, form')).toHaveCount(0);
+      await expect(main).not.toContainText(/add (this service )?to (your )?quote/i);
+
+      // Cross-links: the machinery page, the industries page, and the other services by their short teaser
+      await expect(main.locator('a[href="/our-machinery/"]')).toHaveCount(1);
+      await expect(main.locator('a[href="/industries/food-processing-agriculture/"]')).toHaveCount(1);
+      for (const other of SERVICES.filter((o) => o.id !== s.id)) {
+        const card = main.locator(`a.card[href="/services/${other.id}/"]`);
+        await expect(card.getByRole('heading')).toHaveText(other.title);
+        await expect(card).toContainText(frontMatter(other.id, 'teaser'));
+      }
+
+      expect(text).not.toMatch(UNCONFIRMED);
+      expect(text).not.toMatch(OLD_SPELLING);
+      expect(await page.locator('meta[name="description"]').getAttribute('content')).not.toMatch(OLD_SPELLING);
+
+      await quote.click();
+      await expect(page).toHaveURL(new RegExp(`/quote/\\?service=${s.id}#details$`));
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    });
+  }
+
+  test('the services hub and the industries page show each service by its one-sentence teaser, not its full summary', async ({ page }) => {
+    for (const s of SERVICES) {
+      const teaser = frontMatter(s.id, 'teaser');
+      expect(teaser, `${s.id}: one plain sentence`).toMatch(/^[A-Z][^.!?]+\.$/);
+      expect(teaser.length).toBeLessThanOrEqual(120);
+    }
+    for (const url of ['/services/', '/industries/food-processing-agriculture/']) {
+      await page.goto(url);
+      const main = page.getByRole('main');
+      const text = await mainText(page);
+      for (const s of SERVICES) {
+        const card = main.locator(`a[href="/services/${s.id}/"]`);
+        await expect(card, url).toHaveCount(1);
+        await expect(card.getByRole('heading'), url).toHaveText(s.title);
+        await expect(card, url).toContainText(frontMatter(s.id, 'teaser'));
+        expect(times(text, frontMatter(s.id, 'summary')), `${url}: the ${s.id} summary`).toBe(0);
+      }
+      expect(text, url).not.toMatch(UNCONFIRMED);
+      expect(text, url).not.toMatch(OLD_SPELLING);
+      expect(await page.locator('meta[name="description"]').getAttribute('content'), url).not.toMatch(OLD_SPELLING);
+      // the band's quote link is the page's quote action: red
+      await expect(main.locator('.cta-band a[href="/quote/"]'), url).toHaveClass(/btn--red/);
+    }
+
+    // industries page: the title has its comma, and a visitor whose part is not listed is sent to the part request form
+    expect(await page.title()).toContain('Salinas, CA');
+    const main = page.getByRole('main');
+    if (shopOn) {
+      const line = main.locator('.not-listed');
+      await expect(line).toContainText(configString('madeTo').replace(/^Made/, 'made'));
+      await expect(line).toContainText(configString('replyTime'));
+      await expect(line.getByRole('link', { name: 'Send us the part number' })).toHaveAttribute('href', '/shop/#request');
+      await expect(main).toContainText(/C&M number: \S/); // a space before the first section link
+    } else {
+      await expect(main.locator('a[href^="/shop"]')).toHaveCount(0);
+    }
+  });
+
+  test('/our-machinery/ links each machine to the service it performs and back, and fetches its first photo first', async ({ page }) => {
+    await page.goto('/our-machinery/');
+    const serviceOf: Record<string, string> = {
+      'sharp-22120b-lathe': 'machining',
+      'cnc-vertical-milling-machine': 'machining',
+      'tb-2060vs-cnc-turning': 'machining',
+      'flow-mach-500-waterjet': 'cutting',
+      'fiber-laser-cutting-system': 'cutting',
+    };
+    await expect(page.locator('.machine')).toHaveCount(Object.keys(serviceOf).length);
+    for (const [machine, service] of Object.entries(serviceOf)) {
+      const link = page.locator(`#${machine} a[href^="/services/"]`);
+      await expect(link, machine).toHaveCount(1);
+      await expect(link, machine).toHaveAttribute('href', `/services/${service}/`);
+      await expect(link, machine).toContainText(SERVICES.find((s) => s.id === service)!.heading);
+    }
+
+    // The first photo is the page's largest element: eager and high priority; the others wait until they are scrolled to
+    const photos = page.locator('.machine img');
+    await expect(photos.first()).toHaveAttribute('loading', 'eager');
+    await expect(photos.first()).toHaveAttribute('fetchpriority', 'high');
+    for (const photo of (await photos.all()).slice(1)) {
+      await expect(photo).toHaveAttribute('loading', 'lazy');
+      await expect(photo).not.toHaveAttribute('fetchpriority', 'high');
+    }
+
+    const text = await mainText(page);
+    expect(text).not.toMatch(/exceptional|state-of-the-art|indispensable|cornerstone|seamlessly/i);
+    expect(text).not.toMatch(UNCONFIRMED);
+    expect(text).toContain('60,000 PSI'); // the facts stay
+
+    // and back: a service page links to its machines, at anchors that exist
+    for (const service of ['cutting', 'machining']) {
+      await page.goto(`/services/${service}/`);
+      const back = page.getByRole('main').locator('a[href^="/our-machinery/#"]');
+      const expected = Object.keys(serviceOf).filter((m) => serviceOf[m] === service).map((m) => `/our-machinery/#${m}`);
+      expect((await back.evaluateAll((els) => els.map((el) => el.getAttribute('href')))).sort(), service).toEqual(expected.sort());
+    }
+    await page.getByRole('main').getByRole('link', { name: 'Sharp 22120B Lathe' }).click();
+    await expect(page).toHaveURL(/\/our-machinery\/#sharp-22120b-lathe$/);
+    await expect(page.locator('#sharp-22120b-lathe')).toBeInViewport();
+  });
+
+  test('/about/ links to the services and the machinery, drops the unconfirmed claims and loads the office photo lazily', async ({ page }) => {
+    await page.goto('/about/');
+    const main = page.getByRole('main');
+    await expect(main.getByRole('link', { name: /^See our services/ })).toHaveAttribute('href', '/services/');
+    await expect(main.getByRole('link', { name: /^See our machinery/ })).toHaveAttribute('href', '/our-machinery/');
+    await expect(main.locator('.intro img')).toHaveAttribute('loading', 'lazy');
+    const text = await mainText(page);
+    expect(text).not.toMatch(UNCONFIRMED);
+    expect(text).not.toMatch(OLD_SPELLING);
+    expect(text).toContain('waterjet cutting, laser cutting, and shearing');
+  });
+
+  test('the business JSON-LD and llms.txt spell waterjet as one word and name no unconfirmed material', async ({ page, request }) => {
+    await page.goto('/services/');
+    const business = (await jsonLd(page)).find((d) => d['@type'] === 'LocalBusiness');
+    expect(JSON.stringify(business)).not.toMatch(OLD_SPELLING);
+    expect(business.knowsAbout).toContain('Waterjet cutting');
+    expect(business.description).toContain('waterjet and laser cutting');
+    const llms = await (await request.get('/llms.txt')).text();
+    expect(llms).not.toMatch(OLD_SPELLING);
+    expect(llms).not.toMatch(UNCONFIRMED);
+    for (const s of SERVICES) expect(llms).toContain(`- [${s.title}](${SITE_ORIGIN}/services/${s.id}/): ${frontMatter(s.id, 'summary')}`);
+  });
+
+  test('the 404 page offers the services, a quote and the phone, and the part search only with the shop on', async ({ page, request }) => {
+    // Any unknown address answers 404 with this page. The checks below load it at /404.html (status 200),
+    // because Chromium reports a 404 document as a console error and the page fixture fails on those.
+    const missing = await request.get('/no-such-page/');
+    expect(missing.status()).toBe(404);
+    expect(await missing.text()).toContain('Page not found');
+
+    await page.goto('/404.html');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Page not found');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+
+    const main = page.getByRole('main');
+    const quote = main.getByRole('link', { name: 'Get a Quote', exact: true });
+    await expect(quote).toHaveAttribute('href', '/quote/');
+    await expect(quote).toHaveClass(/btn--red/);
+    await expect(main.getByRole('link', { name: 'Our services', exact: true })).toHaveAttribute('href', '/services/');
+    await expect(main.getByRole('link', { name: `Call ${configString('phone')}` })).toHaveAttribute('href', `tel:${configString('phoneE164')}`);
+    // For a visitor who was looking for a part: the facts in src/config/site.ts, and the part request form
+    await expect(main).toContainText(configString('madeTo').replace(/^Made/, 'made'));
+    await expect(main).toContainText(configString('replyTime'));
+    const send = main.getByRole('link', { name: 'Send us the part number' });
+
+    // The meta description says what the page offers
+    const description = (await page.locator('meta[name="description"]').getAttribute('content'))!;
+    expect(description.length).toBeLessThanOrEqual(160);
+    expect(description).toMatch(/services/);
+    expect(description).toMatch(/request a quote/);
+    expect(description).toContain(configString('phone'));
+
+    const search = main.getByRole('search');
+    if (shopOn) {
+      expect(description).toMatch(/search parts by number/i);
+      await expect(main.getByRole('link', { name: 'Browse parts', exact: true })).toHaveAttribute('href', '/shop/');
+      await expect(send).toHaveAttribute('href', '/shop/#request');
+      // the same plain GET form as the home page hero: the shop page runs the search
+      await search.getByLabel('Search by OEM or C&M part number').fill(PART);
+      await search.getByRole('button', { name: 'Search', exact: true }).click();
+      await expect(page).toHaveURL(new RegExp(`/shop/\\?q=${PART}$`));
+      const visibleRows = page.locator('[data-rows] > li.prow:not([hidden])');
+      await expect(visibleRows).toHaveCount(1);
+      await expect(visibleRows.first()).toContainText(PART);
+    } else {
+      expect(description).not.toMatch(/search|parts/i);
+      await expect(search).toHaveCount(0);
+      await expect(main.locator('a[href^="/shop"]')).toHaveCount(0);
+      await expect(send).toHaveAttribute('href', '/quote/#cant-find');
+    }
+  });
+
+  test('/how-to-order/ quotes the form choices with straight quotes', async ({ page }) => {
+    await page.goto('/how-to-order/');
+    const text = await mainText(page);
+    expect(text).toContain('"ASAP / rush", "This week", "2–4 weeks" or "Flexible"');
+    expect(text).not.toMatch(/[“”]/);
+  });
+
+  test('the privacy page says what the code does: no tracking cookies, the quote list in the browser, delivery by Cloudflare', async ({ page }) => {
+    await page.goto('/privacy/');
+    const main = page.getByRole('main');
+    await expect(main).toContainText('sets no analytics or advertising cookies');
+    await expect(main).toContainText('"Do Not Track" signal');
+    await expect(main).toContainText("kept in your own browser's storage");
+    await expect(main).toContainText('delivered by Cloudflare');
+    await expect(main).toContainText('IP address');
+    // the owner's open points (an effective date, a retention period) are a code comment, not page text
+    await expect(main).not.toContainText(/CONFIRM|effective date|retention/i);
+    // and the page keeps its word: it sets no cookie (a request to any other host fails the test in the page fixture)
+    await page.waitForLoadState('networkidle');
+    expect(await page.context().cookies()).toEqual([]);
+  });
+
+  test('the changed pages fit a phone without sideways scrolling, with the service buttons stacked full width', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    for (const url of ['/services/', '/services/cutting/', '/services/metal-work/', '/our-machinery/', '/about/', '/privacy/', '/404.html']) {
+      await page.goto(url);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), url).toBeLessThanOrEqual(0);
+    }
+    await page.goto('/services/machining/');
+    const boxes = await page.locator('.service__actions .btn').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().toJSON()));
+    expect(boxes).toHaveLength(2);
+    expect(boxes[1].y).toBeGreaterThan(boxes[0].y);
+    expect(boxes[0].width).toBe(boxes[1].width);
+    expect(boxes[0].width).toBeGreaterThan(280);
+  });
+});
+
 // Facts the pages state must come from src/config/site.ts or be true of every form: no payment, language or
 // "email only" claims, no drafting note on the privacy page.
 test.describe('stated facts', () => {
@@ -1483,11 +1855,120 @@ test.describe('stated facts', () => {
   });
 });
 
+test.describe('chrome: header buttons, print, short screens and reduced motion', () => {
+  const header = (page: Page) => page.locator('header.site-header');
+  const saveOneLine = (page: Page) =>
+    page.evaluate(() =>
+      localStorage.setItem('quote-list-v2', JSON.stringify({ ref: 'Q-261110-TEST', items: [{ key: 'x', id: 'x', title: 'Test line', qty: 1, kind: 'service' }] })),
+    );
+
+  test('desktop: one coloured button, "Get a Quote" when the list is empty and "Quote list" with the count when it is not', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/about/');
+    const quote = header(page).locator('.cart-btn');
+    await expect(quote).toBeVisible();
+    await expect(header(page).getByRole('link', { name: 'Get a Quote', exact: true })).toBeVisible();
+    await expect(header(page).locator('.shop-btn')).toBeHidden(); // the nav link is enough
+    if (shopOn) await expect(page.getByRole('navigation', { name: 'Main', exact: true }).getByRole('link', { name: 'Parts', exact: true })).toBeVisible();
+    const empty = await quote.boundingBox();
+
+    await saveOneLine(page);
+    await page.reload();
+    await expect(quote).toHaveAttribute('data-quote-has-items', 'true');
+    await expect(header(page).getByRole('link', { name: 'Quote list 1', exact: true })).toBeVisible();
+    await expect(quoteBadge(page)).toHaveText('1');
+    expect((await quote.boundingBox())!.width, 'the button keeps its width').toBe(empty!.width);
+  });
+
+  test('a saved list is flagged before first paint, so the header word is right before quote-store runs', async ({ page }) => {
+    await page.goto('/about/');
+    await saveOneLine(page);
+    // Empty the bundled scripts, so quote-store never runs: only public/quote-early.js may set the state.
+    await page.route('**/_astro/*.js', (route) => route.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-quote', 'filled');
+    await expect(header(page).locator('.cart-btn')).toHaveAttribute('data-quote-has-items', '');
+    await expect(header(page).locator('.cart-btn .qlabel__full')).toBeVisible();
+    await expect(header(page).locator('.cart-btn .qlabel__empty')).toBeHidden();
+  });
+
+  test('phones: no quote button in the header, a labelled Parts button and the menu link names the list', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/about/');
+    await expect(header(page).locator('.cart-btn')).toBeHidden();
+    await expect(page.locator('.mobile-bar').getByRole('link', { name: 'Get a Quote' })).toBeVisible();
+    const parts = header(page).locator('.shop-btn');
+    if (shopOn) {
+      await expect(parts).toBeVisible();
+      await expect(parts).toHaveText('Parts');
+      await expect(parts).toHaveClass(/btn--outline/);
+    } else await expect(parts).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Menu' }).click();
+    const menu = page.getByRole('navigation', { name: 'Main mobile' });
+    await expect(menu.getByRole('link', { name: 'Get a Quote', exact: true })).toBeVisible();
+    if (shopOn) await expect(menu.getByRole('link', { name: 'Parts', exact: true })).toHaveAttribute('href', '/shop/');
+
+    await saveOneLine(page);
+    await page.reload();
+    await page.getByRole('button', { name: 'Menu' }).click();
+    await expect(menu.getByRole('link', { name: 'Quote list (1)', exact: true })).toBeVisible();
+  });
+
+  test('the footer parts column is labelled Parts and goes with the shop', async ({ page }) => {
+    await page.goto('/');
+    const column = page.locator('footer').getByRole('navigation', { name: 'Parts', exact: true });
+    if (shopOn) await expect(column.getByRole('link', { name: 'Parts catalog' })).toHaveAttribute('href', '/shop/');
+    else await expect(column).toHaveCount(0);
+    await expect(page.locator('footer .cta .btn--red')).toHaveCount(1);
+    await expect(page.locator('footer').locator('.btn--dark, .btn--light')).toHaveCount(0);
+  });
+
+  test('print hides the header, bars, footer band and buttons and keeps the content on white', async ({ page, request }) => {
+    const urls = ['/quote/'];
+    if (shopOn) urls.push((await findPart(request)).u);
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const url of urls) {
+      await page.goto(url);
+      await page.emulateMedia({ media: 'print' });
+      for (const sel of ['.site-header', '.storebar', '.mobile-bar', '.addbar', 'main .btn']) {
+        for (const el of await page.locator(sel).all()) await expect(el, `${url} ${sel}`).toBeHidden();
+      }
+      await expect(page.locator('body')).toHaveCSS('background-image', 'none');
+      await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      if (url !== '/quote/') await expect(page.locator('.ident__oem')).toBeVisible();
+      await page.emulateMedia({ media: 'screen' });
+    }
+  });
+
+  for (const size of [
+    { width: 320, height: 256 },
+    { width: 844, height: 390 },
+  ]) {
+    test(`short screens (${size.width}x${size.height}): the header and the bottom bar scroll with the page`, async ({ page }) => {
+      await page.setViewportSize(size);
+      await page.goto('/about/');
+      await expect(page.locator('.site-header')).toHaveCSS('position', 'static');
+      await expect(page.locator('.mobile-bar')).toHaveCSS('position', 'static');
+      await expect(page.locator('body')).toHaveCSS('padding-bottom', '0px');
+      await expect(page.locator('html')).toHaveCSS('scroll-padding-top', 'auto');
+    });
+  }
+
+  test('reduced motion: no transitions and no smooth scrolling', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/industries/food-processing-agriculture/');
+    await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'auto');
+    await expect(page.locator('.card').first()).toHaveCSS('transition-duration', '0s');
+  });
+});
+
 test.describe('shared pages follow the parts shop switch', () => {
   test('llms.txt and the footer list the number index and the CSV only with the shop on', async ({ page, request }) => {
     const llms = await (await request.get('/llms.txt')).text();
     await page.goto('/');
-    const shopColumn = page.locator('footer').getByRole('navigation', { name: 'Shop' });
+    const shopColumn = page.locator('footer').getByRole('navigation', { name: 'Parts' });
     if (shopOn) {
       expect(llms).toContain(`(${SITE_ORIGIN}/shop/part-numbers/)`);
       expect(llms).toContain(`(${SITE_ORIGIN}/shop/catalog.csv)`);
