@@ -56,12 +56,6 @@
 /metal-fabrication     /services/custom-fabrication/  301
 /metal-fabrication/    /services/custom-fabrication/  301
 
-# WordPress leftovers
-/hello-world/          /   301
-/hello-world           /   301
-/blog-post-title-5/    /   301
-/blog-post-title-5     /   301
-
 # Sitemap URLs other generators use (WordPress, Yoast, plain)
 /wp-sitemap.xml        /sitemap-index.xml   301
 /sitemap.xml           /sitemap-index.xml   301

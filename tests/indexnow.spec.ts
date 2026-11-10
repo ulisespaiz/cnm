@@ -59,6 +59,17 @@ test.describe('IndexNow', () => {
     const from = deployJob.lastIndexOf('\n      - ', step);
     const block = deployJob.slice(from, step + 'npm run indexnow'.length);
     expect(block).toMatch(/continue-on-error:\s*true/);
-    expect(block).toMatch(/CLOUDFLARE_API_TOKEN/); // only where the deploy ran
+    expect(block).toMatch(/HAS_CF_TOKEN == 'true'/); // only where the deploy ran
+  });
+
+  // `npm ci` runs the install scripts of every dependency, and this step needs no credential either:
+  // the Cloudflare token goes to the wrangler step through its inputs and is never a job or step env.
+  test('the deploy token is handed to the wrangler step only, never to the job environment', () => {
+    const deployJob = ci.slice(ci.indexOf('\n  deploy:'));
+    expect(deployJob).not.toMatch(/^\s+CLOUDFLARE_(?:API_TOKEN|ACCOUNT_ID):/m);
+    expect(deployJob).toMatch(/HAS_CF_TOKEN: \$\{\{ secrets\.CLOUDFLARE_API_TOKEN != '' \}\}/);
+    const uses = [...deployJob.matchAll(/secrets\.CLOUDFLARE_API_TOKEN/g)];
+    expect(uses, 'the flag and the wrangler input').toHaveLength(2);
+    expect(deployJob).toMatch(/apiToken: \$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/);
   });
 });
