@@ -4,7 +4,7 @@ import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import CtaBand from '../../components/CtaBand.astro';
 import { site } from '../../config/site';
-import { getServices, serviceUrl } from '../../lib/content';
+import { getServices, serviceTeaser, serviceUrl } from '../../lib/content';
 import { breadcrumbs } from '../../lib/schema';
 
 const services = await getServices();
@@ -16,7 +16,7 @@ const crumbs = [
 
 <Base
   title={`Machine Shop Services in ${site.address.city}, CA`}
-  description={`Water-jet and laser cutting, CNC machining, welding, metal work and custom fabrication from ${site.legalName} in ${site.address.city}, CA.`}
+  description={`Waterjet and laser cutting, CNC machining, welding, metal work and custom fabrication from ${site.legalName} in ${site.address.city}, CA.`}
   jsonLd={[breadcrumbs(crumbs)]}
 >
   <section class="section">
@@ -38,7 +38,7 @@ const crumbs = [
             <div class="service-row__body">
               <span class="num">{String(i + 1).padStart(2, '0')}</span>
               <h2>{s.data.title}</h2>
-              <p class="muted">{s.data.summary}</p>
+              <p class="muted">{serviceTeaser(s)}</p>
               <ul class="ticks">
                 {s.data.capabilities.map((c) => <li>{c.name}</li>)}
               </ul>

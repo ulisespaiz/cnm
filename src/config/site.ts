@@ -14,7 +14,7 @@ export const site = {
   // Mentions the parts store only while the shop switch (store.enabled) is on.
   get description() {
     const tail = this.store.enabled ? ', fabrication and a parts store' : ' and fabrication';
-    return `Family-owned machine shop in Salinas, CA since 2002. CNC machining, water-jet and laser cutting, welding${tail}.`;
+    return `Family-owned machine shop in Salinas, CA since 2002. CNC machining, waterjet and laser cutting, welding${tail}.`;
   },
   url: 'https://cmmachshop.com',
   founded: 2002,
@@ -75,7 +75,7 @@ export const site = {
     'CNC machining',
     'CNC milling',
     'CNC turning',
-    'Water-jet cutting',
+    'Waterjet cutting',
     'Fiber laser cutting',
     'Sheet metal shearing',
     'MIG welding',

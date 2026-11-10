@@ -1,6 +1,8 @@
 ---
 title: "Machining"
+heading: "CNC Machining"
 summary: "Our machining services include precision milling and turning, allowing us to create complex parts with high accuracy and consistency — ideal for both prototyping and large production runs."
+teaser: "CNC milling and turning, from prototypes to production runs."
 image: ../../assets/equipment/CNC-Vertical-Milling-Machine.jpg
 imageAlt: "CNC vertical machining center in the C&M shop"
 capabilities:
@@ -9,8 +11,8 @@ capabilities:
   - name: "Turning"
     text: "Precision CNC turning for cylindrical components at production scale."
 materialsLabel: "Materials We Machine"
-materials: ["Steel", "Aluminum", "Stainless Steel", "Titanium", "High-Performance Polymers"]
-# CONFIRM: Titanium and High-Performance Polymers (and "titanium" in the home page FAQ) are the old site's copy; nothing in the repo records them. Confirm with the owner, then delete this note.
+materials: ["Steel", "Aluminum", "Stainless Steel"]
+# CONFIRM: "Titanium" and "High-Performance Polymers" were removed from this list until the owner confirms them (old-site copy; nothing in the repo records them, and no other page may name them either). Still unconfirmed and kept: Steel, Aluminum, Stainless Steel; "tight tolerances"; "at production scale" and "large production runs". Re-add or correct what the owner confirms, then delete this note.
 order: 2
 seoTitle: "CNC Machining in Salinas, CA"
 seoDescription: "Precision CNC milling and turning in Salinas, CA, from prototypes to production runs. Request a quote."
@@ -23,4 +25,4 @@ faqs:
   - q: "Can you make a part without a drawing?"
     a: "Yes. We work directly from technical drawings, and when there is no blueprint we can help engineer the part from a sample or your description."
 ---
-Our machining services include precision milling and turning, allowing us to create complex parts with high accuracy and consistency — ideal for both prototyping and large production runs. We operate CNC mills and lathes.
+We operate CNC mills and lathes.

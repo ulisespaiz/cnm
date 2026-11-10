@@ -1,6 +1,8 @@
 ---
 title: "Custom Fabrication"
+heading: "Custom Metal Fabrication"
 summary: "Whether you provide detailed blueprints or just a vision, we turn your ideas into reality through custom metal fabrication tailored to your exact specifications."
+teaser: "Custom metal fabrication from your blueprints, or from concept to finished part without them."
 image: ../../assets/equipment/Flow-Mach-500-Waterjet-Cutting-Machine.jpg
 imageAlt: "Flow waterjet cutting table in the C&M shop"
 capabilities:
@@ -9,7 +11,8 @@ capabilities:
   - name: "Without Blueprints"
     text: "Concept-to-part fabrication — we help engineer the solution from scratch."
 materialsLabel: "Materials We Work With"
-materials: ["Steel", "Aluminum", "Stainless Steel", "Copper", "Exotic Alloys"]
+materials: ["Steel", "Aluminum", "Stainless Steel", "Copper"]
+# CONFIRM: "Exotic Alloys" was removed from this list and from the materials answer below until the owner confirms it (old-site copy; nothing in the repo records it). Still unconfirmed and kept: Steel, Aluminum, Stainless Steel, Copper; "precision tolerances"; the process list (CNC machining, precision welding, sheet-metal bending, forming, finishing). Re-add or correct what the owner confirms, then delete this note.
 order: 4
 seoTitle: "Custom Metal Fabrication in Salinas, CA"
 seoDescription: "Custom metal fabrication in Salinas, CA, with or without blueprints: CNC machining, welding, bending, forming and finishing. Request a quote."
@@ -20,6 +23,6 @@ faqs:
   - q: "What does custom fabrication include?"
     a: "End-to-end work under one roof: CNC machining, precision welding, sheet-metal bending, forming and finishing."
   - q: "What materials do you fabricate with?"
-    a: "Steel, aluminum, stainless steel, copper and exotic alloys."
+    a: "Steel, aluminum, stainless steel and copper."
 ---
-Whether you provide detailed blueprints or just a vision, we turn your ideas into reality through custom metal fabrication tailored to your exact specifications. Our end-to-end fabrication services include CNC machining, precision welding, sheet-metal bending, forming, and finishing.
+Our end-to-end fabrication services include CNC machining, precision welding, sheet-metal bending, forming, and finishing.

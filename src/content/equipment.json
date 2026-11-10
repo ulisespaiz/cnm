@@ -2,8 +2,9 @@
   {
     "id": "sharp-22120b-lathe",
     "name": "Sharp 22120B Lathe",
-    "text": "A versatile and indispensable metalworking machine that enables us to shape, cut, and craft custom cylindrical components with exceptional precision. As a cornerstone of precision machining, this lathe is designed to handle a wide range of tasks, making it a crucial part of our manufacturing capabilities.",
+    "text": "A versatile metalworking machine that enables us to shape, cut, and craft custom cylindrical components with precision. This lathe is designed to handle a wide range of tasks, making it a crucial part of our manufacturing capabilities.",
     "image": "./../assets/equipment/Sharp-22120B-Lathe.jpg",
+    "service": "machining",
     "featuresLabel": "Applications",
     "features": [
       { "name": "Turning", "text": "Shaping materials to achieve exact diameters and contours." },
@@ -17,8 +18,9 @@
   {
     "id": "cnc-vertical-milling-machine",
     "name": "CNC Vertical Milling Machine",
-    "text": "A cornerstone of our manufacturing operations, delivering unmatched precision and reliability in cutting, drilling, and shaping a variety of materials. This advanced machine seamlessly integrates powerful cutting tools with state-of-the-art computer technology, enabling us to craft complex parts with exceptional accuracy and efficiency.",
+    "text": "Part of our manufacturing operations, delivering precision and reliability in cutting, drilling, and shaping a variety of materials. This advanced machine integrates powerful cutting tools with computer technology, enabling us to craft complex parts with accuracy and efficiency.",
     "image": "./../assets/equipment/CNC-Vertical-Milling-Machine.jpg",
+    "service": "machining",
     "featuresLabel": "Key Features",
     "features": [
       { "name": "High Precision", "text": "Ensures accurate and consistent machining for even the most intricate designs." },
@@ -33,20 +35,21 @@
     "name": "Flow Mach 500 Waterjet Cutter",
     "text": "A high-performance solution for precision cutting, designed to handle even the toughest materials with ease. Operating at pressures exceeding 60,000 PSI, the waterjet stream removes material efficiently and precisely — delivering flawless results without thermal distortion. Ideal for prototyping, small batch runs, and large-scale production.",
     "image": "./../assets/equipment/Flow-Mach-500-Waterjet-Cutting-Machine.jpg",
+    "service": "cutting",
     "featuresLabel": "Key Features",
     "features": [
-      { "name": "High Precision", "text": "Exceptional accuracy for intricate designs and complex geometries." },
+      { "name": "High Precision", "text": "Accuracy for intricate designs and complex geometries." },
       { "name": "Versatility", "text": "Cuts metals, composites, stone, and more across diverse industries." },
-      { "name": "Cold Cutting Process", "text": "Eliminates heat-affected zones, preserving the structural integrity of materials." },
-      { "name": "Eco-Friendly", "text": "A clean and sustainable cutting method with minimal waste." }
+      { "name": "Cold Cutting Process", "text": "Eliminates heat-affected zones, preserving the structural integrity of materials." }
     ],
     "order": 3
   },
   {
     "id": "tb-2060vs-cnc-turning",
     "name": "TB-2060VS CNC Turning Machine",
-    "text": "An integral part of our manufacturing process, offering high-precision machining with exceptional efficiency. This robust CNC lathe is engineered to handle complex turning operations seamlessly, enabling us to produce custom components that meet stringent standards across a variety of industries.",
+    "text": "An integral part of our manufacturing process, offering efficient, high-precision machining. This robust CNC lathe is engineered to handle complex turning operations, enabling us to produce custom components that meet stringent standards across a variety of industries.",
     "image": "./../assets/equipment/TB-2060VSCNC-CNC-Turning-Machine.jpg",
+    "service": "machining",
     "featuresLabel": "Key Features",
     "features": [
       { "name": "High Torque Spindle", "text": "Superior power and performance on even the toughest materials." },
@@ -59,12 +62,13 @@
   {
     "id": "fiber-laser-cutting-system",
     "name": "Fiber Laser Cutting System",
-    "text": "Utilizing state-of-the-art fiber laser cutting technology, we deliver exceptional precision and efficiency for a wide range of projects. From intricate designs to large-scale production, our laser system handles stainless steel, aluminum, brass, and mild steel to your exact specifications — with clean, smooth cuts every time.",
+    "text": "Using fiber laser cutting technology, we deliver precision and efficiency for a wide range of projects. From intricate designs to large-scale production, our laser system handles stainless steel, aluminum, brass, and mild steel to your exact specifications — with clean, smooth cuts every time.",
     "image": "./../assets/equipment/Laser-Cutting-Services.jpg",
+    "service": "cutting",
     "featuresLabel": "Our Services",
     "features": [
       { "name": "Custom Metal Cutting", "text": "Stainless steel, aluminum, brass, and mild steel to exact specifications." },
-      { "name": "High-Precision Work", "text": "Perfect for detailed designs and complex geometries with exceptional accuracy." },
+      { "name": "High-Precision Work", "text": "Accurate cutting for detailed designs and complex geometries." },
       { "name": "Material Versatility", "text": "Works with various metals and thicknesses, accommodating both small and large projects." },
       { "name": "Lead Time", "text": "Lead time is confirmed on your quote." }
     ],

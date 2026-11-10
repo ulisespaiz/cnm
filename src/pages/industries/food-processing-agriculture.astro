@@ -4,7 +4,7 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import FeaturedParts from '../../components/FeaturedParts.astro';
 import CtaBand from '../../components/CtaBand.astro';
 import { site } from '../../config/site';
-import { getServices, serviceUrl } from '../../lib/content';
+import { getServices, serviceTeaser, serviceUrl } from '../../lib/content';
 import { getParts, getSections, MAIN_MACHINE, sectionUrl, machineUrl } from '../../lib/parts';
 import { breadcrumbs, faqPage } from '../../lib/schema';
 
@@ -40,7 +40,7 @@ const faqs = [
 ---
 
 <Base
-  title={`Food Processing & Ag Machine Shop, ${site.address.city} CA`}
+  title={`Food Processing & Ag Machine Shop, ${site.address.city}, CA`}
   description={shopOn
     ? `Replacement parts, machining, cutting, welding and fabrication for food processing, packaging and agriculture equipment. ${site.legalName}, ${site.address.city}, CA.`
     : `Replacement parts made to your drawing or sample, plus machining, cutting, welding and fabrication for food processing and ag equipment in ${site.address.city}, CA.`}
@@ -70,7 +70,7 @@ const faqs = [
           <a class="card" href={serviceUrl(s)}>
             <div class="card__body">
               <h3>{s.data.title}</h3>
-              <p class="muted">{s.data.summary}</p>
+              <p class="muted">{serviceTeaser(s)}</p>
             </div>
           </a>
         ))}
@@ -90,7 +90,7 @@ const faqs = [
         <h2>Replacement parts for VFFS packaging machines</h2>
         <p>
           Our <a href={machineUrl(MAIN_MACHINE)}>parts catalog</a> lists {partCount} replacement parts for vertical form fill
-          seal (VFFS) packaging machines, searchable by OEM part number or C&amp;M number:
+          seal (VFFS) packaging machines, searchable by OEM part number or C&amp;M number:{' '}
           {sections.map((sec, i) => (
             <>
               <a href={sectionUrl(sec)}>{sec.data.title}</a>{i < sections.length - 1 ? ', ' : '.'}
@@ -98,6 +98,10 @@ const faqs = [
           ))}
         </p>
         <FeaturedParts />
+        <p class="muted not-listed">
+          Part not listed? Replacement parts are {site.store.madeTo.replace(/^Made/, 'made')}.{' '}
+          <a href="/shop/#request">Send us the part number</a>. {site.replyTime}.
+        </p>
       </div>
     </section>
   )}
@@ -126,6 +130,17 @@ const faqs = [
 
   .points {
     margin-top: 28px;
+  }
+
+  .not-listed {
+    margin: 24px 0 0;
+  }
+
+  /* The link sits in running text: padding makes its tap target 44px+ tall, the negative margin keeps the line where it was */
+  .not-listed a {
+    display: inline-block;
+    padding-block: 12px;
+    margin-block: -12px;
   }
 
   .faq-wrap {
