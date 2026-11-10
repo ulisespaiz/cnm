@@ -119,6 +119,103 @@ test('home renders with the main navigation', async ({ page }) => {
   await expect(page.locator('.cart-btn')).toHaveAttribute('href', '/quote/');
 });
 
+test.describe('home: services up top, a short parts block, quote paths and honest FAQ answers', () => {
+  const SERVICE_IDS = ['cutting', 'machining', 'metal-work', 'custom-fabrication'];
+  const siteConfig = readFileSync('src/config/site.ts', 'utf8');
+  const replyTime = /replyTime: '([^']+)'/.exec(siteConfig)![1];
+  const serviceFile = (id: string) => readFileSync(`src/content/services/${id}.md`, 'utf8');
+  const teaser = (id: string) => /^teaser:\s*"(.*)"\s*$/m.exec(serviceFile(id))![1];
+
+  test('the four service cards sit right under the hero on a phone, each linking to its page with its teaser', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    const cards = page.locator('#services .svc__card');
+    await expect(cards).toHaveCount(4);
+    for (const [i, id] of SERVICE_IDS.entries()) {
+      await expect(cards.nth(i)).toHaveAttribute('href', `/services/${id}/`);
+      await expect(cards.nth(i)).toContainText(teaser(id));
+    }
+    expect((await cards.first().boundingBox())!.y + (await page.evaluate(() => scrollY)), 'first service card within 1,600 px').toBeLessThan(1600);
+    expect(await page.evaluate(() => document.documentElement.scrollHeight), 'page height on a phone').toBeLessThan(8500);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  });
+
+  test('the hero keeps the headline and says what and where in the eyebrow and lead', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^Precision machining since 2002\.\s*Still your machine shop\.$/);
+    const hero = page.locator('.hero');
+    await expect(hero.locator('.eyebrow')).toHaveText('Machine shop in Salinas, CA · Since 2002');
+    const lead = hero.locator('.lead');
+    for (const words of ['CNC machining', 'waterjet and laser cutting', 'welding and metal work', 'custom metal fabrication']) await expect(lead).toContainText(words);
+  });
+
+  test('buttons follow the colour contract: red Get a Quote, outline second button, blue Search, nothing black', async ({ page }) => {
+    await page.goto('/');
+    const actions = page.locator('.hero .hero__actions .btn');
+    await expect(actions.first()).toHaveText('Get a Quote');
+    await expect(actions.first()).toHaveClass(/\bbtn--red\b/);
+    await expect(actions.nth(1)).toHaveClass(/\bbtn--outline\b/);
+    await expect(actions.nth(1)).toHaveText(shopOn ? 'Browse parts' : 'Our Services');
+    await expect(page.locator('main .btn--dark')).toHaveCount(0);
+    if (shopOn) {
+      const search = page.getByRole('button', { name: 'Search', exact: true });
+      await expect(search).toHaveClass(/\bbtn\b/);
+      await expect(search).not.toHaveClass(/\bbtn--red\b/);
+      await expect(page.locator('.store__count .btn--red')).toHaveCount(0);
+    }
+  });
+
+  test('a visitor whose part is not listed is sent to the quote page', async ({ page }) => {
+    test.skip(!shopOn, 'the parts search and the parts block exist only with the shop on');
+    await page.goto('/');
+    const miss = page.locator('.part-search__miss');
+    await expect(miss).toContainText('Part not listed?');
+    await expect(miss).toContainText(`${replyTime}.`);
+    await expect(miss.getByRole('link', { name: 'Send us the number, a sample or a print' })).toHaveAttribute('href', '/quote/');
+
+    const parts = page.locator('#parts');
+    await expect(parts.getByRole('link', { name: 'Browse all parts' })).toHaveCount(1);
+    await expect(parts.getByRole('link', { name: 'Browse all parts' })).toHaveAttribute('href', '/shop/');
+    await expect(parts.getByRole('list', { name: 'Parts sections' }).getByRole('link')).toHaveCount(8);
+    await expect(parts.locator('.store__miss').getByRole('link', { name: 'Request a quote' })).toHaveAttribute('href', '/quote/');
+    await expect(parts.locator('.store__miss')).toContainText(replyTime);
+    await expect(parts).toContainText('not affiliated with or endorsed by any machine manufacturer');
+  });
+
+  test('with the shop off there is no parts block', async ({ page }) => {
+    test.skip(shopOn, 'the parts shop is on in this build');
+    await page.goto('/');
+    await expect(page.locator('#parts')).toHaveCount(0);
+    await expect(page.locator('#hero-q')).toHaveCount(0);
+  });
+
+  test('the FAQ names all four services, only listed materials, and an honest turnaround', async ({ page }) => {
+    await page.goto('/');
+    const answer = (q: string) => page.locator('details.faq', { has: page.locator('summary', { hasText: q }) }).locator('p');
+    const services = await answer('What services do you offer?').textContent();
+    for (const words of ['CNC machining', 'cutting', 'welding', 'fabrication']) expect(services).toContain(words);
+
+    const materials = (await answer('What materials do you use?').textContent())!;
+    expect(materials).not.toMatch(/titanium|polymer|alloy/i);
+    const listed = SERVICE_IDS.flatMap((id) => JSON.parse(/^materials:\s*(\[.*\])\s*$/m.exec(serviceFile(id))![1]) as string[]).map((m) => m.toLowerCase());
+    for (const m of new Set(listed)) expect(materials, m).toContain(m);
+
+    const turnaround = (await answer('What is your typical turnaround time?').textContent())!;
+    expect(turnaround.endsWith(`${replyTime}.`)).toBe(true);
+    expect(turnaround).not.toMatch(/complexity/i);
+  });
+
+  test('the photo section says what it shows, the alt text does not double "shop", the banner loads lazily, "waterjet" is one word', async ({ page }) => {
+    await page.goto('/');
+    const main = page.getByRole('main');
+    await expect(main).not.toContainText('Proof of our quality');
+    await expect(main.locator('.eyebrow', { hasText: 'Inside our shop' })).toHaveCount(1);
+    for (const alt of await main.locator('img').evaluateAll((imgs) => imgs.map((i) => i.getAttribute('alt') ?? ''))) expect(alt).not.toMatch(/shop shop/i);
+    await expect(page.locator('.banner img')).toHaveAttribute('loading', 'lazy');
+    await expect(main).not.toContainText(/water-jet|water jet/i);
+  });
+});
+
 test.describe('parts shop', () => {
   test.skip(!shopOn, 'the parts shop is off in this build');
 
