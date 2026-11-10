@@ -26,7 +26,7 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
     "@fontsource-variable/geist": "^5.3.0",
-    "astro": "^7.3.5"
+    "astro": "^7.4.7"
   },
   "private": true,
   "type": "module",
@@ -34,9 +34,9 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@astrojs/check": "0.9.10",
-    "@playwright/test": "1.63.0",
-    "@types/node": "^24.19.2",
-    "typescript": "~6.0.3"
+    "@astrojs/check": "0.9.12",
+    "@playwright/test": "1.65.0",
+    "@types/node": "^26.6.6",
+    "typescript": "~7.0.2"
   }
 }
