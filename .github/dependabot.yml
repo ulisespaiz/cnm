@@ -1,0 +1,20 @@
+# Weekly dependency updates, one grouped pull request per ecosystem.
+# CI (.github/workflows/ci.yml) builds and tests each one in both parts shop states.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      npm:
+        patterns: ['*']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']

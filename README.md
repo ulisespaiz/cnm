@@ -377,7 +377,11 @@ other.** With both on, every push to `main` is deployed twice.
 2. In the GitHub repo, Settings > Secrets and variables > Actions, add two
    repository secrets: `CLOUDFLARE_API_TOKEN` (the token) and
    `CLOUDFLARE_ACCOUNT_ID` (your Cloudflare account ID, shown on the Workers &
-   Pages overview).
+   Pages overview). The workflow hands the token to the `wrangler` step only;
+   `npm ci` never sees it. A repository secret can still be read by a workflow
+   on any branch of this repo. To limit it to `main`, create the two secrets in
+   an environment instead (Settings > Environments > `production`, deployment
+   branches: `main` only) and add `environment: production` to the `deploy` job.
 3. Disconnect Workers Builds so the site is not deployed twice: Cloudflare
    dashboard > Workers & Pages > `cnmwebsite` > Settings > Builds > disconnect
    the Git repository.
